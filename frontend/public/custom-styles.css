@@ -213,3 +213,8 @@ body{
 .nice-shadow-22 {
 	box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px !important;
 }
+
+.p-treetable .p-treetable-tbody > tr > td {
+    font-size: 12px; 
+    padding: 4px 8px; 
+}

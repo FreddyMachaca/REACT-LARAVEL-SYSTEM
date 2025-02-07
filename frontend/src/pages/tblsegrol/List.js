@@ -9,12 +9,18 @@ import { PageRequestError } from 'components/PageRequestError';
 import { Paginator } from 'primereact/paginator';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { SplitButton } from 'primereact/splitbutton';
+import { Dialog } from 'primereact/dialog';
+import { TreeTable } from 'primereact/treetable';
 import { Title } from 'components/Title';
+import { useState, useEffect } from 'react'
 import useApp from 'hooks/useApp';
+import useApi from 'hooks/useApi'
 
 import useListPage from 'hooks/useListPage';
 const TblsegrolListPage = (props) => {
 		const app = useApp();
+		const api = useApi();
+
 	const filterSchema = {
 		search: {
 			tagTitle: "Search",
@@ -23,11 +29,29 @@ const TblsegrolListPage = (props) => {
 			options: [],
 		}
 	}
+	const [rolSelected, setRolSelected] = useState(null);
+	const [dialogRol, setDialogRol] = useState(false);
+	const [nodes, setNodes] = useState(transformToTreeNodes(jsonData));
+	const [selection, setSelection] = useState({}); 
+
 	const pageController = useListPage(props, filterSchema);
 	const filterController = pageController.filterController;
 	const { records, pageReady, loading, selectedItems, sortBy, sortOrder, apiRequestError, setSelectedItems, getPageBreadCrumbs, onSort, deleteItem, pagination } = pageController;
 	const { filters, setFilterValue } = filterController;
 	const { totalRecords, totalPages, recordsPosition, firstRow, limit, onPageChange } =  pagination;
+
+	useEffect(() => {
+		if (!rolSelected) return ;
+		api.get(`tblsegmenu/rol/${rolSelected.rol_id}`)
+		.then(response => {
+			jsonData = response.data;
+		});
+		setNodes( transformToTreeNodes(jsonData) );
+	}, [rolSelected]);
+
+	const onSelectionChange = (e) => {
+		setSelection(e.value);
+	};
 	function ActionButton(data){
 		const items = [
 		{
@@ -44,6 +68,14 @@ const TblsegrolListPage = (props) => {
 			label: "Delete",
 			command: (event) => { deleteItem(data.rol_id) },
 			icon: "pi pi-trash"
+		}, 
+		{
+			label : "Permissions",
+			command: () => { 
+				setRolSelected(data);
+				setDialogRol(!dialogRol); 
+			},
+			icon: "pi pi-lock"
 		}
 	]
 		return (<SplitButton dropdownIcon="pi pi-bars" className="dropdown-only p-button-text p-button-plain" model={items} />);
@@ -133,6 +165,7 @@ const TblsegrolListPage = (props) => {
 		);
 	}
 	return (
+		<>
 <main id="TblsegrolListPage" className="main-page">
     { (props.showHeader) && 
     <section className="page-section mb-3" >
@@ -198,6 +231,14 @@ const TblsegrolListPage = (props) => {
             </div>
         </section>
     </main>
+	<Dialog header="Asignar Menú" visible={dialogRol} style={{ width: '50vw', height:'100vm' }} onHide={() => setDialogRol(!dialogRol)}>
+		<div>
+			<TreeTable value={nodes} selectionMode="checkbox" selectionKeys={selection} onSelectionChange={onSelectionChange}>
+				<Column field="name" header={ rolSelected ? (rolSelected.rol_descripcion):null } expander></Column>
+			</TreeTable>
+		</div>
+	</Dialog>
+	</>
 	);
 }
 TblsegrolListPage.defaultProps = {
@@ -226,3 +267,22 @@ TblsegrolListPage.defaultProps = {
 	limit: 10,
 }
 export default TblsegrolListPage;
+
+const transformToTreeNodes = (obj, parentKey = "") => {
+	return Object.entries(obj).map(([key, value], index) => {
+		const nodeKey = parentKey ? `${parentKey}-${index + 1}` : `${index + 1}`;
+		
+		if (typeof value === "object" && value !== null) {
+		return {
+			key: nodeKey,
+			data: { name: key },
+			children: transformToTreeNodes(value, nodeKey),
+		};
+		}
+
+		return {
+		key: nodeKey,
+		data: { name: key },
+		};
+	});
+};

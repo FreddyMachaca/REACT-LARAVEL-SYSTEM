@@ -90,4 +90,38 @@ class TblSegMenuController extends Controller
 		$query->delete();
 		return $this->respond($arr_id);
 	}
+
+	/**
+	 * This function get menu by rol_id
+	 * @param  \Illuminate\Http\Request
+	 * @param string $rec_id //can be separated by comma 
+     * @return \Illuminate\Http\Response
+	 */
+	function getMenuByRol(Request $request, $rec_id = null){
+		$menuTree = $this->buildMenuTree();
+        
+        return response()->json($menuTree);
+	}
+
+	private function buildMenuTree($parentId = 0) {
+        $menus = TblSegMenu::where('me_id_padre', $parentId)
+            ->where('me_estado', 'V')
+            ->select('me_id', 'me_descripcion')
+            ->get();
+
+        $tree = [];
+
+        foreach ($menus as $menu) {
+            $children = $this->buildMenuTree($menu->me_id);
+
+            if (!empty($children)) {
+                $tree[$menu->me_descripcion] = $children;
+            } 
+            else {
+                $tree[$menu->me_descripcion] = true;
+            }
+        }
+
+        return $tree;
+    }
 }
