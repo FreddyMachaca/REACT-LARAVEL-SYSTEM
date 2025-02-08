@@ -15,8 +15,10 @@ import { Title } from 'components/Title';
 import { useState, useEffect } from 'react'
 import useApp from 'hooks/useApp';
 import useApi from 'hooks/useApi'
-
 import useListPage from 'hooks/useListPage';
+
+let jsonData = { };
+
 const TblsegrolListPage = (props) => {
 		const app = useApp();
 		const api = useApi();
