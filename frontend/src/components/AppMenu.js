@@ -113,10 +113,14 @@ const AppSubmenu = (props) => {
 }
 
 export const AppMenu = (props) => {
-
     return (
-        <div className="layout-menu-container">
-            <AppSubmenu items={props.model} className="layout-menu" onMenuItemClick={props.onMenuItemClick} role="menu" />
+        <div className="layout-menu-container" style={{ height: 'auto', overflow: 'visible' }}>
+            <AppSubmenu 
+                items={props.model} 
+                className="layout-menu" 
+                onMenuItemClick={props.onMenuItemClick} 
+                role="menu" 
+            />
         </div>
     );
 }

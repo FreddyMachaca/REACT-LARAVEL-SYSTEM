@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TblSegMenuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -209,6 +210,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblsegmenu/add', 'TblSegMenuController@add');	
 	Route::any('tblsegmenu/edit/{rec_id}', 'TblSegMenuController@edit');	
 	Route::any('tblsegmenu/delete/{rec_id}', 'TblSegMenuController@delete');
+	Route::get('/tblsegmenu/getMenuTree', [TblSegMenuController::class, 'getMenuTree']);
 
 /* routes for TblSegMenuUsuario Controller  */	
 	Route::get('tblsegmenuusuario/', 'TblSegMenuUsuarioController@index');

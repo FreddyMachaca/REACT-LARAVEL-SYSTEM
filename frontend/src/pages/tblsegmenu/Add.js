@@ -3,70 +3,63 @@ import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
+import { Checkbox } from 'primereact/checkbox';  // Agregar esta importación
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 
 import useAddPage from 'hooks/useAddPage';
 const TblsegmenuAddPage = (props) => {
-		const app = useApp();
-	
-	//form validation rules
-	const validationSchema = yup.object().shape({
-		me_descripcion: yup.string().nullable().label("Me Descripcion"),
-		me_url: yup.string().nullable().label("Me Url"),
-		me_icono: yup.string().nullable().label("Me Icono"),
-		me_id_padre: yup.number().nullable().label("Me Id Padre"),
-		me_vista: yup.number().nullable().label("Me Vista"),
-		me_orden: yup.number().nullable().label("Me Orden"),
-		me_estado: yup.string().required().label("Me Estado"),
-		me_usuario_creacion: yup.number().required().label("Me Usuario Creacion"),
-		me_fecha_creacion: yup.string().required().label("Me Fecha Creacion")
-	});
-	
-	//form default values
-	const formDefaultValues = {
-		me_descripcion: '', 
-		me_url: '', 
-		me_icono: '', 
-		me_id_padre: '', 
-		me_vista: '', 
-		me_orden: '', 
-		me_estado: '', 
-		me_usuario_creacion: '', 
-		me_fecha_creacion: new Date(), 
-	}
-	
-	//page hook where logics resides
-	const pageController =  useAddPage({ props, formDefaultValues, afterSubmit });
-	
-	// destructure and grab what the page needs
-	const { formData, resetForm, handleSubmit, submitForm, pageReady, loading, saving, inputClassName } = pageController;
-	
-	//event raised after form submit
-	function afterSubmit(response){
-		app.flashMsg(props.msgTitle, props.msgAfterSave);
-		resetForm();
-		if(app.isDialogOpen()){
-			app.closeDialogs(); // if page is open as dialog, close dialog
-		}
-		else if(props.redirect) {
-			app.navigate(`/tblsegmenu`);
-		}
-	}
-	
-	// page loading form data from api
-	if(loading){
-		return (
-			<div className="p-3 text-center">
-				<ProgressSpinner style={{width:'50px', height:'50px'}} />
-			</div>
-		);
-	}
-	
-	//page has loaded any required data and ready to render
-	if(pageReady){
-		return (
+    const app = useApp();
+    
+    const validationSchema = yup.object().shape({
+        me_descripcion: yup.string().required('La descripción es requerida'),
+        me_icono: yup.string().nullable(),
+        me_estado: yup.string().required('El estado es requerido')
+    });
+    
+    const formDefaultValues = {
+        me_descripcion: '', 
+        me_url: '#',  // Siempre será '#' para menús padre
+        me_icono: '', 
+        me_id_padre: null,  // Valor por defecto null para menús padre
+        me_vista: 1,  // Valor por defecto
+        me_orden: 0,  // Valor por defecto
+        me_estado: '1', // Activo por defecto
+        me_usuario_creacion: '1', // Usuario por defecto
+        me_fecha_creacion: new Date()
+    };
+
+    //page hook where logics resides
+    const pageController =  useAddPage({ props, formDefaultValues, afterSubmit });
+    
+    // destructure and grab what the page needs
+    const { formData, resetForm, handleSubmit, submitForm, pageReady, loading, saving, inputClassName } = pageController;
+    
+    //event raised after form submit
+    function afterSubmit(response){
+        app.flashMsg(props.msgTitle, props.msgAfterSave);
+        resetForm();
+        if(app.isDialogOpen()){
+            app.closeDialogs(); // if page is open as dialog, close dialog
+        }
+        else if(props.redirect) {
+            app.navigate(`/tblsegmenu`);
+        }
+    }
+    
+    // page loading form data from api
+    if(loading){
+        return (
+            <div className="p-3 text-center">
+                <ProgressSpinner style={{width:'50px', height:'50px'}} />
+            </div>
+        );
+    }
+    
+    //page has loaded any required data and ready to render
+    if(pageReady){
+        return (
 <main id="TblsegmenuAddPage" className="main-page">
     { (props.showHeader) && 
     <section className="page-section mb-3" >
@@ -97,10 +90,10 @@ const TblsegmenuAddPage = (props) => {
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                Me Descripcion 
+                                                Descripción *
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_descripcion"  onChange={formik.handleChange}  value={formik.values.me_descripcion}   label="Me Descripcion" type="text" placeholder="Escribir Me Descripcion"        className={inputClassName(formik?.errors?.me_descripcion)} />
+                                                <InputText name="me_descripcion"  onChange={formik.handleChange}  value={formik.values.me_descripcion}   label="Me Descripcion" type="text" placeholder="Nombre del menú"        className={inputClassName(formik?.errors?.me_descripcion)} />
                                                 <ErrorMessage name="me_descripcion" component="span" className="p-error" />
                                             </div>
                                         </div>
@@ -108,95 +101,46 @@ const TblsegmenuAddPage = (props) => {
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                Me Url 
+                                                URL
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_url"  onChange={formik.handleChange}  value={formik.values.me_url}   label="Me Url" type="text" placeholder="Escribir Me Url"        className={inputClassName(formik?.errors?.me_url)} />
-                                                <ErrorMessage name="me_url" component="span" className="p-error" />
+                                                <InputText name="me_url"  value="#" disabled className="p-inputtext p-component w-full opacity-60" />
                                             </div>
                                         </div>
                                     </div>
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                Me Icono 
+                                                Icono
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_icono"  onChange={formik.handleChange}  value={formik.values.me_icono}   label="Me Icono" type="text" placeholder="Escribir Me Icono"        className={inputClassName(formik?.errors?.me_icono)} />
-                                                <ErrorMessage name="me_icono" component="span" className="p-error" />
+                                                <InputText name="me_icono"  onChange={formik.handleChange}  value={formik.values.me_icono}   label="Me Icono" type="text" placeholder="Ejemplo: pi pi-home"        className={inputClassName(formik?.errors?.me_icono)} />
                                             </div>
                                         </div>
                                     </div>
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                Me Id Padre 
+                                                Estado *
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_id_padre"  onChange={formik.handleChange}  value={formik.values.me_id_padre}   label="Me Id Padre" type="number" placeholder="Escribir Me Id Padre"  min={0}  step="any"    className={inputClassName(formik?.errors?.me_id_padre)} />
-                                                <ErrorMessage name="me_id_padre" component="span" className="p-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="col-12">
-                                        <div className="formgrid grid">
-                                            <div className="col-12 md:col-3">
-                                                Me Vista 
-                                            </div>
-                                            <div className="col-12 md:col-9">
-                                                <InputText name="me_vista"  onChange={formik.handleChange}  value={formik.values.me_vista}   label="Me Vista" type="number" placeholder="Escribir Me Vista"  min={0}  step="any"    className={inputClassName(formik?.errors?.me_vista)} />
-                                                <ErrorMessage name="me_vista" component="span" className="p-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="col-12">
-                                        <div className="formgrid grid">
-                                            <div className="col-12 md:col-3">
-                                                Me Orden 
-                                            </div>
-                                            <div className="col-12 md:col-9">
-                                                <InputText name="me_orden"  onChange={formik.handleChange}  value={formik.values.me_orden}   label="Me Orden" type="number" placeholder="Escribir Me Orden"  min={0}  step="any"    className={inputClassName(formik?.errors?.me_orden)} />
-                                                <ErrorMessage name="me_orden" component="span" className="p-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="col-12">
-                                        <div className="formgrid grid">
-                                            <div className="col-12 md:col-3">
-                                                Me Estado *
-                                            </div>
-                                            <div className="col-12 md:col-9">
-                                                <InputText name="me_estado"  onChange={formik.handleChange}  value={formik.values.me_estado}   label="Me Estado" type="text" placeholder="Escribir Me Estado"        className={inputClassName(formik?.errors?.me_estado)} />
-                                                <ErrorMessage name="me_estado" component="span" className="p-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="col-12">
-                                        <div className="formgrid grid">
-                                            <div className="col-12 md:col-3">
-                                                Me Usuario Creacion *
-                                            </div>
-                                            <div className="col-12 md:col-9">
-                                                <InputText name="me_usuario_creacion"  onChange={formik.handleChange}  value={formik.values.me_usuario_creacion}   label="Me Usuario Creacion" type="number" placeholder="Escribir Me Usuario Creacion"  min={0}  step="any"    className={inputClassName(formik?.errors?.me_usuario_creacion)} />
-                                                <ErrorMessage name="me_usuario_creacion" component="span" className="p-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="col-12">
-                                        <div className="formgrid grid">
-                                            <div className="col-12 md:col-3">
-                                                Me Fecha Creacion *
-                                            </div>
-                                            <div className="col-12 md:col-9">
-                                                <Calendar name="me_fecha_creacion" value={formik.values.me_fecha_creacion} onChange={formik.handleChange} showButtonBar showTime dateFormat="yy-mm-dd" hourFormat="24"showIcon className={inputClassName(formik?.errors?.me_fecha_creacion)}        />
-                                                <ErrorMessage name="me_fecha_creacion" component="span" className="p-error" />
+                                                <div className="p-field-checkbox">
+                                                    <Checkbox
+                                                        name="me_estado"
+                                                        checked={formik.values.me_estado === '1'}
+                                                        onChange={(e) => {
+                                                            formik.setFieldValue('me_estado', e.checked ? '1' : '0')
+                                                        }}
+                                                    />
+                                                    <label className="ml-2">Activo</label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 { props.showFooter && 
                                 <div className="text-center my-3">
-                                    <Button onClick={(e) => handleSubmit(e, formik)} className="p-button-primary" type="submit" label="Entregar" icon="pi pi-send" loading={saving} />
+                                    <Button onClick={(e) => handleSubmit(e, formik)} className="p-button-primary" type="submit" label="Guardar" icon="pi pi-save" loading={saving} />
                                 </div>
                                 }
                             </Form>
@@ -209,25 +153,25 @@ const TblsegmenuAddPage = (props) => {
             </div>
         </section>
     </main>
-		);
-	}
+        );
+    }
 }
 
 //page props and default values
 TblsegmenuAddPage.defaultProps = {
-	primaryKey: 'me_id',
-	pageName: 'tblsegmenu',
-	apiPath: 'tblsegmenu/add',
-	routeName: 'tblsegmenuadd',
-	submitButtonLabel: "Entregar",
-	formValidationError: "El formulario no es válido",
-	formValidationMsg: "Por favor complete el formulario",
-	msgTitle: "Crear registro",
-	msgAfterSave: "Grabar agregado exitosamente",
-	msgBeforeSave: "",
-	showHeader: true,
-	showFooter: true,
-	redirect: true,
-	isSubPage: false
+    primaryKey: 'me_id',
+    pageName: 'tblsegmenu',
+    apiPath: 'tblsegmenu/add',
+    routeName: 'tblsegmenuadd',
+    submitButtonLabel: "Entregar",
+    formValidationError: "El formulario no es válido",
+    formValidationMsg: "Por favor complete el formulario",
+    msgTitle: "Crear registro",
+    msgAfterSave: "Grabar agregado exitosamente",
+    msgBeforeSave: "",
+    showHeader: true,
+    showFooter: true,
+    redirect: true,
+    isSubPage: false
 }
 export default TblsegmenuAddPage;
