@@ -53,47 +53,46 @@ const TblsegmenuListPage = (props) => {
 
     const nodeTemplate = (node) => {
         const isParentNode = node.data.me_url === '#';
-        
         return (
             <div className="flex align-items-center justify-content-between py-2 w-full">
                 <div className="flex-grow-1">
                     {node.label}
                     {!isParentNode && <small className="ml-2 text-gray-500">({node.data.me_url})</small>}
                 </div>
-                {isParentNode && (
-                    <div className="flex gap-2 ml-auto">
+                <div className="flex gap-2 ml-auto">
+                    {isParentNode && (
                         <Button 
                             icon="pi pi-plus-circle" 
                             className="p-button-rounded p-button-text p-button-success"
-                            tooltip="Agregar hijo"
+                            tooltip="Agregar un submenu"
                             tooltipOptions={{ position: 'left' }}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleAddChild(node);
                             }}
                         />
-                        <Button 
-                            icon="pi pi-pencil" 
-                            className="p-button-rounded p-button-text"
-                            tooltip="Editar"
-                            tooltipOptions={{ position: 'left' }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(node);
-                            }}
-                        />
-                        <Button 
-                            icon="pi pi-trash" 
-                            className="p-button-rounded p-button-text p-button-danger"
-                            tooltip="Eliminar"
-                            tooltipOptions={{ position: 'left' }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(node);
-                            }}
-                        />
-                    </div>
-                )}
+                    )}
+                    <Button 
+                        icon="pi pi-pencil" 
+                        className="p-button-rounded p-button-text"
+                        tooltip="Editar"
+                        tooltipOptions={{ position: 'left' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(node);
+                        }}
+                    />
+                    <Button 
+                        icon="pi pi-trash" 
+                        className="p-button-rounded p-button-text p-button-danger"
+                        tooltip="Eliminar"
+                        tooltipOptions={{ position: 'left' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(node);
+                        }}
+                    />
+                </div>
             </div>
         );
     };
@@ -200,10 +199,8 @@ const TblsegmenuListPage = (props) => {
     return (
         <main id="TblsegmenuListPage" className="main-page p-5">
             <Toast ref={toast} />
-            
-            {/* Diálogo para agregar hijo */}
             <Dialog
-                header="Agregar hijo"
+                header="Agregar un submenu"
                 visible={addChildDialogVisible}
                 style={{ width: '50vw' }}
                 modal
@@ -253,7 +250,7 @@ const TblsegmenuListPage = (props) => {
                                     </span>
                                     <Link to="/tblsegmenu/add">
                                         <Button 
-                                            label="Agregar nuevo" 
+                                            label="Agregar Nuevo Menu" 
                                             icon="pi pi-plus" 
                                             className="p-button p-component bg-primary" 
                                         />

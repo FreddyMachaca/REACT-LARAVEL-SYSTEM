@@ -90,10 +90,10 @@ const TblsegmenuEditPage = (props) => {
                                     <Formik
                                         initialValues={formData}
                                         validationSchema={validationSchema}
-                                        onSubmit={submitForm}
+                                        onSubmit={(values, actions) => submitForm(values)}
                                     >
                                         {(formik) => (
-                                            <Form className={`${!props.isSubPage ? 'card p-4' : ''}`}>
+                                            <Form className={`${!props.isSubPage ? 'card' : ''}`}>
                                                 <div className="grid">
                                                     {/* Descripción */}
                                                     <div className="col-12">
@@ -117,18 +117,23 @@ const TblsegmenuEditPage = (props) => {
                                                         </div>
                                                     </div>
 
-                                                    {/* URL (Deshabilitado) */}
+                                                    {/* URL */}
                                                     <div className="col-12">
                                                         <div className="formgrid grid">
                                                             <div className="col-12 md:col-3">
-                                                                <label className="font-medium">URL</label>
+                                                                <label htmlFor="me_url" className="font-medium">URL</label>
                                                             </div>
                                                             <div className="col-12 md:col-9">
-                                                                <InputText
-                                                                    value={formik.values.me_url || '#'}
-                                                                    disabled
-                                                                    className="p-inputtext p-component w-full opacity-60"
+                                                                <InputText 
+                                                                    id="me_url"
+                                                                    name="me_url" 
+                                                                    onChange={formik.handleChange} 
+                                                                    value={formik.values.me_url} 
+                                                                    placeholder="URL del menú" 
+                                                                    disabled={!formik.values.me_id_padre} 
+                                                                    className={inputClassName(formik?.errors?.me_url)} 
                                                                 />
+                                                                <ErrorMessage name="me_url" component="small" className="p-error" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -158,7 +163,7 @@ const TblsegmenuEditPage = (props) => {
                                                     <div className="col-12">
                                                         <div className="formgrid grid">
                                                             <div className="col-12 md:col-3">
-                                                                <label className="font-medium">Estado *</label>
+                                                                <label className="ml-2">Mostrar en el menú</label>
                                                             </div>
                                                             <div className="col-12 md:col-9">
                                                                 <div className="p-field-checkbox">
@@ -166,7 +171,6 @@ const TblsegmenuEditPage = (props) => {
                                                                         checked={formik.values.me_estado === '1'}
                                                                         onChange={e => formik.setFieldValue('me_estado', e.checked ? '1' : '0')}
                                                                     />
-                                                                    <label className="ml-2">Activo</label>
                                                                 </div>
                                                                 <ErrorMessage name="me_estado" component="small" className="p-error" />
                                                             </div>
@@ -176,11 +180,12 @@ const TblsegmenuEditPage = (props) => {
 
                                                 {/* Botón submit */}
                                                 {props.showFooter && (
-                                                    <div className="flex justify-content-center mt-4">
+                                                    <div className="text-center my-3">
                                                         <Button
                                                             onClick={(e) => handleSubmit(e, formik)}
+                                                            className="p-button-primary"
                                                             type="submit"
-                                                            label="Guardar"
+                                                            label="Actualizar"
                                                             icon="pi pi-save"
                                                             loading={saving}
                                                         />

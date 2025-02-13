@@ -15,6 +15,7 @@ const TblsegmenuAddPage = (props) => {
     const validationSchema = yup.object().shape({
         me_descripcion: yup.string().required('La descripción es requerida'),
         me_icono: yup.string().nullable(),
+        me_url: yup.string().required('La URL es requerida'),
         me_estado: yup.string().required('El estado es requerido')
     });
     
@@ -71,7 +72,7 @@ const TblsegmenuAddPage = (props) => {
                 </div>
                 }
                 <div className="col " >
-                    <Title title="Agregar nuevo"   titleClass="text-2xl text-primary font-bold" subTitleClass="text-500"      separator={false} />
+                    <Title title="Agregar nuevo Menu"   titleClass="text-2xl text-primary font-bold" subTitleClass="text-500"      separator={false} />
                 </div>
             </div>
         </div>
@@ -85,7 +86,7 @@ const TblsegmenuAddPage = (props) => {
                         <Formik initialValues={formData} validationSchema={validationSchema} onSubmit={(values, actions) =>submitForm(values)}>
                             {(formik) => 
                             <>
-                            <Form className={`${!props.isSubPage ? 'card  ' : ''}`}>
+                            <Form className={`${!props.isSubPage ? 'card' : ''}`}>
                                 <div className="grid">
                                     <div className="col-12">
                                         <div className="formgrid grid">
@@ -93,7 +94,7 @@ const TblsegmenuAddPage = (props) => {
                                                 Descripción *
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_descripcion"  onChange={formik.handleChange}  value={formik.values.me_descripcion}   label="Me Descripcion" type="text" placeholder="Nombre del menú"        className={inputClassName(formik?.errors?.me_descripcion)} />
+                                                <InputText name="me_descripcion" onChange={formik.handleChange} value={formik.values.me_descripcion} placeholder="Nombre del menú" className={inputClassName(formik?.errors?.me_descripcion)} />
                                                 <ErrorMessage name="me_descripcion" component="span" className="p-error" />
                                             </div>
                                         </div>
@@ -101,10 +102,18 @@ const TblsegmenuAddPage = (props) => {
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                URL
+                                                URL {/** Solo editable para hijos */}
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_url"  value="#" disabled className="p-inputtext p-component w-full opacity-60" />
+                                                <InputText 
+                                                    name="me_url" 
+                                                    onChange={formik.handleChange} 
+                                                    value={formik.values.me_url} 
+                                                    placeholder="URL del menú"
+                                                    disabled={!formik.values.me_id_padre} 
+                                                    className={inputClassName(formik?.errors?.me_url)} 
+                                                />
+                                                <ErrorMessage name="me_url" component="span" className="p-error" />
                                             </div>
                                         </div>
                                     </div>
@@ -121,7 +130,7 @@ const TblsegmenuAddPage = (props) => {
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                Estado *
+                                                <label className="ml-2">Mostrar en el menú</label>
                                             </div>
                                             <div className="col-12 md:col-9">
                                                 <div className="p-field-checkbox">
@@ -132,8 +141,8 @@ const TblsegmenuAddPage = (props) => {
                                                             formik.setFieldValue('me_estado', e.checked ? '1' : '0')
                                                         }}
                                                     />
-                                                    <label className="ml-2">Activo</label>
                                                 </div>
+                                                <ErrorMessage name="me_estado" component="span" className="p-error" />
                                             </div>
                                         </div>
                                     </div>
