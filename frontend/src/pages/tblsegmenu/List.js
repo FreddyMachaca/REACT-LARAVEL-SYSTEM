@@ -136,7 +136,7 @@ const TblsegmenuListPage = (props) => {
             me_descripcion: '',
             me_url: '',
             me_id_padre: selectedParentNode?.key,
-            me_estado: '1'
+            me_estado: 'V' // Valor activo "V" por defecto; "F" para inactivo
         };
 
         const handleSubmit = async (values, { setSubmitting }) => {

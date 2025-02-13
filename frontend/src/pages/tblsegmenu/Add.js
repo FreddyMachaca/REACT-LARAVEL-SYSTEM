@@ -26,7 +26,7 @@ const TblsegmenuAddPage = (props) => {
         me_id_padre: null,  // Valor por defecto null para menús padre
         me_vista: 1,  // Valor por defecto
         me_orden: 0,  // Valor por defecto
-        me_estado: '1', // Activo por defecto
+        me_estado: 'V', // Activo por defecto ahora se guarda "V"
         me_usuario_creacion: '1', // Usuario por defecto
         me_fecha_creacion: new Date()
     };
@@ -136,9 +136,9 @@ const TblsegmenuAddPage = (props) => {
                                                 <div className="p-field-checkbox">
                                                     <Checkbox
                                                         name="me_estado"
-                                                        checked={formik.values.me_estado === '1'}
+                                                        checked={formik.values.me_estado === 'V'}
                                                         onChange={(e) => {
-                                                            formik.setFieldValue('me_estado', e.checked ? '1' : '0')
+                                                            formik.setFieldValue('me_estado', e.checked ? 'V' : 'F')
                                                         }}
                                                     />
                                                 </div>

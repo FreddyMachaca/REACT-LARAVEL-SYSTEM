@@ -168,8 +168,8 @@ const TblsegmenuEditPage = (props) => {
                                                             <div className="col-12 md:col-9">
                                                                 <div className="p-field-checkbox">
                                                                     <Checkbox
-                                                                        checked={formik.values.me_estado === '1'}
-                                                                        onChange={e => formik.setFieldValue('me_estado', e.checked ? '1' : '0')}
+                                                                        checked={formik.values.me_estado === 'V'} // verificar estado activo con "V"
+                                                                        onChange={e => formik.setFieldValue('me_estado', e.checked ? 'V' : 'F')}
                                                                     />
                                                                 </div>
                                                                 <ErrorMessage name="me_estado" component="small" className="p-error" />
