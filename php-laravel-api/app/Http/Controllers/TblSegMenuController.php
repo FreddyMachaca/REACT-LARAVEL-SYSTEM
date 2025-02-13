@@ -126,20 +126,33 @@ class TblSegMenuController extends Controller
 		
 		return $this->respond($tree);
 	}
+
+	public function manageMenuTree() {
+		$menu = TblSegMenu::orderBy('me_orden')
+			->get(['me_id', 'me_descripcion', 'me_url', 'me_icono', 
+				   'me_id_padre', 'me_orden', 'me_estado']);
+		
+		// Convertir la lista plana en una estructura de árbol
+		$tree = $this->buildTree($menu);
+		
+		return $this->respond($tree);
+	}
 	
 	private function buildTree($elements, $parentId = null) {
 		$branch = [];
-	
 		foreach ($elements as $element) {
-			if ($element->me_id_padre == $parentId) {
+			// Para nodos raíz: me_id_padre es nulo o 0, o coincide con $parentId en otros casos
+			if (
+				($parentId === null && (empty($element->me_id_padre) || $element->me_id_padre == 0)) ||
+				($element->me_id_padre == $parentId)
+			) {
 				$children = $this->buildTree($elements, $element->me_id);
-				if ($children) {
-					$element->children = $children;
-				}
+				$element->children = $children ? $children : [];
+				$element->expanded = true; // Flag para forzar la expansión
 				$branch[] = $element;
 			}
 		}
-	
 		return $branch;
 	}
+	
 }

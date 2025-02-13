@@ -50,7 +50,7 @@ const MenuTreePage = () => {
         const fetchTree = async () => {
             setLoading(true);
             try {
-                const response = await axios.get('/tblsegmenu/getMenuTree');
+                const response = await axios.get('/tblsegmenu/manageMenuTree');
                 // Transformamos la respuesta al formato que requiere Tree
                 setTreeData(mapToTreeNodes(response.data));
             } catch (err) {

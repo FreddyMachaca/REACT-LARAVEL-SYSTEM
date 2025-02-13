@@ -211,6 +211,7 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblsegmenu/edit/{rec_id}', 'TblSegMenuController@edit');	
 	Route::any('tblsegmenu/delete/{rec_id}', 'TblSegMenuController@delete');
 	Route::get('/tblsegmenu/getMenuTree', [TblSegMenuController::class, 'getMenuTree']);
+	Route::get('/tblsegmenu/manageMenuTree', [TblSegMenuController::class, 'manageMenuTree']);
 
 /* routes for TblSegMenuUsuario Controller  */	
 	Route::get('tblsegmenuusuario/', 'TblSegMenuUsuarioController@index');

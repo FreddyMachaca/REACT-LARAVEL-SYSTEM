@@ -226,17 +226,17 @@ export default function useMenus() {
         try {
             const response = await axios.get('/tblsegmenu/getMenuTree');
             const rawData = response.data?.data || response.data || [];
-            console.log('Datos crudos:', rawData);
+            console.log('Datos crudos en useMenus:', rawData);
             
-            // Primero construir la jerarquía
-            const hierarchicalData = buildMenuTree(rawData);
+            // Si la respuesta ya tiene "children", asume que es un árbol
+            const hierarchicalData = (rawData.length && rawData[0].children !== undefined)
+                  ? rawData
+                  : buildMenuTree(rawData);
             console.log('Datos jerárquicos:', hierarchicalData);
             
-            // Luego transformar a formato de menú
             const menuItems = transformMenuData(hierarchicalData);
             console.log('Menús dinámicos cargados:', menuItems);
             
-            // Combinar menús estáticos con dinámicos
             setDynamicMenus(menuItems);
         } catch (error) {
             console.error('Error loading dynamic menu:', error);
@@ -267,37 +267,23 @@ export default function useMenus() {
 
     const transformMenuData = (menuData) => {
         const transformNode = (node) => {
-            // Validación más flexible del estado
-            const isActive = node.me_estado === '1' || 
-                           node.me_estado === 1 || 
-                           node.me_estado === true || 
-                           node.me_estado === 'true' || 
-                           node.me_estado === 'ACT' || 
-                           node.me_estado === 'V';
-
-            if (!isActive) {
+            if (!node.me_estado) {
                 return null;
             }
 
-            // Crear item de menú con mapeo flexible
+            // Crear item de menú para PanelMenu
             const menuItem = {
-                to: node.me_url && node.me_url !== '#' ? node.me_url : null,
                 label: node.me_descripcion,
-                icon: node.me_icono || node.icon || 'pi pi-th-large',
-                iconcolor: '',
-                target: '',
-                items: []
+                icon: node.me_icono || 'pi pi-fw pi-folder',
+                to: node.me_url && node.me_url !== '#' ? node.me_url : undefined,
+                expanded: false // Se establece expanded en false para que los submenús no estén extendidos por defecto
             };
 
             // Procesar hijos si existen
-            if (Array.isArray(node.children) && node.children.length > 0) {
-                const children = node.children
+            if (node.children?.length > 0) {
+                menuItem.items = node.children
                     .map(transformNode)
                     .filter(Boolean);
-                
-                if (children.length > 0) {
-                    menuItem.items = children;
-                }
             }
 
             return menuItem;
