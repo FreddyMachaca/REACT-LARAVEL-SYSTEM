@@ -220,6 +220,12 @@ export default function useMenus() {
 
     useEffect(() => {
         loadMenuItems();
+
+        const interval = setInterval(() => {
+            loadMenuItems();
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const loadMenuItems = async () => {
