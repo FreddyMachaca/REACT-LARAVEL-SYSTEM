@@ -7,6 +7,7 @@ import { Checkbox } from 'primereact/checkbox';  // Agregar esta importación
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
+import UploadIcon from 'components/UploadIcon';
 
 import useAddPage from 'hooks/useAddPage';
 const TblsegmenuAddPage = (props) => {
@@ -123,7 +124,8 @@ const TblsegmenuAddPage = (props) => {
                                                 Icono
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                <InputText name="me_icono"  onChange={formik.handleChange}  value={formik.values.me_icono}   label="Me Icono" type="text" placeholder="Ejemplo: pi pi-home"        className={inputClassName(formik?.errors?.me_icono)} />
+                                                {/* Removed InputText for icon name */}
+                                                <UploadIcon onUpload={(url) => formik.setFieldValue('me_icono', url)} />
                                             </div>
                                         </div>
                                     </div>

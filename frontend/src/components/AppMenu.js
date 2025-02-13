@@ -6,17 +6,22 @@ export const AppMenu = (props) => {
     const navigate = useNavigate();
 
     const processItems = (items) => {
-        return items.map(item => ({
-            label: item.label,
-            icon: item.icon,
-            expanded: item.expanded, // preserve expanded flag from DB
-            items: item.items ? processItems(item.items) : undefined,
-            command: () => {
-                if (item.to) {
-                    navigate(item.to);
+        return items.map(item => {
+            const iconContent = item.icon && /^(http|https):\/\//.test(item.icon)
+                ? (<img src={item.icon} alt="icon" style={{width:'16px', height:'16px'}} />)
+                : item.icon;
+            return {
+                label: item.label,
+                icon: iconContent,
+                expanded: item.expanded,
+                items: item.items ? processItems(item.items) : undefined,
+                command: () => {
+                    if (item.to) {
+                        navigate(item.to);
+                    }
                 }
-            }
-        }));
+            };
+        });
     };
 
     const processedModel = processItems(props.model);

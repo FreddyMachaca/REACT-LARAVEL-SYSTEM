@@ -8,6 +8,7 @@ import { PageRequestError } from 'components/PageRequestError';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
+import UploadIcon from 'components/UploadIcon';
 
 import useEditPage from 'hooks/useEditPage';
 const TblsegmenuEditPage = (props) => {
@@ -142,19 +143,11 @@ const TblsegmenuEditPage = (props) => {
                                                     <div className="col-12">
                                                         <div className="formgrid grid">
                                                             <div className="col-12 md:col-3">
-                                                                <label htmlFor="me_icono" className="font-medium">
-                                                                    Icono
-                                                                </label>
+                                                                Icono
                                                             </div>
                                                             <div className="col-12 md:col-9">
-                                                                <InputText
-                                                                    id="me_icono"
-                                                                    name="me_icono"
-                                                                    value={formik.values.me_icono}
-                                                                    onChange={formik.handleChange}
-                                                                    placeholder="Ejemplo: pi pi-home"
-                                                                    className={inputClassName(formik?.errors?.me_icono)}
-                                                                />
+                                                                {/* Removed InputText for icon name */}
+                                                                <UploadIcon onUpload={(url) => formik.setFieldValue('me_icono', url)} />
                                                             </div>
                                                         </div>
                                                     </div>

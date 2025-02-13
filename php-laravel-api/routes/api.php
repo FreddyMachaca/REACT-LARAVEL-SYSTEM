@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TblSegMenuController;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -273,3 +274,13 @@ Route::get('home', 'HomeController@index');
 Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
 Route::post('fileuploader/remove_temp_file', 'FileUploaderController@remove_temp_file');
+
+Route::post('/upload-icon', function (Request $request) {
+    $request->validate([
+        'icon' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    $path = $request->file('icon')->store('icons', 'public');
+
+    return response()->json(['url' => asset("storage/$path")]);
+});
