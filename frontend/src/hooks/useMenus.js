@@ -267,31 +267,18 @@ export default function useMenus() {
 
     const transformMenuData = (menuData) => {
         const transformNode = (node) => {
-            if (!node.me_estado) {
+            if (node.me_estado !== 'V') { // filtrar registros inactivos
                 return null;
             }
-
-            // Crear item de menú para PanelMenu
-            const menuItem = {
+            return {
                 label: node.me_descripcion,
                 icon: node.me_icono || 'pi pi-fw pi-folder',
                 to: node.me_url && node.me_url !== '#' ? node.me_url : undefined,
-                expanded: false // Se establece expanded en false para que los submenús no estén extendidos por defecto
+                expanded: false,
+                items: node.children ? node.children.map(transformNode).filter(Boolean) : undefined
             };
-
-            // Procesar hijos si existen
-            if (node.children?.length > 0) {
-                menuItem.items = node.children
-                    .map(transformNode)
-                    .filter(Boolean);
-            }
-
-            return menuItem;
         };
-
-        return menuData
-            .map(transformNode)
-            .filter(Boolean);
+        return menuData.map(transformNode).filter(Boolean);
     };
 
     // Combinar menús estáticos y dinámicos en el return

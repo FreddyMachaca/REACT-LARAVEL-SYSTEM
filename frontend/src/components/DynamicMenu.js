@@ -123,6 +123,29 @@ const MenuTree = ({ apiPath }) => {
         });
     };
 
+    const transformMenuData = (menuData) => {
+        const transformNode = (node) => {
+            if (node.me_estado !== 'V') { // solo incluir nodos activos
+                return null;
+            }
+            const menuItem = {
+                label: node.me_descripcion,
+                icon: node.me_icono || 'pi pi-fw pi-folder',
+                to: node.me_url && node.me_url !== '#' ? node.me_url : undefined,
+                expanded: false
+            };
+            if (node.children?.length > 0) {
+                menuItem.items = node.children
+                    .map(transformNode)
+                    .filter(Boolean);
+            }
+            return menuItem;
+        };
+        return menuData
+            .map(transformNode)
+            .filter(Boolean);
+    };
+
     return (
         <Card className="p-4">
             <div className="mb-4 flex justify-end">
