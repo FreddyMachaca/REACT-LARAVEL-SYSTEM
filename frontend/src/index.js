@@ -8,6 +8,11 @@ import { AppProvider } from "contexts/AppContext";
 
 import InjectAxios from "components/InjectAxios";
 
+import "primereact/resources/themes/lara-light-indigo/theme.css";  // tema
+import "primereact/resources/primereact.min.css";                  // core css
+import "primeicons/primeicons.css";                               // iconos
+import "/node_modules/primeflex/primeflex.css";                   // utilities
+
 const container = document.getElementById('root');
 const root = createRoot(container);
 const queryClient = new QueryClient({

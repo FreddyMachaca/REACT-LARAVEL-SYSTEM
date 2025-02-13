@@ -8,7 +8,7 @@ import PrimeReact from 'primereact/api';
 import useApp from 'hooks/useApp';
 
 const MainLayout = () => {
-		const app = useApp();
+	const app = useApp();
 	const appName = process.env.REACT_APP_NAME;
 	const [staticMenuInactive, setStaticMenuInactive] = useState(false);
 	const [overlayMenuActive, setOverlayMenuActive] = useState(false);
@@ -119,9 +119,12 @@ const MainLayout = () => {
                     }
                 </div>
             </div>
-            <div className="layout-sidebar  " onClick={onSidebarClick}>
-                <AppMenu model={navbarSideLeft} onMenuItemClick={onMenuItemClick} />
-                </div>
+            <div className="layout-sidebar" onClick={onSidebarClick}>
+                <AppMenu 
+                    model={navbarSideLeft}
+                    className="border-none w-full md:w-25rem"
+                />
+            </div>
 			<div className="layout-main-container ">
 				<div className="layout-main">
 					<Outlet />

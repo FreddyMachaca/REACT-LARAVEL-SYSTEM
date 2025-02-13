@@ -158,3 +158,9 @@
 .layout-sidebar::-webkit-scrollbar-thumb {
 	box-shadow: inset 2px 3px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* SIdebar Icono de despliegue oculto*/
+.pi-angle-right:before {
+  content: "" !important;
+  display: none !important;
+}

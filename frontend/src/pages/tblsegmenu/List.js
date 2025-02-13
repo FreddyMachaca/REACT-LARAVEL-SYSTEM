@@ -1,233 +1,337 @@
-import { BreadCrumb } from 'primereact/breadcrumb';
+import React, { useEffect, useState, useRef } from 'react';
+import { Tree } from 'primereact/tree';
 import { Button } from 'primereact/button';
-import { Column } from 'primereact/column';
-import { DataTable } from 'primereact/datatable';
-import { FilterTags } from 'components/FilterTags';
-import { InputText } from 'primereact/inputtext';
-import { Link } from 'react-router-dom';
-import { PageRequestError } from 'components/PageRequestError';
-import { Paginator } from 'primereact/paginator';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { SplitButton } from 'primereact/splitbutton';
-import { Title } from 'components/Title';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { InputText } from 'primereact/inputtext';
+import { confirmDialog } from 'primereact/confirmdialog';
+import { Toast } from 'primereact/toast';
+import { Dialog } from 'primereact/dialog';
+import { Formik, Form, ErrorMessage } from 'formik';  // Agregar estas importaciones
+import * as yup from 'yup';  // Agregar esta importación
+import TblsegmenuEditPage from './Edit';
 import useApp from 'hooks/useApp';
+import UploadIcon from 'components/UploadIcon';
 
-import useListPage from 'hooks/useListPage';
 const TblsegmenuListPage = (props) => {
-		const app = useApp();
-	const filterSchema = {
-		search: {
-			tagTitle: "Search",
-			value: '',
-			valueType: 'single',
-			options: [],
-		}
-	}
-	const pageController = useListPage(props, filterSchema);
-	const filterController = pageController.filterController;
-	const { records, pageReady, loading, selectedItems, sortBy, sortOrder, apiRequestError, setSelectedItems, getPageBreadCrumbs, onSort, deleteItem, pagination } = pageController;
-	const { filters, setFilterValue } = filterController;
-	const { totalRecords, totalPages, recordsPosition, firstRow, limit, onPageChange } =  pagination;
-	function ActionButton(data){
-		const items = [
-		{
-			label: "View",
-			command: (event) => { app.navigate(`/tblsegmenu/view/${data.me_id}`) },
-			icon: "pi pi-eye"
-		},
-		{
-			label: "Edit",
-			command: (event) => { app.navigate(`/tblsegmenu/edit/${data.me_id}`) },
-			icon: "pi pi-pencil"
-		},
-		{
-			label: "Delete",
-			command: (event) => { deleteItem(data.me_id) },
-			icon: "pi pi-trash"
-		}
-	]
-		return (<SplitButton dropdownIcon="pi pi-bars" className="dropdown-only p-button-text p-button-plain" model={items} />);
-	}
-	function MeIdTemplate(data){
-		if(data){
-			return (
-				<Link to={`/tblsegmenu/view/${data.me_id}`}> { data.me_id }</Link>
-			);
-		}
-	}
-	function PageLoading(){
-		if(loading){
-			return (
-				<>
-					<div className="flex align-items-center justify-content-center text-gray-500 p-3">
-						<div><ProgressSpinner style={{width:'30px', height:'30px'}} /> </div>
-						<div  className="font-bold text-lg">Cargando...</div>
-					</div>
-				</>
-			);
-		}
-	}
-	function EmptyRecordMessage(){
-		if(pageReady && !records.length){
-			return (
-				<div className="text-lg mt-3 p-3 text-center text-400 font-bold">
-					ningún record fue encontrado
-				</div>
-			);
-		}
-	}
-	function MultiDelete() {
-		if (selectedItems.length) {
-			return (
-				<div className="m-2 flex-grow-0">
-					<Button onClick={() => deleteItem(selectedItems)} icon="pi pi-trash" className="p-button-danger" title="Eliminar seleccionado"/>
-				</div>
-			)
-		}
-	}
-	function PagerControl() {
-		if (props.paginate && totalPages > 1) {
-		const pagerReportTemplate = {
-			layout: pagination.layout,
-			CurrentPageReport: (options) => {
-				return (
-					<>
-						<span className="text-sm text-gray-500 px-2">Archivos <b>{ recordsPosition } de { options.totalRecords }</b></span>
-					</>
-				);
-			}
-		}
-		return (
-			<div className="flex-grow-1">
-				<Paginator first={firstRow} rows={limit} totalRecords={totalRecords}  onPageChange={onPageChange} template={pagerReportTemplate} />
-			</div>
-		)
-		}
-	}
-	function PageActionButtons() {
-		return (
-			<div className="flex flex-wrap">
-				<MultiDelete />
-			</div>
-		);
-	}
-	function PageFooter() {
-		if (pageReady && props.showFooter) {
-			return (
-				<div className="flex flex-wrap">
-					<PageActionButtons />
-					<PagerControl />
-				</div>
-			);
-		}
-	}
-	function PageBreadcrumbs(){
-		if(props.showBreadcrumbs) {
-			const items = getPageBreadCrumbs();
-			return (items.length > 0 && <BreadCrumb className="mb-3" model={items} />);
-		}
-	}
-	if(apiRequestError){
-		return (
-			<PageRequestError error={apiRequestError} />
-		);
-	}
-	return (
-<main id="TblsegmenuListPage" className="main-page">
-    { (props.showHeader) && 
-    <section className="page-section mb-3" >
-        <div className="container-fluid">
-            <div className="grid justify-content-between align-items-center">
-                <div className="col " >
-                    <Title title="Tbl Seg Menu"   titleClass="text-2xl text-primary font-bold" subTitleClass="text-500"      separator={false} />
-                </div>
-                <div className="col-fixed " >
-                    <Link to={`/tblsegmenu/add`}>
-                        <Button label="Agregar nuevo" icon="pi pi-plus" type="button" className="p-button w-full bg-primary "  />
-                        </Link>
-                    </div>
-                    <div className="col-12 md:col-3 " >
-                        <span className="p-input-icon-left w-full">
-                        <i className="pi pi-search" />
-                        <InputText placeholder="Buscar" className="w-full" value={filters.search.value}  onChange={(e) => setFilterValue('search', e.target.value)} />
+    const app = useApp();
+    const [searchText, setSearchText] = useState('');
+    const toast = useRef(null);
+    const [treeData, setTreeData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [editDialogVisible, setEditDialogVisible] = useState(false);
+    const [selectedNodeId, setSelectedNodeId] = useState(null);
+    const [addChildDialogVisible, setAddChildDialogVisible] = useState(false);
+    const [selectedParentNode, setSelectedParentNode] = useState(null);
+
+    const handleEdit = (node) => {
+        setSelectedNodeId(node.key);
+        setEditDialogVisible(true);
+    };
+
+    const handleDelete = (node) => {
+        confirmDialog({
+            message: '¿Está seguro que desea eliminar este registro?',
+            header: 'Confirmación',
+            icon: 'pi pi-exclamation-triangle',
+            accept: async () => {
+                try {
+                    await axios.delete(`/tblsegmenu/delete/${node.key}`);
+                    toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Registro eliminado' });
+                    fetchMenuTree(); // Recargar el árbol
+                } catch (error) {
+                    toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el registro' });
+                }
+            }
+        });
+    };
+
+    const handleAddChild = (node) => {
+        setSelectedParentNode(node);
+        setAddChildDialogVisible(true);
+    };
+
+    const nodeTemplate = (node) => {
+        const isParentNode = node.data.me_url === '#';
+        return (
+            <div className="flex align-items-center justify-content-between py-2 w-full">
+                <div className="flex align-items-center flex-grow-1">
+                    {node.data.me_icono && (
+                        <span className="mr-2">
+                            {node.data.me_icono.startsWith('http') ? (
+                                <img src={node.data.me_icono} alt="icon" style={{width: '24px', height: '24px'}} />
+                            ) : (
+                                <i className={`${node.data.me_icono} text-xl`}></i>
+                            )}
                         </span>
-                    </div>
+                    )}
+                    {node.label}
+                    {!isParentNode && <small className="ml-2 text-gray-500">({node.data.me_url})</small>}
+                </div>
+                <div className="flex gap-2 ml-auto">
+                    {isParentNode && (
+                        <Button 
+                            icon="pi pi-plus-circle" 
+                            className="p-button-rounded p-button-text p-button-success"
+                            tooltip="Agregar un submenu"
+                            tooltipOptions={{ position: 'left' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddChild(node);
+                            }}
+                        />
+                    )}
+                    <Button 
+                        icon="pi pi-pencil" 
+                        className="p-button-rounded p-button-text"
+                        tooltip="Editar"
+                        tooltipOptions={{ position: 'left' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(node);
+                        }}
+                    />
+                    <Button 
+                        icon="pi pi-trash" 
+                        className="p-button-rounded p-button-text p-button-danger"
+                        tooltip="Eliminar"
+                        tooltipOptions={{ position: 'left' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(node);
+                        }}
+                    />
                 </div>
             </div>
-        </section>
+        );
+    };
+
+    const filterTree = (nodes) => {
+        if (!searchText) return nodes;
+        
+        return nodes.filter(node => {
+            const matchesSearch = node.label.toLowerCase().includes(searchText.toLowerCase());
+            const hasMatchingChildren = node.children && filterTree(node.children).length > 0;
+            return matchesSearch || hasMatchingChildren;
+        });
+    };
+
+    const convertNodes = (nodes) => {
+        return nodes.map(node => ({
+            key: String(node.me_id),
+            label: node.me_descripcion,
+            data: node,
+            children: node.children ? convertNodes(node.children) : []
+        }));
+    };
+
+    const fetchMenuTree = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get('/tblsegmenu/getMenuTree');
+            setTreeData(convertNodes(response.data));
+        } catch (error) {
+            console.error('Error al obtener el menú en forma de árbol:', error);
         }
-        <section className="page-section " >
-            <div className="container-fluid">
-                <div className="grid ">
-                    <div className="col comp-grid" >
-                        <FilterTags filterController={filterController} />
-                        <div >
-                            <PageBreadcrumbs />
-                            <div className="page-records">
-                                <DataTable 
-                                    lazy={true} 
-                                    loading={loading} 
-                                    selectionMode="checkbox" selection={selectedItems} onSelectionChange={e => setSelectedItems(e.value)}
-                                    value={records} 
-                                    dataKey="me_id" 
-                                    sortField={sortBy} 
-                                    sortOrder={sortOrder} 
-                                    onSort={onSort}
-                                    className=" p-datatable-sm" 
-                                    stripedRows={true}
-                                    showGridlines={false} 
-                                    rowHover={true} 
-                                    responsiveLayout="stack" 
-                                    emptyMessage={<EmptyRecordMessage />} 
-                                    >
-                                    {/*PageComponentStart*/}
-                                    <Column selectionMode="multiple" headerStyle={{width: '2rem'}}></Column>
-                                    <Column  field="me_id" header="Me Id" body={MeIdTemplate}  ></Column>
-                                    <Column  field="me_descripcion" header="Me Descripcion"   ></Column>
-                                    <Column  field="me_url" header="Me Url"   ></Column>
-                                    <Column  field="me_icono" header="Me Icono"   ></Column>
-                                    <Column  field="me_id_padre" header="Me Id Padre"   ></Column>
-                                    <Column  field="me_vista" header="Me Vista"   ></Column>
-                                    <Column  field="me_orden" header="Me Orden"   ></Column>
-                                    <Column  field="me_estado" header="Me Estado"   ></Column>
-                                    <Column  field="me_usuario_creacion" header="Me Usuario Creacion"   ></Column>
-                                    <Column  field="me_fecha_creacion" header="Me Fecha Creacion"   ></Column>
-                                    <Column headerStyle={{width: '2rem'}} headerClass="text-center" body={ActionButton}></Column>
-                                    {/*PageComponentEnd*/}
-                                </DataTable>
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchMenuTree();
+    }, []);
+
+    const AddChildForm = () => {
+        const initialValues = {
+            me_descripcion: '',
+            me_url: '',
+            me_icono: '',
+            me_id_padre: selectedParentNode?.key,
+            me_estado: 'V' // Valor activo "V" por defecto; "F" para inactivo
+        };
+
+        const handleSubmit = async (values, { setSubmitting }) => {
+            try {
+                await axios.post('/tblsegmenu/add', {
+                    ...values,
+                    me_icono: values.me_icono || null, // Asegurarse de que el icono sea null si no se seleccionó ninguno
+                });
+                toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Menú agregado correctamente' });
+                setAddChildDialogVisible(false);
+                fetchMenuTree();
+            } catch (error) {
+                toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo agregar el menú' });
+            }
+            setSubmitting(false);
+        };
+
+        return (
+            <Formik
+                initialValues={initialValues}
+                onSubmit={handleSubmit}
+                validationSchema={yup.object().shape({
+                    me_descripcion: yup.string().required('La descripción es requerida'),
+                    me_url: yup.string().required('La URL es requerida'),
+                    me_icono: yup.string().nullable()
+                })}
+            >
+                {({ values, handleChange, isSubmitting, setFieldValue }) => (
+                    <Form className="p-fluid">
+                        <div className="field">
+                            <label htmlFor="me_descripcion">Descripción</label>
+                            <InputText
+                                id="me_descripcion"
+                                name="me_descripcion"
+                                value={values.me_descripcion}
+                                onChange={handleChange}
+                            />
+                            <ErrorMessage name="me_descripcion" component="small" className="p-error" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="me_url">URL</label>
+                            <InputText
+                                id="me_url"
+                                name="me_url"
+                                value={values.me_url}
+                                onChange={handleChange}
+                                placeholder="/ruta del submenu"
+                            />
+                            <ErrorMessage name="me_url" component="small" className="p-error" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="me_icono">Icono</label>
+                            <UploadIcon 
+                                onUpload={(url) => setFieldValue('me_icono', url)}
+                            />
+                            <small className="text-gray-500">
+                                Puedes subir un icono personalizado o dejarlo vacío para usar el icono por defecto
+                            </small>
+                        </div>
+                        <div className="flex justify-content-end mt-4">
+                            <Button 
+                                type="submit" 
+                                label="Guardar" 
+                                icon="pi pi-save"
+                                loading={isSubmitting}
+                            />
+                        </div>
+                    </Form>
+                )}
+            </Formik>
+        );
+    };
+
+    return (
+        <main id="TblsegmenuListPage" className="main-page p-5">
+            <Toast ref={toast} />
+            <Dialog
+                header="Agregar un submenu"
+                visible={addChildDialogVisible}
+                style={{ width: '50vw' }}
+                modal
+                onHide={() => setAddChildDialogVisible(false)}
+            >
+                <AddChildForm />
+            </Dialog>
+
+            {/* Diálogo de edición */}
+            <Dialog
+                header="Editar Menú"
+                visible={editDialogVisible}
+                style={{ width: '50vw' }}
+                modal
+                onHide={() => setEditDialogVisible(false)}
+            >
+                {selectedNodeId && (
+                    <TblsegmenuEditPage
+                        id={selectedNodeId}
+                        isSubPage={true}
+                        showHeader={false}
+                        onSave={() => {
+                            setEditDialogVisible(false);
+                            fetchMenuTree(); // Recargar el árbol después de guardar
+                        }}
+                    />
+                )}
+            </Dialog>
+
+            {props.showHeader && (
+                <section className="page-section mb-4">
+                    <div className="container-fluid">
+                        <div className="grid justify-content-between align-items-center">
+                            <div className="col">
+                                <h2 className="text-3xl text-primary font-bold">Menú del Sistema</h2>
                             </div>
-                            <PageFooter />
+                            <div className="col-fixed" style={{ minWidth: '400px' }}>
+                                <div className="flex gap-3">
+                                    <span className="p-input-icon-left flex-grow-1">
+                                        <i className="pi pi-search" />
+                                        <InputText 
+                                            value={searchText} 
+                                            onChange={(e) => setSearchText(e.target.value)} 
+                                            placeholder="Buscar..."
+                                            className="p-inputtext p-component w-full"
+                                        />
+                                    </span>
+                                    <Link to="/tblsegmenu/add">
+                                        <Button 
+                                            label="Agregar Nuevo Menu" 
+                                            icon="pi pi-plus" 
+                                            className="p-button p-component bg-primary" 
+                                        />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </section>
+            )}
+            <section className="page-section">
+                <div className="container-fluid">
+                    <div className="card p-4">
+                        {loading ? (
+                            <div className="flex align-items-center justify-content-center text-gray-500 p-5">
+                                <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+                            </div>
+                        ) : (
+                            <Tree 
+                                value={filterTree(treeData)} 
+                                nodeTemplate={nodeTemplate}
+                                className="w-full"
+                                style={{ minHeight: '400px' }}
+                            />
+                        )}
+                    </div>
                 </div>
-            </div>
-        </section>
-    </main>
-	);
-}
+            </section>
+        </main>
+    );
+};
+
 TblsegmenuListPage.defaultProps = {
-	primaryKey: 'me_id',
-	pageName: 'tblsegmenu',
-	apiPath: 'tblsegmenu/index',
-	routeName: 'tblsegmenulist',
-	msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
-	msgTitle: "Eliminar el registro",
-	msgAfterDelete: "Grabar eliminado con éxito",
-	showHeader: true,
-	showFooter: true,
-	paginate: true,
-	isSubPage: false,
-	showBreadcrumbs: true,
-	exportData: false,
-	importData: false,
-	keepRecords: false,
-	multiCheckbox: true,
-	search: '',
-	fieldName: null,
-	fieldValue: null,
-	sortField: '',
-	sortDir: '',
-	pageNo: 1,
-	limit: 10,
-}
+    primaryKey: 'me_id',
+    pageName: 'tblsegmenu',
+    apiPath: 'tblsegmenu/index',
+    routeName: 'tblsegmenulist',
+    msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
+    msgTitle: "Eliminar el registro",
+    msgAfterDelete: "Grabar eliminado con éxito",
+    showHeader: true,
+    showFooter: true,
+    paginate: true,
+    isSubPage: false,
+    showBreadcrumbs: true,
+    exportData: false,
+    importData: false,
+    keepRecords: false,
+    multiCheckbox: true,
+    search: '',
+    fieldName: null,
+    fieldValue: null,
+    sortField: '',
+    sortDir: '',
+    pageNo: 1,
+    limit: 10,
+};
+
 export default TblsegmenuListPage;

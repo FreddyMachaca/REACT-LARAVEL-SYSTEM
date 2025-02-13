@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\TblSegMenuController ;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('tbl-seg-menu/parent-options', [TblSegMenuController::class, 'getParentOptions']);
+Route::get('menu-tree', [TblSegMenuController::class, 'getMenuTree']);
