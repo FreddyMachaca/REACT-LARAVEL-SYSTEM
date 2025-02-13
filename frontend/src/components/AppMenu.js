@@ -8,8 +8,8 @@ export const AppMenu = (props) => {
     const processItems = (items) => {
         return items.map(item => {
             const iconContent = item.icon && /^(http|https):\/\//.test(item.icon)
-                ? (<img src={item.icon} alt="icon" style={{width:'16px', height:'16px'}} />)
-                : item.icon;
+                ? (<img src={item.icon} alt="icon" className="mr-2" style={{width:'30px', height:'30px'}} />)
+                : <i className={`${item.icon} text-xl mr-2`}></i>;
             return {
                 label: item.label,
                 icon: iconContent,
