@@ -129,7 +129,7 @@ const TblsegmenuEditPage = (props) => {
                                                                     name="me_url" 
                                                                     onChange={formik.handleChange} 
                                                                     value={formik.values.me_url} 
-                                                                    placeholder="URL del menú" 
+                                                                    placeholder="/ruta del submenu"
                                                                     disabled={!formik.values.me_id_padre} 
                                                                     className={inputClassName(formik?.errors?.me_url)} 
                                                                 />

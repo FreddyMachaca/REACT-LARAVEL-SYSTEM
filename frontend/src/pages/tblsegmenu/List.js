@@ -179,6 +179,7 @@ const TblsegmenuListPage = (props) => {
                                 name="me_url"
                                 value={values.me_url}
                                 onChange={handleChange}
+                                placeholder="/ruta del submenu"
                             />
                             <ErrorMessage name="me_url" component="small" className="p-error" />
                         </div>
