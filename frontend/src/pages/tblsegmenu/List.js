@@ -12,6 +12,7 @@ import { Formik, Form, ErrorMessage } from 'formik';  // Agregar estas importaci
 import * as yup from 'yup';  // Agregar esta importación
 import TblsegmenuEditPage from './Edit';
 import useApp from 'hooks/useApp';
+import UploadIcon from 'components/UploadIcon';
 
 const TblsegmenuListPage = (props) => {
     const app = useApp();
@@ -55,7 +56,16 @@ const TblsegmenuListPage = (props) => {
         const isParentNode = node.data.me_url === '#';
         return (
             <div className="flex align-items-center justify-content-between py-2 w-full">
-                <div className="flex-grow-1">
+                <div className="flex align-items-center flex-grow-1">
+                    {node.data.me_icono && (
+                        <span className="mr-2">
+                            {node.data.me_icono.startsWith('http') ? (
+                                <img src={node.data.me_icono} alt="icon" style={{width: '24px', height: '24px'}} />
+                            ) : (
+                                <i className={`${node.data.me_icono} text-xl`}></i>
+                            )}
+                        </span>
+                    )}
                     {node.label}
                     {!isParentNode && <small className="ml-2 text-gray-500">({node.data.me_url})</small>}
                 </div>
@@ -135,18 +145,22 @@ const TblsegmenuListPage = (props) => {
         const initialValues = {
             me_descripcion: '',
             me_url: '',
+            me_icono: '',
             me_id_padre: selectedParentNode?.key,
             me_estado: 'V' // Valor activo "V" por defecto; "F" para inactivo
         };
 
         const handleSubmit = async (values, { setSubmitting }) => {
             try {
-                await axios.post('/tblsegmenu/add', values);
-                toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Hijo agregado correctamente' });
+                await axios.post('/tblsegmenu/add', {
+                    ...values,
+                    me_icono: values.me_icono || null, // Asegurarse de que el icono sea null si no se seleccionó ninguno
+                });
+                toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Menú agregado correctamente' });
                 setAddChildDialogVisible(false);
                 fetchMenuTree();
             } catch (error) {
-                toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo agregar el hijo' });
+                toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo agregar el menú' });
             }
             setSubmitting(false);
         };
@@ -157,10 +171,11 @@ const TblsegmenuListPage = (props) => {
                 onSubmit={handleSubmit}
                 validationSchema={yup.object().shape({
                     me_descripcion: yup.string().required('La descripción es requerida'),
-                    me_url: yup.string().required('La URL es requerida')
+                    me_url: yup.string().required('La URL es requerida'),
+                    me_icono: yup.string().nullable()
                 })}
             >
-                {({ values, handleChange, isSubmitting }) => (
+                {({ values, handleChange, isSubmitting, setFieldValue }) => (
                     <Form className="p-fluid">
                         <div className="field">
                             <label htmlFor="me_descripcion">Descripción</label>
@@ -182,6 +197,15 @@ const TblsegmenuListPage = (props) => {
                                 placeholder="/ruta del submenu"
                             />
                             <ErrorMessage name="me_url" component="small" className="p-error" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="me_icono">Icono</label>
+                            <UploadIcon 
+                                onUpload={(url) => setFieldValue('me_icono', url)}
+                            />
+                            <small className="text-gray-500">
+                                Puedes subir un icono personalizado o dejarlo vacío para usar el icono por defecto
+                            </small>
                         </div>
                         <div className="flex justify-content-end mt-4">
                             <Button 
