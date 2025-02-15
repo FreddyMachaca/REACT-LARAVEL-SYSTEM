@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TblSegRolMenuAddRequest;
@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Exception;
 class TblSegRolMenuController extends Controller
 {
-	
+
 
 	/**
      * List table records
@@ -32,7 +32,7 @@ class TblSegRolMenuController extends Controller
 		$records = $this->paginate($query, TblSegRolMenu::listFields());
 		return $this->respond($records);
 	}
-	
+
 
 	/**
      * Select table record by ID
@@ -44,7 +44,7 @@ class TblSegRolMenuController extends Controller
 		$record = $query->findOrFail($rec_id, TblSegRolMenu::viewFields());
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Save form record to the table
@@ -52,13 +52,13 @@ class TblSegRolMenuController extends Controller
      */
 	function add(TblSegRolMenuAddRequest $request){
 		$modeldata = $request->validated();
-		
+
 		//save TblSegRolMenu record
 		$record = TblSegRolMenu::create($modeldata);
 		$rec_id = $record->rolme_id;
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Update table record with form data
@@ -74,13 +74,13 @@ class TblSegRolMenuController extends Controller
 		}
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Delete record from the database
 	 * Support multi delete by separating record id by comma.
 	 * @param  \Illuminate\Http\Request
-	 * @param string $rec_id //can be separated by comma 
+	 * @param string $rec_id //can be separated by comma
      * @return \Illuminate\Http\Response
      */
 	function delete(Request $request, $rec_id = null){
@@ -90,4 +90,51 @@ class TblSegRolMenuController extends Controller
 		$query->delete();
 		return $this->respond($arr_id);
 	}
+
+    public function createRolMenuRecords(Request $request)
+{
+    $request->validate([
+        'rol_id' => 'required|integer',
+        'node_keys' => 'required|array',
+    ]);
+
+    $rol_id = $request->input('rol_id');
+    $node_keys = $request->input('node_keys');
+
+    try {
+        foreach ($node_keys as $node_key) {
+            TblSegRolMenu::create([
+                'rolme_rol_id' => $rol_id,
+                'rolme_me_id' => $node_key,
+                'rolme_estado' => 'V', // Estado activo
+                'rolme_usuario_creacion' => auth()->id(), // ID del usuario autenticado
+                'rolme_fecha_creacion' => now(),
+            ]);
+        }
+
+        return response()->json(['message' => 'Registros creados correctamente'], 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Error al crear registros', 'error' => $e->getMessage()], 500);
+    }
+}
+public function deleteRolMenuRecords(Request $request)
+{
+    $request->validate([
+        'rol_id' => 'required|integer',
+        'node_keys' => 'required|array',
+    ]);
+
+    $rol_id = $request->input('rol_id');
+    $node_keys = $request->input('node_keys');
+
+    try {
+        TblSegRolMenu::where('rolme_rol_id', $rol_id)
+            ->whereIn('rolme_me_id', $node_keys)
+            ->delete();
+
+        return response()->json(['message' => 'Registros eliminados correctamente'], 200);
+    } catch (Exception $e) {
+        return response()->json(['message' => 'Error al eliminar registros', 'error' => $e->getMessage()], 500);
+    }
+}
 }

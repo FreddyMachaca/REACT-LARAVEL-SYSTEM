@@ -112,15 +112,69 @@ const TblsegrolListPage = (props) => {
     });
 
   }, [rolSelected]);
-
+/*
   const onSelectionChange = (e) => {
     const selectedKeys = Object.keys(e.value).filter(
       (key) => e.value[key].checked === true
     );
     setSelection(e.value);
+   
     // TODO actualizar en la BD
-    console.log(selectedKeys);
+ 
+    console.log(selectionKeys);
+  };*/
+  const onSelectionChange = (e) => {
+    const newSelection = e.value;
+    const previousSelection = selection;
+    const nodesToAdd = Object.keys(newSelection).filter(
+      (key) => newSelection[key].checked && !previousSelection[key]?.checked
+    );
+    const nodesToRemove = Object.keys(previousSelection).filter(
+      (key) => previousSelection[key]?.checked && !newSelection[key]?.checked
+    );
+    setSelection(newSelection);  
+    // Llamar a la API para crear o eliminar registros en la tabla tbl_seg_rol_menu
+    if (nodesToAdd.length > 0) {
+      createRolMenuRecords(rolSelected.rol_id, nodesToAdd);
+    }
+    if (nodesToRemove.length > 0) {
+      deleteRolMenuRecords(rolSelected.rol_id, nodesToRemove);
+    }
   };
+  const createRolMenuRecords = async (rolId, nodeKeys) => {
+    try {
+      const response = await api.post(`tblsegrolmenu/create`, {
+        rol_id: rolId,
+        node_keys: nodeKeys,
+      });
+  
+      if (response.status === 200) {
+        console.log("Registros creados correctamente en tbl_seg_rol_menu");
+      } else {
+        console.error("Error al crear registros en tbl_seg_rol_menu");
+      }
+    } catch (error) {
+      console.error("Error al crear registros en tbl_seg_rol_menu:", error);
+    }
+  };
+  
+  const deleteRolMenuRecords = async (rolId, nodeKeys) => {
+    try {
+      const response = await api.post(`tblsegrolmenu/delete`, {
+        rol_id: rolId,
+        node_keys: nodeKeys,
+      });
+  
+      if (response.status === 200) {
+        console.log("Registros eliminados correctamente en tbl_seg_rol_menu");
+      } else {
+        console.error("Error al eliminar registros en tbl_seg_rol_menu");
+      }
+    } catch (error) {
+      console.error("Error al eliminar registros en tbl_seg_rol_menu:", error);
+    }
+  };
+
 
   function ActionButton(data) {
     const items = [
