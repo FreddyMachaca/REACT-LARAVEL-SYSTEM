@@ -1,0 +1,5 @@
+ALTER TABLE tbl_seg_menu
+ALTER COLUMN me_icono TYPE VARCHAR(255);
+
+ALTER TABLE tbl_seg_menu
+ALTER COLUMN me_url TYPE VARCHAR(255);
