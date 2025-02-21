@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TblSegMenuController;
 use Illuminate\Support\Facades\Storage;
 
 /*
@@ -211,8 +210,9 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblsegmenu/add', 'TblSegMenuController@add');	
 	Route::any('tblsegmenu/edit/{rec_id}', 'TblSegMenuController@edit');	
 	Route::any('tblsegmenu/delete/{rec_id}', 'TblSegMenuController@delete');
-	Route::get('/tblsegmenu/getMenuTree', [TblSegMenuController::class, 'getMenuTree']);
-	Route::get('/tblsegmenu/manageMenuTree', [TblSegMenuController::class, 'manageMenuTree']);
+	Route::get('tblsegmenu/getMenuTree', 'TblSegMenuController@getMenuTree');
+	Route::get('tblsegmenu/manageMenuTree', 'TblSegMenuController@manageMenuTree');
+
 
 /* routes for TblSegMenuUsuario Controller  */	
 	Route::get('tblsegmenuusuario/', 'TblSegMenuUsuarioController@index');
@@ -268,19 +268,27 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoeventoacademico/edit/{rec_id}', 'TblTipoeventoAcademicoController@edit');	
 	Route::any('tbltipoeventoacademico/delete/{rec_id}', 'TblTipoeventoAcademicoController@delete');
 
+/* routes for TblItem Controller  */	
+	Route::get('tblitem/', 'TblItemController@index');
+	Route::get('tblitem/index', 'TblItemController@index');
+	Route::get('tblitem/index/{filter?}/{filtervalue?}', 'TblItemController@index');	
+	Route::get('tblitem/view/{rec_id}', 'TblItemController@view');	
+	Route::post('tblitem/add', 'TblItemController@add');	
+	Route::any('tblitem/edit/{rec_id}', 'TblItemController@edit');	
+	Route::any('tblitem/delete/{rec_id}', 'TblItemController@delete');
 
 
 /* routes for FileUpload Controller  */	
-Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
-Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
-Route::post('fileuploader/remove_temp_file', 'FileUploaderController@remove_temp_file');
+	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
+	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
+	Route::post('fileuploader/remove_temp_file', 'FileUploaderController@remove_temp_file');
 
-Route::post('/upload-icon', function (Request $request) {
-    $request->validate([
-        'icon' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+	Route::post('/upload-icon', function (Request $request) {
+		$request->validate([
+			'icon' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+		]);
 
-    $path = $request->file('icon')->store('icons', 'public');
+		$path = $request->file('icon')->store('icons', 'public');
 
-    return response()->json(['url' => asset("storage/$path")]);
-});
+		return response()->json(['url' => asset("storage/$path")]);
+	});
