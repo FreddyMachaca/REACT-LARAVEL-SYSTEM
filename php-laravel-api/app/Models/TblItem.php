@@ -22,4 +22,86 @@ class TblItem extends Model
         'unidad_organizacional',
         'fecha_creacion'
     ];
+
+    protected $casts = [
+        'haber_basico' => 'decimal:2',
+        'fecha_creacion' => 'datetime'
+    ];
+
+    /**
+     * Set search query for the model
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $text
+     */
+    public static function search($query, $text){
+        //search table record 
+        $search_condition = '(
+                CAST(id AS TEXT) LIKE ?  OR 
+                codigo_item LIKE ?  OR 
+                cargo LIKE ?  OR 
+                CAST(haber_basico AS TEXT) LIKE ?  OR 
+                unidad_organizacional LIKE ? 
+        )';
+        $search_params = [
+            "%$text%","%$text%","%$text%","%$text%","%$text%"
+        ];
+        //setting search conditions
+        $query->whereRaw($search_condition, $search_params);
+    }
+
+    /**
+     * return list page fields of the model.
+     */
+    public static function listFields(){
+        return [ 
+            "id", 
+            "codigo_item",
+            "cargo",
+            "haber_basico",
+            "unidad_organizacional",
+            "fecha_creacion"
+        ];
+    }
+
+    /**
+     * return exportList page fields of the model.
+     */
+    public static function exportListFields(){
+        return [ 
+            "id", 
+            "codigo_item",
+            "cargo",
+            "haber_basico",
+            "unidad_organizacional",
+            "fecha_creacion"
+        ];
+    }
+
+    /**
+     * return view page fields of the model.
+     */
+    public static function viewFields(){
+        return [ 
+            "id", 
+            "codigo_item",
+            "cargo",
+            "haber_basico",
+            "unidad_organizacional",
+            "fecha_creacion"
+        ];
+    }
+
+    /**
+     * return edit page fields of the model.
+     */
+    public static function editFields(){
+        return [ 
+            "id", 
+            "codigo_item",
+            "cargo",
+            "haber_basico",
+            "unidad_organizacional",
+            "fecha_creacion"
+        ];
+    }
 }
