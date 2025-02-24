@@ -121,7 +121,7 @@ TblItemsEditPage.defaultProps = {
     id: null,
     primaryKey: 'id',
     pageName: 'tblitems',
-    apiPath: 'tblitem/edit', 
+    apiPath: 'tblitem/edit',
     routeName: 'tblitemsedit',
     submitButtonLabel: "Guardar",
     submitButtonIcon: "pi pi-save",

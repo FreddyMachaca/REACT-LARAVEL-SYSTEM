@@ -10,6 +10,7 @@ import { Paginator } from 'primereact/paginator';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { SplitButton } from 'primereact/splitbutton';
 import { Title } from 'components/Title';
+import TblItemsEditPage from './Edit';
 import useApp from 'hooks/useApp';
 import useListPage from 'hooks/useListPage';
 
@@ -61,7 +62,12 @@ const TblItemsListPage = (props) => {
             },
             {
                 label: "Editar",
-                command: (event) => { app.navigate(`/tblitems/edit/${data.id}`); },
+                command: (event) => { 
+                    app.openPageDialog(
+                        <TblItemsEditPage isSubPage apiPath={`tblitems/${data.id}/edit`} />,
+                        { closeBtn: true }
+                    );
+                },
                 icon: "pi pi-pencil"
             },
             {
@@ -251,7 +257,7 @@ const TblItemsListPage = (props) => {
 TblItemsListPage.defaultProps = {
     primaryKey: 'id',
     pageName: 'tblitems',
-    apiPath: 'tblitem', 
+    apiPath: 'tblitem',
     routeName: 'tblitemslist',
     msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
     msgTitle: "Eliminar el registro",

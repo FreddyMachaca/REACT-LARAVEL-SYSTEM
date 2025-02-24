@@ -18,7 +18,7 @@ const TblItemsViewPage = (props) => {
                 label: "Editar",
                 command: (event) => {
                     app.openPageDialog(
-                        <TblItemsEditPage isSubPage apiPath={`/tblitems/edit/${data.id}`} />,
+                        <TblItemsEditPage isSubPage apiPath={`tblitems/${data.id}/edit`} />,
                         { closeBtn: true }
                     );
                 },
