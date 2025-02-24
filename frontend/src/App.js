@@ -103,6 +103,10 @@ import TbltipoeventoacademicoList from 'pages/tbltipoeventoacademico/List';
 import TbltipoeventoacademicoView from 'pages/tbltipoeventoacademico/View';
 import TbltipoeventoacademicoAdd from 'pages/tbltipoeventoacademico/Add';
 import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
+import TblItemsList from 'pages/tblitems/List';
+import TblItemsView from 'pages/tblitems/View';
+import TblItemsAdd from 'pages/tblitems/Add';
+import TblItemsEdit from 'pages/tblitems/Edit';
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -334,6 +338,14 @@ const App = () => {
 				<Route path="/tbltipoeventoacademico/view/:pageid" element={<TbltipoeventoacademicoView />} />
 				<Route path="/tbltipoeventoacademico/add" element={<TbltipoeventoacademicoAdd />} />
 				<Route path="/tbltipoeventoacademico/edit/:pageid" element={<TbltipoeventoacademicoEdit />} />
+
+				{/* tblitems pages routes */}
+				<Route path="/tblitems" element={<TblItemsList />} />
+				<Route path="/tblitems/:fieldName/:fieldValue" element={<TblItemsList />} />
+				<Route path="/tblitems/index/:fieldName/:fieldValue" element={<TblItemsList />} />
+				<Route path="/tblitems/view/:pageid" element={<TblItemsView />} />
+				<Route path="/tblitems/add" element={<TblItemsAdd />} />
+				<Route path="/tblitems/edit/:pageid" element={<TblItemsEdit />} />
 			</Route>
 			<Route exact element={<IndexLayout />}>
 				<Route path="/*" element={<IndexPages />} />
