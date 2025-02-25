@@ -35,6 +35,7 @@ const TblItemsAddPage = (props) => {
         }
         try {
             await submitForm(item);
+            app.flashMsg("Éxito", "Registro agregado correctamente", "success");
             toast.current.show({ 
                 severity: 'success', 
                 summary: 'Éxito', 
@@ -55,12 +56,12 @@ const TblItemsAddPage = (props) => {
 
     const handleCancel = () => {
         setSubmitted(false);
-        app.navigate(-1); // changed: navigate back instead of closing a dialog
+        app.navigate(-1);
     };
 
     return (
         <main className="main-page">
-            <h2>Agregar Nuevo Item</h2> {/* added header */}
+            <h2>Agregar Nuevo Item</h2>
             <Toast ref={toast} />
             <form onSubmit={(e) => e.preventDefault()} className="p-fluid">
                 <div className="field">
@@ -139,7 +140,7 @@ const TblItemsAddPage = (props) => {
 TblItemsAddPage.defaultProps = {
     id: null,
     primaryKey: 'id',
-    pageName: 'tblitems',
+    pageName: 'tblitem',
     apiPath: 'tblitem/add',
     routeName: 'tblitemsadd',
     msgBeforeDelete: "¿Seguro que quieres borrar este registro?",

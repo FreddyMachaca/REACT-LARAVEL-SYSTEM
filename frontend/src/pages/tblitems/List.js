@@ -24,6 +24,7 @@ const TblItemsListPage = (props) => {
             options: [],
         }
     };
+    const IdTemplate = (data) => <Link to={`/tblitems/view/${data.id}`}>{data.id}</Link>;
 
     const pageController = useListPage(props, filterSchema);
     const filterController = pageController.filterController;
@@ -53,7 +54,6 @@ const TblItemsListPage = (props) => {
         onPageChange
     } = pagination;
 
-    // Add tableColumns configuration to define visible columns and actions
     const tableColumns = [
         { field: 'codigo_item', header: 'Código Item' },
         { field: 'cargo', header: 'Cargo' },
@@ -81,6 +81,10 @@ const TblItemsListPage = (props) => {
         }
     ];
 
+    const handleDelete = (rowData) => {
+        deleteItem(rowData.id, 'tblitem/delete');
+    };
+
     function ActionButton(data) {
         const items = [
             {
@@ -91,24 +95,17 @@ const TblItemsListPage = (props) => {
             {
                 label: "Editar",
                 command: (event) => { 
-                    app.openPageDialog(
-                        <TblItemsEditPage isSubPage apiPath={`tblitems/${data.id}/edit`} />,
-                        { closeBtn: true }
-                    );
+                    app.navigate(`/tblitems/edit/${data.id}`);
                 },
                 icon: "pi pi-pencil"
             },
             {
                 label: "Eliminar",
-                command: (event) => { deleteItem(data.id); },
+                command: (event) => { deleteItem(data.id, 'tblitem/delete'); },
                 icon: "pi pi-trash"
             }
         ];
         return (<SplitButton dropdownIcon="pi pi-bars" className="dropdown-only p-button-text p-button-plain" model={items} />);
-    }
-
-    function IdTemplate(data) {
-        return <Link to={`/tblitems/view/${data.id}`}>{data.id}</Link>;
     }
 
     function PageLoading() {
@@ -137,7 +134,7 @@ const TblItemsListPage = (props) => {
             return (
                 <div className="m-2 flex-grow-0">
                     <Button
-                        onClick={() => deleteItem(selectedItems)}
+                        onClick={() => deleteItem(selectedItems, 'tblitem/delete')} // Fix: Use correct API path
                         icon="pi pi-trash"
                         className="p-button-danger"
                         title="Eliminar seleccionados"
@@ -285,8 +282,8 @@ const TblItemsListPage = (props) => {
 
 TblItemsListPage.defaultProps = {
     primaryKey: 'id',
-    pageName: 'tblitems',
-    apiPath: 'tblitem',
+    pageName: 'tblitem',         
+    apiPath: 'tblitem', 
     routeName: 'tblitemslist',
     msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
     msgTitle: "Eliminar el registro",

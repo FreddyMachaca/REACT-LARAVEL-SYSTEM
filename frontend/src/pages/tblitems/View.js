@@ -1,9 +1,10 @@
+import React from 'react';
 import { Button } from 'primereact/button';
 import { Menubar } from 'primereact/menubar';
 import { PageRequestError } from 'components/PageRequestError';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
-import TblItemsEditPage from 'pages/tblitems/Edit';
+import TblItemsEditPage from './Edit';
 import useApp from 'hooks/useApp';
 import useViewPage from 'hooks/useViewPage';
 
@@ -18,7 +19,11 @@ const TblItemsViewPage = (props) => {
                 label: "Editar",
                 command: (event) => {
                     app.openPageDialog(
-                        <TblItemsEditPage isSubPage apiPath={`tblitems/${data.id}/edit`} />,
+                        <TblItemsEditPage 
+                            isSubPage={true} 
+                            id={data.id} 
+                            apiPath={`tblitem/edit`} 
+                        />,
                         { closeBtn: true }
                     );
                 },
@@ -36,7 +41,7 @@ const TblItemsViewPage = (props) => {
     }
 
     function PageFooter() {
-        if (props.showFooter) {
+        if (props.showFooter && item && item.id) {
             return (
                 <div className="flex justify-content-between">
                     <div className="flex justify-content-start">
@@ -45,6 +50,7 @@ const TblItemsViewPage = (props) => {
                 </div>
             );
         }
+        return null;
     }
 
     if (loading) {
@@ -59,7 +65,7 @@ const TblItemsViewPage = (props) => {
         return <PageRequestError error={apiRequestError} />;
     }
 
-    if (pageReady) {
+    if (pageReady && item) {
         return (
             <div>
                 <main id="TblItemsViewPage" className="main-page">
