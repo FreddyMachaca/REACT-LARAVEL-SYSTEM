@@ -1,155 +1,221 @@
-import React, { useEffect, useState } from 'react';
+import { Formik, Form, ErrorMessage } from 'formik';
+import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
 import { PageRequestError } from 'components/PageRequestError';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 import useEditPage from 'hooks/useEditPage';
-import { Route } from 'react-router-dom';
 
 const TblItemsEditPage = (props) => {
     const app = useApp();
     
-    const id = props.id || (props.match && props.match.params && props.match.params.id) || null;
-    
-    const pageController = useEditPage({ ...props, id });
-    const { item = {}, loading, errorMessages = {} } = pageController;
+    const validationSchema = yup.object().shape({
+        codigo_item: yup.string().required('El código del item es requerido'),
+        cargo: yup.string().required('El cargo es requerido'),
+        haber_basico: yup.number().required('El haber básico es requerido'),
+        unidad_organizacional: yup.string().required('La unidad organizacional es requerida')
+    });
 
-    async function onSubmit(e) {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const modeldata = {};
-        formData.forEach((value, key) => {
-            modeldata[key] = value;
-        });
-        await pageController.submitForm(modeldata);
+    const formDefaultValues = {
+        codigo_item: '', 
+        cargo: '', 
+        haber_basico: '', 
+        unidad_organizacional: ''
     }
 
-    if (loading) {
+    const pageController = useEditPage({ props, formDefaultValues, afterSubmit });
+    
+    const { formData, handleSubmit, submitForm, pageReady, loading, saving, apiRequestError, inputClassName } = pageController
+
+    function afterSubmit(response){
+        app.flashMsg(props.msgTitle, props.msgAfterSave);
+        if(props.onSave) {
+            props.onSave(response);
+        }
+        else if(app.isDialogOpen()){
+            app.closeDialogs();
+        }
+        else if(props.redirect) {
+            app.navigate(`/tblitems`);
+        }
+    }
+
+    if(loading){
         return (
             <div className="p-3 text-center">
-                <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+                <ProgressSpinner style={{width:'50px', height:'50px'}} />
             </div>
         );
     }
 
-    if (Object.keys(errorMessages).length) {
-        return <PageRequestError error={errorMessages} />;
+    if(apiRequestError){
+        return (
+            <PageRequestError error={apiRequestError} />
+        );
     }
 
-    return (
-        <main id="TblItemsEditPage" className="main-page">
-            {props.showHeader && (
-                <section className="page-section mb-3">
-                    <div className="container">
-                        <div className="grid justify-content-between align-items-center">
-                            {!props.isSubPage && (
-                                <div className="col-fixed">
-                                    <Button
-                                        onClick={() => app.navigate(-1)}
-                                        label=""
-                                        className="p-button p-button-text"
-                                        icon="pi pi-arrow-left"
-                                    />
+    if(pageReady){
+        return (
+            <main id="TblItemsEditPage" className="main-page">
+                {props.showHeader && (
+                    <section className="page-section mb-3" >
+                        <div className="container">
+                            <div className="grid justify-content-between align-items-center">
+                                { !props.isSubPage && 
+                                <div className="col-fixed " >
+                                    <Button onClick={() => app.navigate(-1)} label=""  className="p-button p-button-text " icon="pi pi-arrow-left"  />
                                 </div>
-                            )}
-                            <div className="col">
-                                <Title
-                                    title="Editar Item"
-                                    titleClass="text-2xl text-primary font-bold"
-                                    subTitleClass="text-500"
-                                    separator={false}
-                                />
+                                }
+                                <div className="col" >
+                                    <Title title="Editar Item" titleClass="text-2xl text-primary font-bold" subTitleClass="text-500" separator={false} />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
+                <section className="page-section">
+                    <div className="container">
+                        <div className="grid">
+                            <div className="md:col-9 sm:col-12 comp-grid">
+                                <div>
+                                    <Formik
+                                        initialValues={formData}
+                                        validationSchema={validationSchema}
+                                        onSubmit={(values, actions) => submitForm(values)}
+                                    >
+                                        {(formik) => (
+                                            <Form className={`${!props.isSubPage ? 'card' : ''}`}>
+                                                <div className="grid">
+                                                    {/* Código Item */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="codigo_item" className="font-medium">
+                                                                    Código Item *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <InputText
+                                                                    id="codigo_item"
+                                                                    name="codigo_item"
+                                                                    value={formik.values.codigo_item}
+                                                                    onChange={formik.handleChange}
+                                                                    className={inputClassName(formik?.errors?.codigo_item)}
+                                                                />
+                                                                <ErrorMessage name="codigo_item" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Cargo */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="cargo" className="font-medium">
+                                                                    Cargo *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <InputText
+                                                                    id="cargo"
+                                                                    name="cargo"
+                                                                    value={formik.values.cargo}
+                                                                    onChange={formik.handleChange}
+                                                                    className={inputClassName(formik?.errors?.cargo)}
+                                                                />
+                                                                <ErrorMessage name="cargo" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Haber Básico */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="haber_basico" className="font-medium">
+                                                                    Haber Básico *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <InputText
+                                                                    id="haber_basico"
+                                                                    name="haber_basico"
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    value={formik.values.haber_basico}
+                                                                    onChange={formik.handleChange}
+                                                                    className={inputClassName(formik?.errors?.haber_basico)}
+                                                                />
+                                                                <ErrorMessage name="haber_basico" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Unidad Organizacional */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="unidad_organizacional" className="font-medium">
+                                                                    Unidad Organizacional *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <InputText
+                                                                    id="unidad_organizacional"
+                                                                    name="unidad_organizacional"
+                                                                    value={formik.values.unidad_organizacional}
+                                                                    onChange={formik.handleChange}
+                                                                    className={inputClassName(formik?.errors?.unidad_organizacional)}
+                                                                />
+                                                                <ErrorMessage name="unidad_organizacional" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Botón submit */}
+                                                {props.showFooter && (
+                                                    <div className="text-center my-3">
+                                                        <Button
+                                                            onClick={(e) => handleSubmit(e, formik)}
+                                                            className="p-button-primary"
+                                                            type="submit"
+                                                            label="Actualizar"
+                                                            icon="pi pi-save"
+                                                            loading={saving}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </Form>
+                                        )}
+                                    </Formik>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </section>
-            )}
-
-            <section className="page-section">
-                <div className="container">
-                    <div className="grid">
-                        <div className="col-12">
-                            <div className="card">
-                                <form onSubmit={onSubmit} className="grid gap-3">
-                                    <div className="col-12 md:col-6">
-                                        <label className="form-label">Código Item *</label>
-                                        <InputText
-                                            name="codigo_item"
-                                            defaultValue={item.codigo_item || ''}
-                                            className={errorMessages.codigo_item ? 'p-invalid' : ''}
-                                        />
-                                        <small className="p-error">{errorMessages.codigo_item}</small>
-                                    </div>
-                                    <div className="col-12 md:col-6">
-                                        <label className="form-label">Cargo *</label>
-                                        <InputText
-                                            name="cargo"
-                                            defaultValue={item.cargo || ''}
-                                            className={errorMessages.cargo ? 'p-invalid' : ''}
-                                        />
-                                        <small className="p-error">{errorMessages.cargo}</small>
-                                    </div>
-                                    <div className="col-12 md:col-6">
-                                        <label className="form-label">Haber Básico *</label>
-                                        <InputNumber
-                                            name="haber_basico"
-                                            value={item.haber_basico || 0}
-                                            onValueChange={(e) => {
-                                                item.haber_basico = e.value;
-                                            }}
-                                            mode="decimal"
-                                            minFractionDigits={2}
-                                            maxFractionDigits={2}
-                                            className={errorMessages.haber_basico ? 'p-invalid' : ''}
-                                        />
-                                        <small className="p-error">{errorMessages.haber_basico}</small>
-                                    </div>
-                                    <div className="col-12 md:col-6">
-                                        <label className="form-label">Unidad Organizacional *</label>
-                                        <InputText
-                                            name="unidad_organizacional"
-                                            defaultValue={item.unidad_organizacional || ''}
-                                            className={errorMessages.unidad_organizacional ? 'p-invalid' : ''}
-                                        />
-                                        <small className="p-error">{errorMessages.unidad_organizacional}</small>
-                                    </div>
-                                    <div className="col-12 text-right">
-                                        <Button
-                                            type="submit"
-                                            label="Guardar"
-                                            icon="pi pi-save"
-                                            loading={loading}
-                                        />
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    );
-};
+            </main>
+        );
+    }
+}
 
 TblItemsEditPage.defaultProps = {
-    id: null,
     primaryKey: 'id',
-    pageName: 'tblitems',
+    pageName: 'tblitem',
     apiPath: 'tblitem/edit',
     routeName: 'tblitemsedit',
-    submitButtonLabel: 'Guardar',
-    submitButtonIcon: 'pi pi-save',
-    msgBeforeDelete: '¿Seguro que quieres borrar este registro?',
-    msgTitle: 'Eliminar el registro',
-    msgAfterDelete: 'Registro eliminado con éxito',
+    submitButtonLabel: "Actualizar",
+    formValidationError: "El formulario no es válido",
+    formValidationMsg: "Por favor complete el formulario",
+    msgTitle: "Actualizar Item",
+    msgAfterSave: "Item actualizado con éxito",
+    msgBeforeSave: "",
     showHeader: true,
     showFooter: true,
-    isSubPage: false,
-    redirectAfterEdit: true,
-    redirectPath: '/tblitems',
-};
+    redirect: true,
+    isSubPage: false
+}
 
 export default TblItemsEditPage;
