@@ -13,20 +13,18 @@ const TblItemsAddPage = (props) => {
     const toast = React.useRef(null);
     const [submitted, setSubmitted] = useState(false);
 
-    const pageController = useAddPage({
-        props: finalProps,
-        formDefaultValues: finalProps.formDefaultValues
-    });
-    const { formData: newItem, setFormData: setNewItem, submitForm: saveItem, apiRequestError, loading } = pageController;
+    const pageController = useAddPage({ props: finalProps });
+    const { submitForm, apiRequestError, loading } = pageController;
+    const [item, setItem] = useState(finalProps.formDefaultValues || {});
 
     const onInputChange = (e) => {
         const { name, value } = e.target;
-        setNewItem({ ...newItem, [name]: value });
+        setItem({ ...item, [name]: value });
     };
 
     const handleSave = async () => {
         setSubmitted(true);
-        if (!newItem.codigo_item || !newItem.cargo || !newItem.haber_basico || !newItem.unidad_organizacional) {
+        if (!item.codigo_item || !item.cargo || !item.haber_basico || !item.unidad_organizacional) {
             toast.current.show({ 
                 severity: 'error', 
                 summary: 'Error', 
@@ -36,7 +34,7 @@ const TblItemsAddPage = (props) => {
             return;
         }
         try {
-            await saveItem(newItem);
+            await submitForm(item);
             toast.current.show({ 
                 severity: 'success', 
                 summary: 'Éxito', 
@@ -57,15 +55,12 @@ const TblItemsAddPage = (props) => {
 
     const handleCancel = () => {
         setSubmitted(false);
-        app.navigate('/tblitems');
+        app.navigate(-1); // changed: navigate back instead of closing a dialog
     };
 
     return (
-        <div className="card p-4">
-            <div className="flex justify-content-between mb-4">
-                <h1>Agregar Nuevo Item</h1>
-                <Button icon="pi pi-arrow-left" onClick={handleCancel} label="Volver" />
-            </div>
+        <main className="main-page">
+            <h2>Agregar Nuevo Item</h2> {/* added header */}
             <Toast ref={toast} />
             <form onSubmit={(e) => e.preventDefault()} className="p-fluid">
                 <div className="field">
@@ -73,47 +68,47 @@ const TblItemsAddPage = (props) => {
                     <InputText
                         id="codigo_item"
                         name="codigo_item"
-                        value={newItem?.codigo_item || ''}
+                        value={item?.codigo_item || ''}
                         onChange={onInputChange}
                         required
                         autoFocus
                     />
-                    {submitted && !newItem?.codigo_item && <small className="p-error">El código del item es requerido.</small>}
+                    {submitted && !item?.codigo_item && <small className="p-error">El código del item es requerido.</small>}
                 </div>
                 <div className="field">
                     <label htmlFor="cargo">Cargo</label>
                     <InputText
                         id="cargo"
                         name="cargo"
-                        value={newItem?.cargo || ''}
+                        value={item?.cargo || ''}
                         onChange={onInputChange}
                         required
                     />
-                    {submitted && !newItem?.cargo && <small className="p-error">El cargo es requerido.</small>}
+                    {submitted && !item?.cargo && <small className="p-error">El cargo es requerido.</small>}
                 </div>
                 <div className="field">
                     <label htmlFor="haber_basico">Haber Básico</label>
                     <InputText
                         id="haber_basico"
                         name="haber_basico"
-                        value={newItem?.haber_basico || ''}
+                        value={item?.haber_basico || ''}
                         onChange={onInputChange}
                         type="number"
                         step="0.01"
                         required
                     />
-                    {submitted && !newItem?.haber_basico && <small className="p-error">El haber básico es requerido.</small>}
+                    {submitted && !item?.haber_basico && <small className="p-error">El haber básico es requerido.</small>}
                 </div>
                 <div className="field">
                     <label htmlFor="unidad_organizacional">Unidad Organizacional</label>
                     <InputText
                         id="unidad_organizacional"
                         name="unidad_organizacional"
-                        value={newItem?.unidad_organizacional || ''}
+                        value={item?.unidad_organizacional || ''}
                         onChange={onInputChange}
                         required
                     />
-                    {submitted && !newItem?.unidad_organizacional && <small className="p-error">La unidad organizacional es requerida.</small>}
+                    {submitted && !item?.unidad_organizacional && <small className="p-error">La unidad organizacional es requerida.</small>}
                 </div>
                 <div className="field">
                     <Button
@@ -137,7 +132,7 @@ const TblItemsAddPage = (props) => {
                     }
                 />
             )}
-        </div>
+        </main>
     );
 };
 

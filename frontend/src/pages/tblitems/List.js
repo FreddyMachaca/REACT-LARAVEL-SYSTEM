@@ -53,6 +53,34 @@ const TblItemsListPage = (props) => {
         onPageChange
     } = pagination;
 
+    // Add tableColumns configuration to define visible columns and actions
+    const tableColumns = [
+        { field: 'codigo_item', header: 'Código Item' },
+        { field: 'cargo', header: 'Cargo' },
+        { field: 'haber_basico', header: 'Haber Básico' },
+        { field: 'unidad_organizacional', header: 'Unidad Organizacional' },
+        {
+            field: 'action',
+            header: 'Acciones',
+            template: (rowData) => {
+                return (
+                    <div className="flex gap-2">
+                        <Button
+                            icon="pi pi-pencil"
+                            className="p-button-rounded p-button-success"
+                            onClick={() => app.navigate(`/tblitems/edit/${rowData.id}`)}
+                        />
+                        <Button
+                            icon="pi pi-trash"
+                            className="p-button-rounded p-button-danger"
+                            onClick={() => handleDelete(rowData)}
+                        />
+                    </div>
+                );
+            }
+        }
+    ];
+
     function ActionButton(data) {
         const items = [
             {
@@ -230,6 +258,7 @@ const TblItemsListPage = (props) => {
                                     rowHover={true}
                                     responsiveLayout="stack"
                                     emptyMessage={<EmptyRecordMessage />}
+                                    columns={tableColumns}
                                 >
                                     <Column selectionMode="multiple" headerStyle={{ width: '2rem' }}></Column>
                                     <Column field="id" header="ID" body={IdTemplate} sortable></Column>
@@ -278,6 +307,12 @@ TblItemsListPage.defaultProps = {
     sortDir: '',
     pageNo: 1,
     limit: 10,
+    columns: [
+        { field: 'codigo_item', header: 'Código Item' },
+        { field: 'cargo', header: 'Cargo' },
+        { field: 'haber_basico', header: 'Haber Básico' },
+        { field: 'unidad_organizacional', header: 'Unidad Organizacional' }
+    ]
 };
 
 export default TblItemsListPage;
