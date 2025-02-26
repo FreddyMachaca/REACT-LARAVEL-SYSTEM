@@ -10,6 +10,7 @@ import ContractItemForm from './components/ContractItemForm';
 import ContractItemEditForm from './components/ContractItemEditForm';
 import { initialOrganizationData, itemDetails as initialItemDetails } from './components/OrganizationData';
 import useApp from 'hooks/useApp';
+import { confirmDialog } from 'primereact/confirmdialog';
 
 const EstructuraOrganizacional = (props) => {
     const app = useApp();
@@ -168,19 +169,20 @@ const EstructuraOrganizacional = (props) => {
     };
 
     const handleDeleteContrato = (contratoId) => {
-        app.confirmDialog({
+        confirmDialog({
             message: '¿Está seguro que desea eliminar este contrato?',
+            header: 'Confirmación de eliminación',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sí, eliminar',
-            rejectLabel: 'Cancelar',
+            acceptClassName: 'p-button-danger',
             accept: () => {
-                setContratos(prevContratos => prevContratos.filter(contrato => contrato.id !== contratoId));
+                const updatedContratos = contratos.filter(c => c.id !== contratoId);
+                setContratos(updatedContratos);
                 
-                app.flashMsg("Éxito", "Contrato eliminado correctamente");
+                if (selectedContratoId === contratoId) {
+                    setSelectedContratoId(null);
+                }
                 
-                const tempId = selectedItemId;
-                setSelectedItemId(null);
-                setTimeout(() => setSelectedItemId(tempId), 100);
+                app.flashMsg('Éxito', 'El contrato ha sido eliminado con éxito');
             }
         });
     };

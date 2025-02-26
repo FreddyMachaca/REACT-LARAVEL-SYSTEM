@@ -6,6 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Divider } from 'primereact/divider';
 import useApp from 'hooks/useApp';
+import { confirmDialog } from 'primereact/confirmdialog';
 
 const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => {
     const app = useApp();
@@ -72,13 +73,15 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
     
     const handleDelete = () => {
         if (onDelete && itemToEdit && itemToEdit.id) {
-            app.confirmDialog({
+            confirmDialog({
                 message: '¿Está seguro que desea eliminar este elemento?',
                 icon: 'pi pi-exclamation-triangle',
                 acceptLabel: 'Sí, eliminar',
                 rejectLabel: 'Cancelar',
+                acceptClassName: 'p-button-danger',
                 accept: () => {
                     onDelete(itemToEdit.id);
+                    app.closeDialogs();
                 }
             });
         }
