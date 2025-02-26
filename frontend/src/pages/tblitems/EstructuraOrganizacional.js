@@ -5,44 +5,75 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import OrganizationTree from './components/OrganizationTree';
 import ItemDetailsSidebar from './components/ItemDetailsSidebar';
+import ItemFormPage from './components/ItemForm';
+import ContractItemForm from './components/ContractItemForm';
+import ContractItemEditForm from './components/ContractItemEditForm';
 import { initialOrganizationData, itemDetails as initialItemDetails } from './components/OrganizationData';
 import useApp from 'hooks/useApp';
-import ItemFormPage from './components/ItemForm';
 
 const EstructuraOrganizacional = (props) => {
     const app = useApp();
     const navigate = useNavigate();
     const [organizationData, setOrganizationData] = useState(() => {
-        const savedData = localStorage.getItem('organizationData');
-        return savedData ? JSON.parse(savedData) : initialOrganizationData;
+        try {
+            const savedData = localStorage.getItem('organizationData');
+            return savedData ? JSON.parse(savedData) : initialOrganizationData;
+        } catch (error) {
+            console.error("Error parsing organizationData from localStorage:", error);
+            return initialOrganizationData;
+        }
     });
     
     const [itemDetails, setItemDetails] = useState(() => {
-        const savedDetails = localStorage.getItem('itemDetails');
-        return savedDetails ? JSON.parse(savedDetails) : initialItemDetails;
+        try {
+            const savedDetails = localStorage.getItem('itemDetails');
+            return savedDetails ? JSON.parse(savedDetails) : initialItemDetails;
+        } catch (error) {
+            console.error("Error parsing itemDetails from localStorage:", error);
+            return initialItemDetails;
+        }
     });
     
     const [menuItems, setMenuItems] = useState(() => {
-        const savedMenuItems = localStorage.getItem('menuItems');
-        return savedMenuItems ? JSON.parse(savedMenuItems) : {};
+        try {
+            const savedMenuItems = localStorage.getItem('menuItems');
+            return savedMenuItems ? JSON.parse(savedMenuItems) : {};
+        } catch (error) {
+            console.error("Error parsing menuItems from localStorage:", error);
+            return {};
+        }
     });
     
     const [selectedItemId, setSelectedItemId] = useState(null);
+    const [selectedContratoId, setSelectedContratoId] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [contratos, setContratos] = useState(() => {
+        try {
+            const savedContratos = localStorage.getItem('contratos');
+            return savedContratos ? JSON.parse(savedContratos) : [];
+        } catch (error) {
+            console.error("Error parsing contratos from localStorage:", error);
+            return [];
+        }
+    });
 
-    // Save to localStorage whenever data changes
     useEffect(() => {
-        localStorage.setItem('organizationData', JSON.stringify(organizationData));
-        localStorage.setItem('itemDetails', JSON.stringify(itemDetails));
-        localStorage.setItem('menuItems', JSON.stringify(menuItems));
-    }, [organizationData, itemDetails, menuItems]);
+        try {
+            localStorage.setItem('organizationData', JSON.stringify(organizationData || []));
+            localStorage.setItem('itemDetails', JSON.stringify(itemDetails || {}));
+            localStorage.setItem('menuItems', JSON.stringify(menuItems || {}));
+            localStorage.setItem('contratos', JSON.stringify(contratos || []));
+        } catch (error) {
+            console.error("Error saving data to localStorage:", error);
+        }
+    }, [organizationData, itemDetails, menuItems, contratos]);
 
-    // Mejorar la función handleSelectItem para garantizar la actualización de la vista
     const handleSelectItem = (itemId) => {
         console.log("Ítem seleccionado:", itemId);
         console.log("Detalles disponibles:", itemDetails[itemId]);
         
-        // Si es el mismo ítem, no hacemos nada para evitar re-renders innecesarios
+        setSelectedContratoId(null);
+        
         if (selectedItemId === itemId) return;
         
         setSelectedItemId(itemId);
@@ -84,14 +115,115 @@ const EstructuraOrganizacional = (props) => {
         }
     };
 
-    // Function to add a new item to the tree
+    const handleCreateContract = (structuralItemId) => {
+        const structuralItem = itemDetails[structuralItemId];
+        
+        if (!structuralItem) {
+            app.flashMsg("Error", "No se encontró el ítem estructural", "error");
+            return;
+        }
+        
+        app.openPageDialog(
+            <ContractItemForm 
+                isSubPage={true} 
+                structuralItem={structuralItem} 
+                onSave={saveContractItem}
+            />,
+            { closeBtn: true, title: 'Crear Ítem de Contrato' }
+        );
+    };
+    
+    const saveContractItem = (contractItemData) => {
+        const { id: itemId } = contractItemData;
+        
+        const contratoId = Date.now();
+        
+        const newContrato = {
+            id: contratoId,
+            itemId: itemId,
+            codigo_item: contractItemData.codigo_item,
+            cargo: contractItemData.cargo,
+            haber_basico: contractItemData.haber_basico,
+            unidad_organizacional: contractItemData.unidad_organizacional,
+            tiempoJornada: contractItemData.tiempoJornada,
+            cantidad: contractItemData.cantidad,
+            fecha_creacion: new Date().toISOString()
+        };
+        
+        setContratos(prevContratos => [...prevContratos, newContrato]);
+        
+        setItemDetails(prevDetails => ({
+            ...prevDetails,
+            [itemId]: {
+                ...prevDetails[itemId],
+                tieneContrato: true
+            }
+        }));
+        
+        app.flashMsg("Éxito", "Contrato creado correctamente");
+        app.closeDialogs();
+        
+        setSelectedItemId(null);
+        setTimeout(() => setSelectedItemId(itemId), 100);
+    };
+
+    const handleDeleteContrato = (contratoId) => {
+        app.confirmDialog({
+            message: '¿Está seguro que desea eliminar este contrato?',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sí, eliminar',
+            rejectLabel: 'Cancelar',
+            accept: () => {
+                setContratos(prevContratos => prevContratos.filter(contrato => contrato.id !== contratoId));
+                
+                app.flashMsg("Éxito", "Contrato eliminado correctamente");
+                
+                const tempId = selectedItemId;
+                setSelectedItemId(null);
+                setTimeout(() => setSelectedItemId(tempId), 100);
+            }
+        });
+    };
+
+    const handleViewContrato = (contratoId) => {
+        setSelectedItemId(null);
+        setSelectedContratoId(contratoId);
+    };
+    
+    const handleEditContrato = (contratoId) => {
+        const contrato = contratos.find(c => c.id === contratoId);
+        if (!contrato) {
+            app.flashMsg("Error", "No se encontró el contrato", "error");
+            return;
+        }
+        
+        app.openPageDialog(
+            <ContractItemEditForm
+                isSubPage={true}
+                contrato={contrato}
+                onSave={handleUpdateContrato}
+            />,
+            { closeBtn: true, title: 'Editar Contrato' }
+        );
+    };
+    
+    const handleUpdateContrato = (updatedContrato) => {
+        setContratos(prevContratos => 
+            prevContratos.map(c => c.id === updatedContrato.id ? updatedContrato : c)
+        );
+        
+        app.flashMsg("Éxito", "Contrato actualizado correctamente");
+        app.closeDialogs();
+        
+        setSelectedContratoId(null);
+        setTimeout(() => setSelectedContratoId(updatedContrato.id), 100);
+    };
+
     const addNewItem = (formData) => {
         const { parentId, ...itemData } = formData;
         
-        // Generate new ID
         const newId = Math.max(...Object.keys(itemDetails).map(Number).length ? Object.keys(itemDetails).map(Number) : [0]) + 1;
         
-        // Add item details
         setItemDetails(prevDetails => ({
             ...prevDetails,
             [newId]: {
@@ -100,9 +232,7 @@ const EstructuraOrganizacional = (props) => {
             }
         }));
         
-        // Add to tree structure
         if (parentId) {
-            // Add as a child node
             const updateTree = (items) => {
                 return items.map(item => {
                     if (item.id === parentId) {
@@ -122,26 +252,20 @@ const EstructuraOrganizacional = (props) => {
             
             setOrganizationData(prevData => updateTree(prevData));
         } else {
-            // Add as a root item
             setOrganizationData(prevData => [
                 ...prevData,
                 { id: newId, title: itemData.title, children: [] }
             ]);
         }
 
-        // Mostrar mensaje de éxito
-        app.flashMsg("Éxito", "Ítem creado correctamente");
-        
-        // Cerrar el diálogo explícitamente
+        app.flashMsg("Éxito", "Ítem creado correctamente");    
         app.closeDialogs();
     };
     
-    // Function to update an existing item
     const updateItem = (formData) => {
         const { id, menuItem, ...itemData } = formData;
         if (!id) return;
         
-        // Update item details
         setItemDetails(prevDetails => ({
             ...prevDetails,
             [id]: {
@@ -150,7 +274,6 @@ const EstructuraOrganizacional = (props) => {
             }
         }));
         
-        // Update menu item if it exists
         if (menuItem) {
             if (menuItem.addToMenu) {
                 setMenuItems(prevMenuItems => ({
@@ -158,7 +281,6 @@ const EstructuraOrganizacional = (props) => {
                     [id]: menuItem
                 }));
             } else {
-                // Si no se debe añadir al menú, eliminamos la entrada si existe
                 setMenuItems(prevMenuItems => {
                     const newMenuItems = { ...prevMenuItems };
                     delete newMenuItems[id];
@@ -167,7 +289,6 @@ const EstructuraOrganizacional = (props) => {
             }
         }
         
-        // Update item title in the tree
         const updateTree = (items) => {
             return items.map(item => {
                 if (item.id === id) {
@@ -192,28 +313,20 @@ const EstructuraOrganizacional = (props) => {
             app.closeDialogs();
         }
         
-        // Si el elemento editado es el seleccionado, actualizamos la selección
         if (selectedItemId === id) {
             setSelectedItemId(null);
             setTimeout(() => setSelectedItemId(id), 100);
         }
     };
     
-    // Function to delete an item from the tree
     const deleteItem = (itemId) => {
         if (!itemId) return;
         
-        // Función recursiva para eliminar un nodo y todos sus hijos
         const removeNode = (items, idToRemove) => {
-            // Filtrar el nodo a eliminar del nivel actual
             const filteredItems = items.filter(item => item.id !== idToRemove);
-            
-            // Si el array ha cambiado de tamaño, significa que ya encontramos y eliminamos el nodo
             if (filteredItems.length !== items.length) {
                 return filteredItems;
             }
-            
-            // Si no se encontró en este nivel, buscar en los hijos
             return filteredItems.map(item => {
                 if (item.children && item.children.length > 0) {
                     return {
@@ -225,24 +338,20 @@ const EstructuraOrganizacional = (props) => {
             });
         };
         
-        // Eliminar el nodo y sus hijos del árbol
         setOrganizationData(prevData => removeNode(prevData, itemId));
         
-        // Eliminar los detalles del ítem
         setItemDetails(prevDetails => {
             const newDetails = { ...prevDetails };
             delete newDetails[itemId];
             return newDetails;
         });
         
-        // Eliminar del menú si existe
         setMenuItems(prevMenuItems => {
             const newMenuItems = { ...prevMenuItems };
             delete newMenuItems[itemId];
             return newMenuItems;
         });
         
-        // Si el elemento eliminado es el seleccionado, limpiamos la selección
         if (selectedItemId === itemId) {
             setSelectedItemId(null);
         }
@@ -253,9 +362,13 @@ const EstructuraOrganizacional = (props) => {
         }
     };
 
-    // Asegurar que selectedItem y selectedMenuInfo tienen los datos correctos
     const selectedItem = selectedItemId ? itemDetails[selectedItemId] : null;
+    const selectedContrato = selectedContratoId ? contratos.find(c => c.id === selectedContratoId) : null;
     
+    if (selectedItem) {
+        selectedItem.contratos = contratos.filter(c => c.itemId === selectedItem.id);
+    }
+
     console.log("Renderizando con ítem seleccionado:", selectedItemId);
     console.log("Datos del ítem:", selectedItem);
 
@@ -264,6 +377,16 @@ const EstructuraOrganizacional = (props) => {
             <section className="page-section mb-3">
                 <div className="container">
                     <div className="grid justify-content-between align-items-center">
+                        <div className="col-fixed">
+                            <Button 
+                                onClick={() => navigate('/tblitems')} 
+                                label="" 
+                                className="p-button p-button-text" 
+                                icon="pi pi-arrow-left" 
+                                tooltip="Volver a la lista de items"
+                                tooltipOptions={{ position: 'right' }}
+                            />
+                        </div>
                         <div className="col">
                             <Title title="Estructura Organizacional" titleClass="text-2xl text-primary font-bold" subTitleClass="text-500" separator={false} />
                         </div>
@@ -298,8 +421,13 @@ const EstructuraOrganizacional = (props) => {
                                     onEditItem={handleEditItem}
                                     onDeleteItem={deleteItem}
                                     selectedItemId={selectedItemId}
+                                    selectedContratoId={selectedContratoId}
+                                    itemDetails={itemDetails}
+                                    contratos={contratos}
+                                    onViewContrato={handleViewContrato}
+                                    onEditContrato={handleEditContrato}
+                                    onDeleteContrato={handleDeleteContrato}
                                 />
-                                {/* Añadir un debug auxiliar durante el desarrollo */}
                                 {props.debug && selectedItemId && (
                                     <div className="p-2 mt-3 bg-gray-100 border-round">
                                         <h5>Debug: Item seleccionado ID: {selectedItemId}</h5>
@@ -311,8 +439,10 @@ const EstructuraOrganizacional = (props) => {
                             </div>
                             <div className="col-12 lg:col-4">
                                 <ItemDetailsSidebar 
-                                    key={selectedItemId} // Añadir key para forzar el re-render cuando cambia
+                                    key={`${selectedItemId}-${selectedContratoId}`}
                                     item={selectedItem} 
+                                    contrato={selectedContrato}
+                                    onCreateContract={handleCreateContract}
                                 />
                             </div>
                         </div>
@@ -326,7 +456,7 @@ const EstructuraOrganizacional = (props) => {
 EstructuraOrganizacional.defaultProps = {
     showHeader: true,
     showFooter: true,
-    debug: false // Opción para activar el debug en desarrollo
+    debug: false
 };
 
 export default EstructuraOrganizacional;

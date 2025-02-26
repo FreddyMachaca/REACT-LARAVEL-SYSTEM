@@ -4,7 +4,6 @@ import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
-import { InputNumber } from 'primereact/inputnumber';
 import { Divider } from 'primereact/divider';
 import useApp from 'hooks/useApp';
 
@@ -25,24 +24,12 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
         { label: 'Unidad', value: 'Unidad' }
     ];
     
-    const tiemposJornada = [
-        { label: 'Completa', value: 'Completa' },
-        { label: 'Media', value: 'Media' },
-        { label: 'Por horas', value: 'Por horas' }
-    ];
-
-    // Eliminamos la validación de menuItem
     const validationSchema = yup.object().shape({
         title: yup.string().required('El título es requerido'),
         categoriaPragmatica: yup.string().required('La categoría pragmática es requerida'),
-        categoriaAdministrativa: yup.string().required('La categoría administrativa es requerida'),
-        cargo: yup.string().required('El cargo es requerido'),
-        tiempoJornada: yup.string().required('El tiempo de jornada es requerido'),
-        cantidad: yup.number().required('La cantidad es requerida').min(1, 'Debe ser al menos 1')
+        categoriaAdministrativa: yup.string().required('La categoría administrativa es requerida')
     });
 
-    // Mantenemos menuItem en los valores iniciales para compatibilidad con el código existente,
-    // pero ya no lo mostraremos en la interfaz
     const initialValues = itemToEdit ? {
         ...itemToEdit,
         parentId: itemToEdit.parentId || parentId
@@ -50,10 +37,8 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
         title: '',
         categoriaPragmatica: '',
         categoriaAdministrativa: '',
-        cargo: '',
-        tiempoJornada: '',
-        cantidad: 1,
-        parentId: parentId
+        parentId: parentId,
+        tieneContrato: false
     };
 
     const handleSubmit = (values, { setSubmitting }) => {
@@ -62,7 +47,6 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
         setSubmitting(true);
         
         try {
-            // Agregamos un objeto menuItem vacío para mantener compatibilidad
             const formData = {
                 ...values,
                 menuItem: {
@@ -119,7 +103,6 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
                 >
                     {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
                         <Form>
-                            {/* Eliminamos TabView y mostramos directamente los campos */}
                             <div className="grid">
                                 <div className="col-12 mb-3">
                                     <div className="p-field">
@@ -131,7 +114,7 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                             className={inputClassName(touched.title && errors.title)}
-                                            placeholder="Ingrese el título del ítem"
+                                            placeholder="Ingrese el título del ítem estructural"
                                         />
                                         <ErrorMessage name="title" component="small" className="p-error" />
                                     </div>
@@ -168,60 +151,6 @@ const ItemFormPage = ({ parentId, itemToEdit, onSave, onDelete, isSubPage }) => 
                                             placeholder="Seleccione una categoría"
                                         />
                                         <ErrorMessage name="categoriaAdministrativa" component="small" className="p-error" />
-                                    </div>
-                                </div>
-
-                                <div className="col-12 mb-3">
-                                    <div className="p-field">
-                                        <label htmlFor="cargo" className="font-medium block mb-2">Cargo *</label>
-                                        <InputText 
-                                            id="cargo"
-                                            name="cargo"
-                                            value={values.cargo}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            className={inputClassName(touched.cargo && errors.cargo)}
-                                            placeholder="Ingrese el cargo"
-                                        />
-                                        <ErrorMessage name="cargo" component="small" className="p-error" />
-                                    </div>
-                                </div>
-
-                                <div className="col-12 md:col-6 mb-3">
-                                    <div className="p-field">
-                                        <label htmlFor="tiempoJornada" className="font-medium block mb-2">Tiempo Jornada *</label>
-                                        <Dropdown
-                                            id="tiempoJornada"
-                                            name="tiempoJornada"
-                                            value={values.tiempoJornada}
-                                            options={tiemposJornada}
-                                            onChange={handleChange}
-                                            onBlur={handleBlur}
-                                            className={inputClassName(touched.tiempoJornada && errors.tiempoJornada)}
-                                            placeholder="Seleccione el tiempo de jornada"
-                                        />
-                                        <ErrorMessage name="tiempoJornada" component="small" className="p-error" />
-                                    </div>
-                                </div>
-
-                                <div className="col-12 md:col-6 mb-3">
-                                    <div className="p-field">
-                                        <label htmlFor="cantidad" className="font-medium block mb-2">Cantidad *</label>
-                                        <InputNumber 
-                                            id="cantidad"
-                                            name="cantidad"
-                                            value={values.cantidad}
-                                            onValueChange={(e) => setFieldValue('cantidad', e.value)}
-                                            min={1}
-                                            className={inputClassName(touched.cantidad && errors.cantidad)}
-                                            showButtons
-                                            buttonLayout="horizontal"
-                                            decrementButtonClassName="p-button-secondary"
-                                            incrementButtonClassName="p-button-secondary"
-                                            incrementButtonIcon="pi pi-plus"
-                                            decrementButtonIcon="pi pi-minus"
-                                        />
-                                        <ErrorMessage name="cantidad" component="small" className="p-error" />
                                     </div>
                                 </div>
                             </div>

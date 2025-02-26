@@ -210,8 +210,8 @@ const TblItemsListPage = (props) => {
                             <div className="col-fixed">
                                 <Link to={`/tblitems/estructura-organizacional`}>
                                     <Button
-                                        label="Agregar nuevo"
-                                        icon="pi pi-plus"
+                                        label="Estructura Organizacional"
+                                        icon="pi pi-sitemap"
                                         type="button"
                                         className="p-button bg-primary"
                                     />

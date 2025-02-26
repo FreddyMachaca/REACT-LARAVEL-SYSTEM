@@ -175,7 +175,6 @@ const TblItemsEditPage = (props) => {
                                                     </div>
                                                 </div>
 
-                                                {/* Botón submit */}
                                                 {props.showFooter && (
                                                     <div className="text-center my-3">
                                                         <Button

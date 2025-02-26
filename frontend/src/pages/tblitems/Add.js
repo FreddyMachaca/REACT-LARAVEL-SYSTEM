@@ -6,7 +6,6 @@ const TblItemsAddPage = (props) => {
     const navigate = useNavigate();
     
     useEffect(() => {
-        // Redirigir a la estructura organizacional
         navigate('/tblitems/estructura-organizacional');
     }, [navigate]);
 

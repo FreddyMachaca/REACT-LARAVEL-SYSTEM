@@ -1,37 +1,20 @@
-// Datos iniciales para la estructura organizacional
 export const initialOrganizationData = [
     {
         id: 1,
-        title: "Dirección General",
+        title: "Directorio",
         children: [
             {
                 id: 2,
-                title: "Gerencia de Administración",
+                title: "Gerencia General",
                 children: [
                     {
                         id: 3,
-                        title: "Departamento de Contabilidad",
+                        title: "Departamento de RRHH",
                         children: []
                     },
                     {
                         id: 4,
-                        title: "Departamento de Recursos Humanos",
-                        children: []
-                    }
-                ]
-            },
-            {
-                id: 5,
-                title: "Gerencia de Operaciones",
-                children: [
-                    {
-                        id: 6,
-                        title: "Departamento de Logística",
-                        children: []
-                    },
-                    {
-                        id: 7,
-                        title: "Departamento de Producción",
+                        title: "Departamento de Finanzas",
                         children: []
                     }
                 ]
@@ -40,69 +23,47 @@ export const initialOrganizationData = [
     }
 ];
 
-// Detalles de los ítems
 export const itemDetails = {
     1: {
         id: 1,
-        title: "Dirección General",
+        title: "Directorio",
         categoriaPragmatica: "Estratégica",
         categoriaAdministrativa: "Dirección",
-        cargo: "Director/a General",
-        tiempoJornada: "Completa",
-        cantidad: 1
+        tieneContrato: false,
     },
     2: {
         id: 2,
-        title: "Gerencia de Administración",
+        title: "Gerencia General",
         categoriaPragmatica: "Táctica",
         categoriaAdministrativa: "Gerencia",
-        cargo: "Gerente de Administración",
-        tiempoJornada: "Completa",
-        cantidad: 1
+        tieneContrato: false,
     },
     3: {
         id: 3,
-        title: "Departamento de Contabilidad",
+        title: "Departamento de RRHH",
         categoriaPragmatica: "Operativa",
         categoriaAdministrativa: "Departamento",
-        cargo: "Jefe/a de Contabilidad",
-        tiempoJornada: "Completa",
-        cantidad: 1
+        tieneContrato: true,
     },
     4: {
         id: 4,
-        title: "Departamento de Recursos Humanos",
+        title: "Departamento de Finanzas",
         categoriaPragmatica: "Operativa",
         categoriaAdministrativa: "Departamento",
-        cargo: "Jefe/a de RRHH",
-        tiempoJornada: "Completa",
-        cantidad: 1
-    },
-    5: {
-        id: 5,
-        title: "Gerencia de Operaciones",
-        categoriaPragmatica: "Táctica",
-        categoriaAdministrativa: "Gerencia",
-        cargo: "Gerente de Operaciones",
-        tiempoJornada: "Completa",
-        cantidad: 1
-    },
-    6: {
-        id: 6,
-        title: "Departamento de Logística",
-        categoriaPragmatica: "Operativa",
-        categoriaAdministrativa: "Departamento",
-        cargo: "Jefe/a de Logística",
-        tiempoJornada: "Completa",
-        cantidad: 1
-    },
-    7: {
-        id: 7,
-        title: "Departamento de Producción",
-        categoriaPragmatica: "Operativa",
-        categoriaAdministrativa: "Departamento",
-        cargo: "Jefe/a de Producción",
-        tiempoJornada: "Completa",
-        cantidad: 1
+        tieneContrato: false,
     }
 };
+
+export const initialContratos = [
+    {
+        id: 1001,
+        itemId: 3,
+        codigo_item: "RRHH-001",
+        cargo: "Director de Recursos Humanos",
+        haber_basico: 12000,
+        unidad_organizacional: "Administración",
+        tiempoJornada: "Completa",
+        cantidad: 1,
+        fecha_creacion: "2023-01-15T12:00:00.000Z"
+    }
+];
