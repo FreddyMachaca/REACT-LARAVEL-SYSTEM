@@ -107,6 +107,11 @@ import TblItemsList from 'pages/tblitems/List';
 import TblItemsView from 'pages/tblitems/View';
 import TblItemsAdd from 'pages/tblitems/Add';
 import TblItemsEdit from 'pages/tblitems/Edit';
+import EstructuraOrganizacional from './pages/tblitems/EstructuraOrganizacional';
+import TblItemsAddPage from './pages/tblitems/Add';
+import TblItemsEditPage from './pages/tblitems/Edit';
+import TblItemsViewPage from './pages/tblitems/View';
+import TblItemsListPage from './pages/tblitems/List';
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -346,6 +351,12 @@ const App = () => {
 				<Route path="/tblitems/view/:pageid" element={<TblItemsView />} />
 				<Route path="/tblitems/add" element={<TblItemsAdd />} />
 				<Route path="/tblitems/edit/:pageid" element={<TblItemsEdit />} />
+				<Route path="/tblitems/estructura-organizacional" element={<EstructuraOrganizacional />} />
+				<Route path="/tblitems" element={<TblItemsListPage />} />
+				<Route path="/tblitems/add" element={<TblItemsAddPage />} />
+				<Route path="/tblitems/edit/:id" element={<TblItemsEditPage />} />
+				<Route path="/tblitems/view/:id" element={<TblItemsViewPage />} />
+				<Route path="/tblitems/estructura-organizacional" element={<EstructuraOrganizacional />} />
 			</Route>
 			<Route exact element={<IndexLayout />}>
 				<Route path="/*" element={<IndexPages />} />
