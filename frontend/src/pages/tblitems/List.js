@@ -1,126 +1,127 @@
-import { BreadCrumb } from 'primereact/breadcrumb';
+import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
-import { FilterTags } from 'components/FilterTags';
 import { InputText } from 'primereact/inputtext';
-import { Link } from 'react-router-dom';
-import { PageRequestError } from 'components/PageRequestError';
-import { Paginator } from 'primereact/paginator';
+import { Link, useNavigate } from 'react-router-dom';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { SplitButton } from 'primereact/splitbutton';
 import { Title } from 'components/Title';
-import TblItemsEditPage from './Edit';
 import useApp from 'hooks/useApp';
-import useListPage from 'hooks/useListPage';
+import useApi from 'hooks/useApi';
 
-const TblItemsListPage = (props) => {
+const TblItemsList = (props) => {
     const app = useApp();
-    const filterSchema = {
-        search: {
-            tagTitle: "Search",
-            value: '',
-            valueType: 'single',
-            options: [],
-        }
-    };
-    const IdTemplate = (data) => <Link to={`/tblitems/view/${data.id}`}>{data.id}</Link>;
-
-    const pageController = useListPage(props, filterSchema);
-    const filterController = pageController.filterController;
-
-    const {
-        records,
-        pageReady,
-        loading,
-        selectedItems,
-        sortBy,
-        sortOrder,
-        apiRequestError,
-        setSelectedItems,
-        getPageBreadCrumbs,
-        onSort,
-        deleteItem,
-        pagination
-    } = pageController;
-
-    const { filters, setFilterValue } = filterController;
-    const {
-        totalRecords,
-        totalPages,
-        recordsPosition,
-        firstRow,
-        limit,
-        onPageChange
-    } = pagination;
-
-    const tableColumns = [
-        { field: 'codigo_item', header: 'Código Item' },
-        { field: 'cargo', header: 'Cargo' },
-        { field: 'haber_basico', header: 'Haber Básico' },
-        { field: 'unidad_organizacional', header: 'Unidad Organizacional' },
-        {
-            field: 'action',
-            header: 'Acciones',
-            template: (rowData) => {
-                return (
-                    <div className="flex gap-2">
-                        <Button
-                            icon="pi pi-pencil"
-                            className="p-button-rounded p-button-success"
-                            onClick={() => app.navigate(`/tblitems/edit/${rowData.id}`)}
-                        />
-                        <Button
-                            icon="pi pi-trash"
-                            className="p-button-rounded p-button-danger"
-                            onClick={() => handleDelete(rowData)}
-                        />
-                    </div>
-                );
+    const api = useApi();
+    const navigate = useNavigate();
+    
+    // Estados
+    const [records, setRecords] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchText, setSearchText] = useState("");
+    const [selectedItems, setSelectedItems] = useState([]);
+    
+    // Cargar datos al montar el componente
+    useEffect(() => {
+        fetchRecords();
+    }, []);
+    
+    const fetchRecords = async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('tblitem');
+            console.log("API Response:", response);
+            
+            let dataRecords = [];
+            if (Array.isArray(response)) {
+                dataRecords = response;
+            } else if (response && Array.isArray(response.data)) {
+                dataRecords = response.data;
+            } else if (response && Array.isArray(response.records)) {
+                dataRecords = response.records;
             }
+            
+            setRecords(dataRecords);
+            setError(null);
+        } catch (error) {
+            console.error("Error fetching records:", error);
+            setError(error.message || "Error al cargar los datos");
+        } finally {
+            setLoading(false);
         }
-    ];
-
-    const handleDelete = (rowData) => {
-        deleteItem(rowData.id, 'tblitem/delete');
     };
-
-    function ActionButton(data) {
+    
+    // Función para buscar
+    const handleSearch = () => {
+        fetchRecords();
+    };
+    
+    // Función para eliminar registro
+    const deleteRecord = async (recordId) => {
+        try {
+            await app.confirmDelete(async () => {
+                setLoading(true);
+                await api.delete(`tblitem/delete/${recordId}`);
+                app.flashMsg("Éxito", "Registro eliminado correctamente", "success");
+                fetchRecords();
+            });
+        } catch (error) {
+            console.error("Error deleting record:", error);
+            app.flashMsg("Error", "No se pudo eliminar el registro", "error");
+        }
+    };
+    
+    // Renderizar acciones por fila
+    const actionButtonTemplate = (rowData) => {
         const items = [
             {
                 label: "Ver",
-                command: (event) => { app.navigate(`/tblitems/view/${data.id}`); },
+                command: (event) => { navigate(`/tblitems/view/${rowData.id}`) },
                 icon: "pi pi-eye"
             },
             {
                 label: "Editar",
-                command: (event) => { 
-                    app.navigate(`/tblitems/edit/${data.id}`);
-                },
+                command: (event) => { navigate(`/tblitems/edit/${rowData.id}`) },
                 icon: "pi pi-pencil"
             },
             {
                 label: "Eliminar",
-                command: (event) => { deleteItem(data.id, 'tblitem/delete'); },
+                command: (event) => { deleteRecord(rowData.id) },
                 icon: "pi pi-trash"
             }
         ];
-        return (<SplitButton dropdownIcon="pi pi-bars" className="dropdown-only p-button-text p-button-plain" model={items} />);
+        
+        return (
+            <SplitButton dropdownIcon="pi pi-bars" className="dropdown-only p-button-text p-button-plain" model={items} />
+        );
+    };
+    
+    // Template para el ID con enlace
+    function IdTemplate(data) {
+        return (
+            <Link to={`/tblitems/view/${data.id}`}>{data.id}</Link>
+        );
     }
-
+    
+    // Formatear el valor monetario
+    const currencyTemplate = (rowData) => {
+        return `Bs. ${parseFloat(rowData.haber_basico).toFixed(2)}`;
+    };
+    
     function PageLoading() {
         if (loading) {
             return (
                 <div className="flex align-items-center justify-content-center text-gray-500 p-3">
-                    <div><ProgressSpinner style={{ width: '30px', height: '30px' }} /></div>
+                    <div><ProgressSpinner style={{width:'30px', height:'30px'}} /></div>
                     <div className="font-bold text-lg">Cargando...</div>
                 </div>
             );
         }
     }
-
+    
     function EmptyRecordMessage() {
-        if (pageReady && !records.length) {
+        if (!loading && records.length === 0) {
             return (
                 <div className="text-lg mt-3 p-3 text-center text-400 font-bold">
                     No se encontraron registros
@@ -128,71 +129,52 @@ const TblItemsListPage = (props) => {
             );
         }
     }
-
+    
     function MultiDelete() {
         if (selectedItems.length) {
             return (
                 <div className="m-2 flex-grow-0">
-                    <Button
-                        onClick={() => deleteItem(selectedItems, 'tblitem/delete')} // Fix: Use correct API path
-                        icon="pi pi-trash"
-                        className="p-button-danger"
-                        title="Eliminar seleccionados"
+                    <Button 
+                        onClick={() => {
+                            app.confirmDelete(() => {
+                                Promise.all(selectedItems.map(item => api.delete(`tblitem/delete/${item.id}`)))
+                                    .then(() => {
+                                        app.flashMsg("Éxito", "Registros eliminados correctamente", "success");
+                                        fetchRecords();
+                                        setSelectedItems([]);
+                                    })
+                                    .catch(error => {
+                                        console.error("Error eliminando registros:", error);
+                                        app.flashMsg("Error", "No se pudieron eliminar algunos registros", "error");
+                                    });
+                            });
+                        }} 
+                        icon="pi pi-trash" 
+                        className="p-button-danger" 
+                        title="Eliminar seleccionado"
                     />
                 </div>
             );
         }
     }
-
-    function PagerControl() {
-        if (props.paginate && totalPages > 1) {
-            const pagerReportTemplate = {
-                layout: pagination.layout,
-                CurrentPageReport: (options) => {
-                    return (
-                        <span className="text-sm text-gray-500 px-2">
-                            Registros <b>{recordsPosition} de {options.totalRecords}</b>
-                        </span>
-                    );
-                }
-            };
-            return (
-                <div className="flex-grow-1">
-                    <Paginator
-                        first={firstRow}
-                        rows={limit}
-                        totalRecords={totalRecords}
-                        onPageChange={onPageChange}
-                        template={pagerReportTemplate}
-                    />
-                </div>
-            );
-        }
-    }
-
-    function PageActionButtons() {
+    
+    // Si hay un error, mostrar mensaje
+    if (error) {
         return (
-            <div className="flex flex-wrap">
-                <MultiDelete />
+            <div className="card p-5 text-center">
+                <i className="pi pi-exclamation-triangle text-5xl text-yellow-500 mb-3"></i>
+                <h3>Error al cargar los datos</h3>
+                <p className="text-600">{error}</p>
+                <Button 
+                    label="Reintentar" 
+                    icon="pi pi-refresh" 
+                    className="mt-3"
+                    onClick={fetchRecords}
+                />
             </div>
         );
     }
-
-    function PageFooter() {
-        if (pageReady && props.showFooter) {
-            return (
-                <div className="flex flex-wrap">
-                    <PageActionButtons />
-                    <PagerControl />
-                </div>
-            );
-        }
-    }
-
-    if (apiRequestError) {
-        return <PageRequestError error={apiRequestError} />;
-    }
-
+    
     return (
         <main id="TblItemsListPage" className="main-page">
             {props.showHeader && (
@@ -200,31 +182,36 @@ const TblItemsListPage = (props) => {
                     <div className="container-fluid">
                         <div className="grid justify-content-between align-items-center">
                             <div className="col">
-                                <Title
-                                    title="Items"
-                                    titleClass="text-2xl text-primary font-bold"
+                                <Title 
+                                    title="Items" 
+                                    titleClass="text-2xl text-primary font-bold" 
                                     subTitleClass="text-500"
                                     separator={false}
                                 />
                             </div>
                             <div className="col-fixed">
-                                <Link to={`/tblitems/estructura-organizacional`}>
-                                    <Button
-                                        label="Estructura Organizacional"
+                                <Link to="/tblitems/estructura-organizacional">
+                                    <Button 
+                                        label="Estructura Organizacional" 
                                         icon="pi pi-sitemap"
-                                        type="button"
-                                        className="p-button bg-primary"
+                                        type="button" 
+                                        className="p-button w-full bg-primary"
                                     />
                                 </Link>
                             </div>
                             <div className="col-12 md:col-3">
                                 <span className="p-input-icon-left w-full">
                                     <i className="pi pi-search" />
-                                    <InputText
-                                        placeholder="Buscar"
-                                        className="w-full"
-                                        value={filters.search.value}
-                                        onChange={(e) => setFilterValue('search', e.target.value)}
+                                    <InputText 
+                                        placeholder="Buscar" 
+                                        className="w-full" 
+                                        value={searchText} 
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleSearch();
+                                            }
+                                        }}
                                     />
                                 </span>
                             </div>
@@ -232,46 +219,43 @@ const TblItemsListPage = (props) => {
                     </div>
                 </section>
             )}
+            
             <section className="page-section">
                 <div className="container-fluid">
                     <div className="grid">
                         <div className="col comp-grid">
-                            <FilterTags filterController={filterController} />
-                            <div className="page-records">
-                                <DataTable
-                                    lazy={true}
-                                    loading={loading}
-                                    selectionMode="checkbox"
-                                    selection={selectedItems}
-                                    onSelectionChange={(e) => setSelectedItems(e.value)}
-                                    value={records}
-                                    dataKey="id"
-                                    sortField={sortBy}
-                                    sortOrder={sortOrder}
-                                    onSort={onSort}
-                                    className="p-datatable-sm"
-                                    stripedRows={true}
-                                    showGridlines={false}
-                                    rowHover={true}
-                                    responsiveLayout="stack"
-                                    emptyMessage={<EmptyRecordMessage />}
-                                    columns={tableColumns}
-                                >
-                                    <Column selectionMode="multiple" headerStyle={{ width: '2rem' }}></Column>
-                                    <Column field="id" header="ID" body={IdTemplate} sortable></Column>
-                                    <Column field="codigo_item" header="Código Item" sortable></Column>
-                                    <Column field="cargo" header="Cargo" sortable></Column>
-                                    <Column field="haber_basico" header="Haber Básico" sortable></Column>
-                                    <Column field="unidad_organizacional" header="Unidad Organizacional" sortable></Column>
-                                    <Column field="fecha_creacion" header="Fecha Creación" sortable></Column>
-                                    <Column
-                                        headerStyle={{ width: '2rem' }}
-                                        headerClass="text-center"
-                                        body={ActionButton}
-                                    ></Column>
-                                </DataTable>
+                            <div>
+                                <div className="page-records">
+                                    <DataTable 
+                                        lazy={true}
+                                        loading={loading}
+                                        selectionMode="checkbox"
+                                        selection={selectedItems}
+                                        onSelectionChange={(e) => setSelectedItems(e.value)}
+                                        value={records}
+                                        dataKey="id"
+                                        className="p-datatable-sm"
+                                        stripedRows={true}
+                                        showGridlines={false}
+                                        rowHover={true}
+                                        responsiveLayout="stack"
+                                        emptyMessage={<EmptyRecordMessage />}
+                                    >
+                                        <Column selectionMode="multiple" headerStyle={{width: '2rem'}}></Column>
+                                        <Column field="id" header="ID" body={IdTemplate}></Column>
+                                        <Column field="codigo_item" header="Código Item" sortable></Column>
+                                        <Column field="cargo" header="Cargo" sortable></Column>
+                                        <Column field="haber_basico" header="Haber Básico" body={currencyTemplate} sortable></Column>
+                                        <Column field="unidad_organizacional" header="Unidad Organizacional" sortable></Column>
+                                        <Column field="tiempo_jornada" header="Tiempo Jornada" sortable></Column>
+                                        <Column field="cantidad" header="Cantidad" sortable></Column>
+                                        <Column headerStyle={{width: '2rem'}} headerClass="text-center" body={actionButtonTemplate}></Column>
+                                    </DataTable>
+                                </div>
+                                <div className="flex flex-wrap">
+                                    <MultiDelete />
+                                </div>
                             </div>
-                            <PageFooter />
                         </div>
                     </div>
                 </div>
@@ -280,36 +264,12 @@ const TblItemsListPage = (props) => {
     );
 };
 
-TblItemsListPage.defaultProps = {
-    primaryKey: 'id',
-    pageName: 'tblitem',         
-    apiPath: 'tblitem', 
-    routeName: 'tblitemslist',
-    msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
-    msgTitle: "Eliminar el registro",
-    msgAfterDelete: "Registro eliminado con éxito",
+TblItemsList.defaultProps = {
     showHeader: true,
     showFooter: true,
-    paginate: false, 
+    paginate: false,
     isSubPage: false,
-    showBreadcrumbs: true,
-    exportData: false,
-    importData: false,
-    keepRecords: false,
-    multiCheckbox: true,
-    search: '',
-    fieldName: null,
-    fieldValue: null,
-    sortField: '',
-    sortDir: '',
-    pageNo: 1,
-    limit: 10,
-    columns: [
-        { field: 'codigo_item', header: 'Código Item' },
-        { field: 'cargo', header: 'Cargo' },
-        { field: 'haber_basico', header: 'Haber Básico' },
-        { field: 'unidad_organizacional', header: 'Unidad Organizacional' }
-    ]
+    showBreadcrumbs: true
 };
 
-export default TblItemsListPage;
+export default TblItemsList;

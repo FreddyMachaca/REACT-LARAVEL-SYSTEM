@@ -15,16 +15,20 @@ class TblItem extends Model
 
     public $timestamps = false; // Desactivar timestamps automáticos
 
+    // Solo incluir los campos que existen en la tabla
     protected $fillable = [
         'codigo_item',
         'cargo',
         'haber_basico',
         'unidad_organizacional',
+        'tiempo_jornada',
+        'cantidad',
         'fecha_creacion'
     ];
 
     protected $casts = [
         'haber_basico' => 'decimal:2',
+        'cantidad' => 'integer',
         'fecha_creacion' => 'datetime'
     ];
 
@@ -40,10 +44,12 @@ class TblItem extends Model
                 codigo_item LIKE ?  OR 
                 cargo LIKE ?  OR 
                 CAST(haber_basico AS TEXT) LIKE ?  OR 
-                unidad_organizacional LIKE ? 
+                unidad_organizacional LIKE ?  OR
+                tiempo_jornada LIKE ?  OR
+                CAST(cantidad AS TEXT) LIKE ?
         )';
         $search_params = [
-            "%$text%","%$text%","%$text%","%$text%","%$text%"
+            "%$text%","%$text%","%$text%","%$text%","%$text%","%$text%","%$text%"
         ];
         //setting search conditions
         $query->whereRaw($search_condition, $search_params);
@@ -59,6 +65,8 @@ class TblItem extends Model
             "cargo",
             "haber_basico",
             "unidad_organizacional",
+            "tiempo_jornada",
+            "cantidad",
             "fecha_creacion"
         ];
     }
@@ -73,6 +81,8 @@ class TblItem extends Model
             "cargo",
             "haber_basico",
             "unidad_organizacional",
+            "tiempo_jornada",
+            "cantidad",
             "fecha_creacion"
         ];
     }
@@ -87,6 +97,8 @@ class TblItem extends Model
             "cargo",
             "haber_basico",
             "unidad_organizacional",
+            "tiempo_jornada",
+            "cantidad",
             "fecha_creacion"
         ];
     }
@@ -101,6 +113,8 @@ class TblItem extends Model
             "cargo",
             "haber_basico",
             "unidad_organizacional",
+            "tiempo_jornada",
+            "cantidad",
             "fecha_creacion"
         ];
     }

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TblItem;
 use Exception;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TblItemController extends Controller
 {
@@ -14,20 +17,43 @@ class TblItemController extends Controller
      * @param string $fieldname //filter records by a table field
      * @param string $fieldvalue //filter value
      */
-    function index(Request $request, $fieldname = null , $fieldvalue = null){
-        $query = TblItem::query();
-        if($request->search){
-            $search = trim($request->search);
-            TblItem::search($query, $search);
+    function index(Request $request, $fieldname = null, $fieldvalue = null){
+        try {
+            // Verificar que todos los campos existen en la base de datos
+            $columns = DB::connection()->getSchemaBuilder()->getColumnListing('tbl_items');
+            Log::info('Columnas disponibles en tbl_items:', $columns);
+
+            $query = TblItem::query();
+            
+            if($request->search){
+                $search = trim($request->search);
+                TblItem::search($query, $search);
+            }
+            
+            $orderby = $request->orderby ?? "tbl_items.id";
+            $ordertype = $request->ordertype ?? "desc";
+            $query->orderBy($orderby, $ordertype);
+            
+            if($fieldname){
+                $query->where($fieldname, $fieldvalue);
+            }
+            
+            // Asegurarnos de no solicitar campos inexistentes
+            $fields = array_intersect(TblItem::listFields(), $columns);
+            $records = $this->paginate($query, $fields);
+            
+            return response()->json($records);
+        } 
+        catch (\Exception $e) {
+            Log::error('Error en TblItemController::index: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Error al cargar los registros: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
         }
-        $orderby = $request->orderby ?? "tbl_items.id";
-        $ordertype = $request->ordertype ?? "desc";
-        $query->orderBy($orderby, $ordertype);
-        if($fieldname){
-            $query->where($fieldname , $fieldvalue);
-        }
-        $records = $this->paginate($query, TblItem::listFields());
-        return $this->respond($records);
     }
 
     /**
@@ -35,9 +61,22 @@ class TblItemController extends Controller
      * @param string $rec_id
      */
     function view($rec_id = null){
-        $query = TblItem::query();
-        $record = $query->findOrFail($rec_id, TblItem::viewFields());
-        return $this->respond($record);
+        try {
+            $columns = DB::connection()->getSchemaBuilder()->getColumnListing('tbl_items');
+            $fields = array_intersect(TblItem::viewFields(), $columns);
+            
+            $query = TblItem::query();
+            $record = $query->findOrFail($rec_id, $fields);
+            
+            return response()->json($record);
+        }
+        catch (\Exception $e) {
+            Log::error('Error en TblItemController::view: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error al obtener el registro: ' . $e->getMessage(),
+                'success' => false
+            ], 500);
+        }
     }
 
     /**
@@ -45,28 +84,47 @@ class TblItemController extends Controller
      */
     function add(Request $request){
         try{
-            $modeldata = $request->all();
+            $validator = Validator::make($request->all(), [
+                'codigo_item' => 'required|unique:tbl_items',
+                'cargo' => 'required',
+                'haber_basico' => 'required|numeric|min:0',
+                'unidad_organizacional' => 'required',
+                'tiempo_jornada' => 'required',
+                'cantidad' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            // Solo aceptar campos que existan en la tabla
+            $modeldata = $request->only([
+                'codigo_item',
+                'cargo',
+                'haber_basico',
+                'unidad_organizacional',
+                'tiempo_jornada',
+                'cantidad',
+                'fecha_creacion'
+            ]);
             
-            // Validar datos requeridos
-            if(empty($modeldata['codigo_item']) || empty($modeldata['cargo']) || 
-               empty($modeldata['haber_basico']) || empty($modeldata['unidad_organizacional'])) {
-                return response()->json(['error' => 'Todos los campos son requeridos'], 422);
-            }
-
-            // Validar código_item único
-            $exists = TblItem::where('codigo_item', $modeldata['codigo_item'])->exists();
-            if($exists) {
-                return response()->json(['error' => 'El código de item ya existe'], 422);
-            }
-
             // Establecer fecha de creación si no está presente
             $modeldata['fecha_creacion'] = $modeldata['fecha_creacion'] ?? now();
 
             $record = TblItem::create($modeldata);
-            return $this->respond($record);
+            
+            return response()->json([
+                'id' => $record->id,
+                'record' => $record,
+                'success' => true
+            ], 201);
         }
         catch(Exception $e){
-            return $this->respond($e->getMessage(), 500);
+            Log::error('Error en TblItemController::add: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'success' => false
+            ], 500);
         }
     }
 
@@ -76,16 +134,50 @@ class TblItemController extends Controller
      */
     function edit(Request $request, $rec_id = null){
         try{
+            $columns = DB::connection()->getSchemaBuilder()->getColumnListing('tbl_items');
+            $fields = array_intersect(TblItem::editFields(), $columns);
+            
             $query = TblItem::query();
-            $record = $query->findOrFail($rec_id, TblItem::editFields());
+            $record = $query->findOrFail($rec_id, $fields);
+            
             if ($request->isMethod('post')) {
-                $modeldata = $request->all();
+                $validator = Validator::make($request->all(), [
+                    'codigo_item' => 'required|unique:tbl_items,codigo_item,'.$rec_id,
+                    'cargo' => 'required',
+                    'haber_basico' => 'required|numeric|min:0',
+                    'unidad_organizacional' => 'required',
+                    'tiempo_jornada' => 'required',
+                    'cantidad' => 'required|integer|min:1',
+                ]);
+
+                if ($validator->fails()) {
+                    return response()->json(['errors' => $validator->errors()], 422);
+                }
+
+                // Solo aceptar campos que existen en la tabla
+                $modeldata = $request->only([
+                    'codigo_item',
+                    'cargo',
+                    'haber_basico',
+                    'unidad_organizacional',
+                    'tiempo_jornada',
+                    'cantidad'
+                ]);
+                
                 $record->update($modeldata);
             }
-            return $this->respond($record);
+            
+            return response()->json([
+                'record' => $record,
+                'success' => true
+            ]);
         }
         catch(Exception $e){
-            return $this->respond($e->getMessage(), 500);
+            Log::error('Error en TblItemController::edit: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'success' => false
+            ], 500);
         }
     }
 
@@ -99,10 +191,18 @@ class TblItemController extends Controller
             $query = TblItem::query();
             $query->whereIn("id", $arr_id);
             $query->delete();
-            return $this->respond($arr_id);
+            
+            return response()->json([
+                'deleted' => $arr_id,
+                'success' => true
+            ]);
         }
         catch(Exception $e){
-            return $this->respond($e->getMessage(), 500);
+            Log::error('Error en TblItemController::delete: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage(),
+                'success' => false
+            ], 500);
         }
     }
 }

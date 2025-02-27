@@ -43,18 +43,19 @@ const ContractItemForm = ({ structuralItem, onSave, isSubPage }) => {
         setSubmitting(true);
         
         try {
-            const contratoData = {
-                ...values,
-                haber_basico: parseFloat(values.haber_basico),
-                cantidad: parseInt(values.cantidad, 10),
-                id: structuralItem.id,
-                title: structuralItem.title,
-                categoriaPragmatica: structuralItem.categoriaPragmatica,
-                categoriaAdministrativa: structuralItem.categoriaAdministrativa,
-                fecha_creacion: new Date().toISOString()
+            // Corregimos el mapeo de campos para que coincidan con el backend
+            const formData = {
+                codigo_item: values.codigo_item,
+                cargo: values.cargo,
+                haber_basico: parseFloat(values.haber_basico).toFixed(2),
+                unidad_organizacional: values.unidad_organizacional,
+                tiempo_jornada: values.tiempoJornada, // Cambiado a tiempo_jornada para coincidir con el backend
+                cantidad: parseInt(values.cantidad, 10)
             };
             
-            onSave(contratoData)
+            console.log("Enviando datos de contrato a API:", formData);
+            
+            onSave(formData)
                 .catch(error => {
                     if (error.response && error.response.status === 422) {
                         const validationErrors = error.response.data.errors;

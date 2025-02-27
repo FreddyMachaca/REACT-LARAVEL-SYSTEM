@@ -32,7 +32,7 @@ const ContractItemEditForm = ({ contrato, onSave, isSubPage }) => {
         codigo_item: contrato.codigo_item || '',
         haber_basico: contrato.haber_basico || 0,
         unidad_organizacional: contrato.unidad_organizacional || '',
-        tiempoJornada: contrato.tiempoJornada || '',
+        tiempoJornada: contrato.tiempo_jornada || '', // Usar tiempo_jornada del backend
         cantidad: contrato.cantidad || 1
     };
 
@@ -45,6 +45,8 @@ const ContractItemEditForm = ({ contrato, onSave, isSubPage }) => {
             const updatedContrato = {
                 ...contrato,
                 ...values,
+                // Asegurar que tiempo_jornada se envía correctamente al backend
+                tiempo_jornada: values.tiempoJornada
             };
             
             onSave(updatedContrato);
@@ -158,7 +160,7 @@ const ContractItemEditForm = ({ contrato, onSave, isSubPage }) => {
                                             name="tiempoJornada"
                                             value={values.tiempoJornada}
                                             options={tiemposJornada}
-                                            onChange={handleChange}
+                                            onChange={(e) => setFieldValue('tiempoJornada', e.value)} // Usa setFieldValue para asignar el valor
                                             onBlur={handleBlur}
                                             className={inputClassName(touched.tiempoJornada && errors.tiempoJornada)}
                                             placeholder="Seleccione el tiempo de jornada"

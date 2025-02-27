@@ -2,6 +2,8 @@ import { Formik, Form, ErrorMessage } from 'formik';
 import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Dropdown } from 'primereact/dropdown';
 import { PageRequestError } from 'components/PageRequestError';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
@@ -14,15 +16,25 @@ const TblItemsEditPage = (props) => {
     const validationSchema = yup.object().shape({
         codigo_item: yup.string().required('El código del item es requerido'),
         cargo: yup.string().required('El cargo es requerido'),
-        haber_basico: yup.number().required('El haber básico es requerido'),
-        unidad_organizacional: yup.string().required('La unidad organizacional es requerida')
+        haber_basico: yup.number().required('El haber básico es requerido').min(0, 'No puede ser negativo'),
+        unidad_organizacional: yup.string().required('La unidad organizacional es requerida'),
+        tiempo_jornada: yup.string().required('El tiempo de jornada es requerido'),
+        cantidad: yup.number().required('La cantidad es requerida').min(1, 'Debe ser al menos 1')
     });
+
+    const tiemposJornada = [
+        { label: 'Completa', value: 'Completa' },
+        { label: 'Media', value: 'Media' },
+        { label: 'Por horas', value: 'Por horas' }
+    ];
 
     const formDefaultValues = {
         codigo_item: '', 
         cargo: '', 
         haber_basico: '', 
-        unidad_organizacional: ''
+        unidad_organizacional: '',
+        tiempo_jornada: '',
+        cantidad: 1
     }
 
     const pageController = useEditPage({ props, formDefaultValues, afterSubmit });
@@ -139,13 +151,15 @@ const TblItemsEditPage = (props) => {
                                                                 </label>
                                                             </div>
                                                             <div className="col-12 md:col-9">
-                                                                <InputText
+                                                                <InputNumber
                                                                     id="haber_basico"
                                                                     name="haber_basico"
-                                                                    type="number"
-                                                                    step="0.01"
                                                                     value={formik.values.haber_basico}
-                                                                    onChange={formik.handleChange}
+                                                                    onValueChange={(e) => formik.setFieldValue('haber_basico', e.value)}
+                                                                    mode="decimal"
+                                                                    minFractionDigits={2}
+                                                                    maxFractionDigits={2}
+                                                                    prefix="Bs. "
                                                                     className={inputClassName(formik?.errors?.haber_basico)}
                                                                 />
                                                                 <ErrorMessage name="haber_basico" component="small" className="p-error" />
@@ -170,6 +184,52 @@ const TblItemsEditPage = (props) => {
                                                                     className={inputClassName(formik?.errors?.unidad_organizacional)}
                                                                 />
                                                                 <ErrorMessage name="unidad_organizacional" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Tiempo Jornada */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="tiempo_jornada" className="font-medium">
+                                                                    Tiempo Jornada *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <Dropdown
+                                                                    id="tiempo_jornada"
+                                                                    name="tiempo_jornada"
+                                                                    value={formik.values.tiempo_jornada}
+                                                                    options={tiemposJornada}
+                                                                    onChange={formik.handleChange}
+                                                                    className={inputClassName(formik?.errors?.tiempo_jornada)}
+                                                                    placeholder="Seleccione el tiempo de jornada"
+                                                                />
+                                                                <ErrorMessage name="tiempo_jornada" component="small" className="p-error" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Cantidad */}
+                                                    <div className="col-12">
+                                                        <div className="formgrid grid">
+                                                            <div className="col-12 md:col-3">
+                                                                <label htmlFor="cantidad" className="font-medium">
+                                                                    Cantidad *
+                                                                </label>
+                                                            </div>
+                                                            <div className="col-12 md:col-9">
+                                                                <InputNumber
+                                                                    id="cantidad"
+                                                                    name="cantidad"
+                                                                    value={formik.values.cantidad}
+                                                                    onValueChange={(e) => formik.setFieldValue('cantidad', e.value)}
+                                                                    showButtons
+                                                                    min={1}
+                                                                    className={inputClassName(formik?.errors?.cantidad)}
+                                                                />
+                                                                <ErrorMessage name="cantidad" component="small" className="p-error" />
                                                             </div>
                                                         </div>
                                                     </div>

@@ -20,60 +20,94 @@ const OrganizationTree = ({
     const [expandedKeys, setExpandedKeys] = useState({});
     const contextMenu = React.useRef(null);
     
+    // Modifica la función transformToTreeNodes para asegurar la correcta asociación de contratos
+
     const transformToTreeNodes = useCallback((items) => {
-        return items.map(item => {
-            const details = itemDetails && itemDetails[item.id];
-            const isContractItem = details && details.tieneContrato;
-            
-            const itemContratos = contratos ? contratos.filter(contrato => contrato.itemId === item.id) : [];
-            
-            const contratoNodes = itemContratos.map(contrato => ({
-                key: `contrato-${contrato.id}`,
-                label: `${contrato.cargo} - ${contrato.haber_basico || 0} Bs.`,
-                icon: 'pi pi-user',
-                data: {
-                    ...contrato,
-                    isContractNode: true
-                },
-                selectable: true,
-                children: []
-            }));
-            
-            const allChildren = [
-                ...(item.children && item.children.length > 0 ? transformToTreeNodes(item.children) : []),
-                ...contratoNodes
-            ];
-            
-            return {
-                key: String(item.id),
-                label: item.title,
-                icon: isContractItem ? 'pi pi-briefcase' : 'pi pi-folder',
-                data: { 
-                    ...item,
-                    tieneContrato: isContractItem 
-                },
-                children: allChildren
-            };
-        });
-    }, [itemDetails, contratos]);
-    
-    const treeNodes = React.useMemo(() => transformToTreeNodes(data), [data, transformToTreeNodes]);
-    
-    useEffect(() => {
-        if (contratos && contratos.length > 0) {
-            setExpandedKeys(prevKeys => {
-                const newKeys = { ...prevKeys };
-                
-                contratos.forEach(contrato => {
-                    if (contrato.itemId) {
-                        newKeys[contrato.itemId] = true;
-                    }
-                });
-                
-                return newKeys;
-            });
+        if (!items || !Array.isArray(items)) {
+            return [];
         }
-    }, [contratos]);
+        
+        try {
+            return items.map(item => {
+                if (!item || !item.id) return null;
+                
+                const details = itemDetails && itemDetails[item.id];
+                const isContractItem = details && details.tieneContrato;
+                
+                // Simplificamos la forma en que relacionamos contratos con items
+                // Como no tenemos item_estructural_id, usamos una asociación manual
+                const itemContratos = details && details.contratos ? details.contratos : [];
+                
+                // Crear nodos para los contratos
+                const contratoNodes = itemContratos.map(contrato => ({
+                    key: `contrato-${contrato.id}`,
+                    label: `${contrato.cargo || 'Sin cargo'} - ${contrato.haber_basico || 0} Bs.`,
+                    icon: 'pi pi-user',
+                    data: {
+                        ...contrato,
+                        isContractNode: true,
+                        parentItemId: item.id // Almacenamos el padre para referencia
+                    },
+                    selectable: true,
+                    children: []
+                }));
+                
+                // Procesar hijos recursivamente
+                const childItems = item.children && Array.isArray(item.children) ? 
+                    transformToTreeNodes(item.children) : [];
+                    
+                // Combinar hijos y contratos
+                const allChildren = [
+                    ...childItems.filter(Boolean),
+                    ...contratoNodes
+                ];
+                
+                return {
+                    key: String(item.id),
+                    label: item.title || `Ítem ${item.id}`,
+                    icon: isContractItem || contratoNodes.length > 0 ? 'pi pi-briefcase' : 'pi pi-folder',
+                    data: { 
+                        ...item,
+                        tieneContrato: isContractItem || contratoNodes.length > 0
+                    },
+                    children: allChildren
+                };
+            }).filter(Boolean);
+        } catch (error) {
+            console.error("Error en transformToTreeNodes:", error);
+            return [];
+        }
+    }, [itemDetails]);
+    
+    // Añade comprobación de nulidad para treeNodes
+    const treeNodes = React.useMemo(() => {
+        if (!data || !Array.isArray(data)) {
+            console.warn("OrganizationTree: data prop is not an array", data);
+            return [];
+        }
+        return transformToTreeNodes(data);
+    }, [data, transformToTreeNodes]);
+    
+    // Optimiza el uso de useEffect para evitar bucles
+    useEffect(() => {
+        if (!contratos || !contratos.length) return;
+
+        // Solo expandir nodos una vez cuando cambian los contratos
+        const newKeys = { ...expandedKeys };
+        let changed = false;
+        
+        contratos.forEach(contrato => {
+            const itemId = contrato.itemId || contrato.item_estructural_id;
+            if (itemId && !newKeys[itemId]) {
+                newKeys[itemId] = true;
+                changed = true;
+            }
+        });
+        
+        if (changed) {
+            setExpandedKeys(newKeys);
+        }
+    }, [contratos]); // Solo depende de contratos, no de expandedKeys
     
     useEffect(() => {
         if (selectedItemId) {
@@ -107,8 +141,8 @@ const OrganizationTree = ({
     useEffect(() => {
         if (selectedContratoId) {
             const contrato = contratos.find(c => c.id === selectedContratoId);
-            if (contrato && contrato.itemId) {
-                setExpandedKeys(prev => ({...prev, [contrato.itemId]: true}));
+            if (contrato && (contrato.itemId || contrato.item_estructural_id)) {
+                setExpandedKeys(prev => ({...prev, [contrato.itemId || contrato.item_estructural_id]: true}));
             }
         }
     }, [selectedContratoId, contratos]);
@@ -322,20 +356,28 @@ const OrganizationTree = ({
             </div>
             
             <div className="p-3">
-                <Tree 
-                    value={treeNodes} 
-                    selectionMode="single"
-                    selectionKeys={selectedItemId ? { [String(selectedItemId)]: true } : {}}
-                    onSelectionChange={handleSelectionChange}
-                    expandedKeys={expandedKeys}
-                    onToggle={handleToggle}
-                    nodeTemplate={nodeTemplate}
-                    className="w-full border-none"
-                    onContextMenu={handleContextMenuShow}
-                    filter
-                    filterMode="lenient"
-                    filterPlaceholder="Buscar ítem..."
-                />
+                {!treeNodes || treeNodes.length === 0 ? (
+                    <div className="p-5 text-center text-500">
+                        <i className="pi pi-info-circle text-3xl mb-3 block"></i>
+                        <p>No hay elementos en la estructura organizacional</p>
+                        <p className="text-sm">Utiliza el botón "Crear Raíz" para comenzar</p>
+                    </div>
+                ) : (
+                    <Tree 
+                        value={treeNodes} 
+                        selectionMode="single"
+                        selectionKeys={selectedItemId ? { [String(selectedItemId)]: true } : {}}
+                        onSelectionChange={handleSelectionChange}
+                        expandedKeys={expandedKeys}
+                        onToggle={handleToggle}
+                        nodeTemplate={nodeTemplate}
+                        className="w-full border-none"
+                        onContextMenu={handleContextMenuShow}
+                        filter
+                        filterMode="lenient"
+                        filterPlaceholder="Buscar ítem..."
+                    />
+                )}
             </div>
         </div>
     );

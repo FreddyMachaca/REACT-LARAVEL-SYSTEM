@@ -70,14 +70,14 @@ const ItemDetailsSidebar = ({ item, contrato, onCreateContract }) => {
                         <div className="col-12 mb-2">
                             <div className="surface-100 p-2 border-round">
                                 <div className="text-500 font-medium mb-1 text-sm">Tiempo Jornada</div>
-                                <div className="font-medium">{contrato.tiempoJornada}</div>
+                                <div className="font-medium">{contrato.tiempo_jornada || contrato.tiempoJornada || 'No especificado'}</div>
                             </div>
                         </div>
                         
                         <div className="col-12 mb-2">
                             <div className="surface-100 p-2 border-round">
                                 <div className="text-500 font-medium mb-1 text-sm">Cantidad</div>
-                                <div className="font-medium">{contrato.cantidad}</div>
+                                <div className="font-medium">{contrato.cantidad || 1}</div>
                             </div>
                         </div>
                         
@@ -99,52 +99,60 @@ const ItemDetailsSidebar = ({ item, contrato, onCreateContract }) => {
         );
     }
 
-    return (
-        <div className="card shadow-2">
-            <div className="card-header bg-primary text-white p-3">
-                <h5 className="m-0">Detalles del Ítem</h5>
-            </div>
-            <div className="p-3">
-                <div className="flex align-items-center mb-3 justify-content-between">
-                    <h5 className="text-xl mb-0 text-primary">{item.title}</h5>
-                    {item.contratos && item.contratos.length > 0 && (
-                        <Badge value={`${item.contratos.length} contrato(s)`} severity="success" />
-                    )}
+    if (item) {
+        if (!item.contratos) {
+            item.contratos = [];
+        }
+        
+        return (
+            <div className="card shadow-2">
+                <div className="card-header bg-primary text-white p-3">
+                    <h5 className="m-0">Detalles del Ítem</h5>
                 </div>
-                
-                <div className="grid">
-                    {hasValue(item.categoriaPragmatica) && (
-                        <div className="col-12 mb-2">
-                            <div className="surface-100 p-2 border-round">
-                                <div className="text-500 font-medium mb-1 text-sm">Categoría Pragmática</div>
-                                <div className="font-medium">{item.categoriaPragmatica}</div>
-                            </div>
-                        </div>
-                    )}
+                <div className="p-3">
+                    <div className="flex align-items-center mb-3 justify-content-between">
+                        <h5 className="text-xl mb-0 text-primary">{item.title}</h5>
+                        {item.contratos && item.contratos.length > 0 && (
+                            <Badge value={`${item.contratos.length} contrato(s)`} severity="success" />
+                        )}
+                    </div>
                     
-                    {hasValue(item.categoriaAdministrativa) && (
-                        <div className="col-12 mb-2">
-                            <div className="surface-100 p-2 border-round">
-                                <div className="text-500 font-medium mb-1 text-sm">Categoría Administrativa</div>
-                                <div className="font-medium">{item.categoriaAdministrativa}</div>
+                    <div className="grid">
+                        {hasValue(item.categoriaPragmatica) && (
+                            <div className="col-12 mb-2">
+                                <div className="surface-100 p-2 border-round">
+                                    <div className="text-500 font-medium mb-1 text-sm">Categoría Pragmática</div>
+                                    <div className="font-medium">{item.categoriaPragmatica}</div>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                        
+                        {hasValue(item.categoriaAdministrativa) && (
+                            <div className="col-12 mb-2">
+                                <div className="surface-100 p-2 border-round">
+                                    <div className="text-500 font-medium mb-1 text-sm">Categoría Administrativa</div>
+                                    <div className="font-medium">{item.categoriaAdministrativa}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
-                <Divider />
-                
-                <div className="flex justify-content-center mt-3">
-                    <Button
-                        label="Crear contrato"
-                        icon="pi pi-plus"
-                        className="p-button-outlined"
-                        onClick={() => onCreateContract(item.id)}
-                    />
+                    <Divider />
+                    
+                    <div className="flex justify-content-center mt-3">
+                        <Button
+                            label="Crear contrato"
+                            icon="pi pi-plus"
+                            className="p-button-outlined"
+                            onClick={() => onCreateContract(item.id)}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
+
+    return null;
 };
 
 export default ItemDetailsSidebar;
