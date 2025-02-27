@@ -33,10 +33,11 @@ const ContractItemForm = ({ structuralItem, onSave, isSubPage }) => {
         haber_basico: 0,
         unidad_organizacional: '',
         tiempoJornada: '',
-        cantidad: 1
+        cantidad: 1,
+        id: structuralItem.id 
     };
 
-    const handleSubmit = (values, { setSubmitting }) => {
+    const handleSubmit = (values, { setSubmitting, setFieldError }) => {
         if (submitting) return;
         
         setSubmitting(true);
@@ -44,6 +45,8 @@ const ContractItemForm = ({ structuralItem, onSave, isSubPage }) => {
         try {
             const contratoData = {
                 ...values,
+                haber_basico: parseFloat(values.haber_basico),
+                cantidad: parseInt(values.cantidad, 10),
                 id: structuralItem.id,
                 title: structuralItem.title,
                 categoriaPragmatica: structuralItem.categoriaPragmatica,
@@ -51,11 +54,26 @@ const ContractItemForm = ({ structuralItem, onSave, isSubPage }) => {
                 fecha_creacion: new Date().toISOString()
             };
             
-            onSave(contratoData);
+            onSave(contratoData)
+                .catch(error => {
+                    if (error.response && error.response.status === 422) {
+                        const validationErrors = error.response.data.errors;
+                        
+                        Object.keys(validationErrors).forEach(field => {
+                            setFieldError(field, validationErrors[field][0]);
+                        });
+                        
+                        app.flashMsg("Error", "Por favor corrija los errores del formulario", "error");
+                    } else {
+                        throw error;
+                    }
+                })
+                .finally(() => {
+                    setSubmitting(false);
+                });
         } catch (error) {
             console.error("Error al guardar el contrato:", error);
             app.flashMsg("Error", "Ocurrió un error al guardar el contrato", "error");
-        } finally {
             setSubmitting(false);
         }
     };
@@ -88,6 +106,12 @@ const ContractItemForm = ({ structuralItem, onSave, isSubPage }) => {
                 >
                     {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
                         <Form>
+                            <input 
+                                type="hidden" 
+                                name="id" 
+                                value={values.id} 
+                            />
+                            
                             <div className="grid">
                                 <div className="col-12 md:col-6 mb-3">
                                     <div className="p-field">

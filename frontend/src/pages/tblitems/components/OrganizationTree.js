@@ -1,13 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tree } from 'primereact/tree';
 import { Button } from 'primereact/button';
 import { ContextMenu } from 'primereact/contextmenu';
 
-const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDeleteItem, selectedItemId, itemDetails, contratos, onViewContrato, onEditContrato, onDeleteContrato, selectedContratoId }) => {
+const OrganizationTree = ({ 
+    data, 
+    onSelectItem, 
+    onAddChild, 
+    onEditItem, 
+    onDeleteItem, 
+    selectedItemId, 
+    itemDetails, 
+    contratos, 
+    onViewContrato, 
+    onEditContrato, 
+    onDeleteContrato, 
+    selectedContratoId 
+}) => {
     const [expandedKeys, setExpandedKeys] = useState({});
     const contextMenu = React.useRef(null);
     
-    const transformToTreeNodes = (items) => {
+    const transformToTreeNodes = useCallback((items) => {
         return items.map(item => {
             const details = itemDetails && itemDetails[item.id];
             const isContractItem = details && details.tieneContrato;
@@ -42,21 +55,23 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
                 children: allChildren
             };
         });
-    };
+    }, [itemDetails, contratos]);
     
-    const treeNodes = transformToTreeNodes(data);
+    const treeNodes = React.useMemo(() => transformToTreeNodes(data), [data, transformToTreeNodes]);
     
     useEffect(() => {
         if (contratos && contratos.length > 0) {
-            const newExpandedKeys = { ...expandedKeys };
-            
-            contratos.forEach(contrato => {
-                if (contrato.itemId) {
-                    newExpandedKeys[contrato.itemId] = true;
-                }
+            setExpandedKeys(prevKeys => {
+                const newKeys = { ...prevKeys };
+                
+                contratos.forEach(contrato => {
+                    if (contrato.itemId) {
+                        newKeys[contrato.itemId] = true;
+                    }
+                });
+                
+                return newKeys;
             });
-            
-            setExpandedKeys(newExpandedKeys);
         }
     }, [contratos]);
     
@@ -78,11 +93,13 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
             
             const path = findPath(treeNodes, selectedItemId);
             if (path) {
-                const newExpandedKeys = {};
-                path.forEach(key => {
-                    newExpandedKeys[key] = true;
+                setExpandedKeys(prev => {
+                    const newKeys = { ...prev };
+                    path.forEach(key => {
+                        newKeys[key] = true;
+                    });
+                    return newKeys;
                 });
-                setExpandedKeys(prev => ({...prev, ...newExpandedKeys}));
             }
         }
     }, [selectedItemId, treeNodes]);
@@ -124,7 +141,7 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
         }
     };
     
-    const menuModel = (nodeKey) => {
+    const getMenuModel = useCallback((nodeKey) => {
         if (nodeKey.startsWith('contrato-')) {
             const contratoId = parseInt(nodeKey.replace('contrato-', ''));
             return [
@@ -165,9 +182,9 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
                 }
             ];
         }
-    };
+    }, [onViewContrato, onEditContrato, onDeleteContrato, onAddChild, onEditItem, onDeleteItem]);
     
-    const nodeTemplate = (node) => {
+    const nodeTemplate = useCallback((node) => {
         const isContractItem = node.data.tieneContrato;
         const isContractNode = node.data.isContractNode;
         
@@ -185,8 +202,10 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
                     data-nodeid={node.key}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        contextMenu.current.show(e);
-                        contextMenu.current.nodeKey = node.key;
+                        if (contextMenu.current) {
+                            contextMenu.current.show(e);
+                            contextMenu.current.nodeKey = node.key;
+                        }
                     }}
                 >
                     <span className={`flex-grow-1 text-sm ${isSelected ? 'text-primary font-bold' : ''}`}>
@@ -225,8 +244,10 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
                 className="flex align-items-center gap-2 py-1"
                 onContextMenu={(e) => {
                     e.preventDefault();
-                    contextMenu.current.show(e);
-                    contextMenu.current.nodeKey = node.key;
+                    if (contextMenu.current) {
+                        contextMenu.current.show(e);
+                        contextMenu.current.nodeKey = node.key;
+                    }
                 }}
                 onClick={(e) => handleNodeClick(e, node)}
                 style={{ cursor: 'pointer' }}
@@ -269,25 +290,29 @@ const OrganizationTree = ({ data, onSelectItem, onAddChild, onEditItem, onDelete
                 </div>
             </div>
         );
-    };
+    }, [selectedItemId, selectedContratoId, onViewContrato, onEditContrato, onDeleteContrato, onEditItem, onAddChild]);
     
     const handleContextMenuHide = () => {
-        contextMenu.current.nodeKey = null;
+        if (contextMenu.current) {
+            contextMenu.current.nodeKey = null;
+        }
     };
     
     const handleContextMenuShow = (e) => {
         const nodeElement = e.originalEvent.target.closest('[data-nodeid]');
         if (nodeElement) {
             const nodeKey = nodeElement.getAttribute('data-nodeid');
-            contextMenu.current.nodeKey = nodeKey;
-            contextMenu.current.show(e.originalEvent);
+            if (contextMenu.current) {
+                contextMenu.current.nodeKey = nodeKey;
+                contextMenu.current.show(e.originalEvent);
+            }
         }
     };
     
     return (
         <div className="card shadow-2">
             <ContextMenu 
-                model={contextMenu.current?.nodeKey ? menuModel(contextMenu.current.nodeKey) : []} 
+                model={(contextMenu.current?.nodeKey ? getMenuModel(contextMenu.current.nodeKey) : [])} 
                 ref={contextMenu} 
                 onHide={handleContextMenuHide}
             />

@@ -11,10 +11,13 @@ import ContractItemEditForm from './components/ContractItemEditForm';
 import { initialOrganizationData, itemDetails as initialItemDetails } from './components/OrganizationData';
 import useApp from 'hooks/useApp';
 import { confirmDialog } from 'primereact/confirmdialog';
+import useApi from 'hooks/useApi';
 
 const EstructuraOrganizacional = (props) => {
     const app = useApp();
+    const api = useApi();
     const navigate = useNavigate();
+    
     const [organizationData, setOrganizationData] = useState(() => {
         try {
             const savedData = localStorage.getItem('organizationData');
@@ -47,27 +50,37 @@ const EstructuraOrganizacional = (props) => {
     
     const [selectedItemId, setSelectedItemId] = useState(null);
     const [selectedContratoId, setSelectedContratoId] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [contratos, setContratos] = useState(() => {
-        try {
-            const savedContratos = localStorage.getItem('contratos');
-            return savedContratos ? JSON.parse(savedContratos) : [];
-        } catch (error) {
-            console.error("Error parsing contratos from localStorage:", error);
-            return [];
-        }
-    });
+    const [loading, setLoading] = useState(true);
+    const [contratos, setContratos] = useState([]);
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            setLoading(true);
+            try {
+                const response = await api.get('tblitem');
+                if (response.records) {
+                    setContratos(response.records);
+                }
+            } catch (error) {
+                console.error("Error fetching contratos:", error);
+                app.flashMsg("Error", "No se pudieron cargar los ítems de contrato", "error");
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchItems();
+    }, []);
 
     useEffect(() => {
         try {
             localStorage.setItem('organizationData', JSON.stringify(organizationData || []));
             localStorage.setItem('itemDetails', JSON.stringify(itemDetails || {}));
             localStorage.setItem('menuItems', JSON.stringify(menuItems || {}));
-            localStorage.setItem('contratos', JSON.stringify(contratos || []));
         } catch (error) {
             console.error("Error saving data to localStorage:", error);
         }
-    }, [organizationData, itemDetails, menuItems, contratos]);
+    }, [organizationData, itemDetails, menuItems]);
 
     const handleSelectItem = (itemId) => {
         console.log("Ítem seleccionado:", itemId);
@@ -134,38 +147,86 @@ const EstructuraOrganizacional = (props) => {
         );
     };
     
-    const saveContractItem = (contractItemData) => {
-        const { id: itemId } = contractItemData;
-        
-        const contratoId = Date.now();
-        
-        const newContrato = {
-            id: contratoId,
-            itemId: itemId,
-            codigo_item: contractItemData.codigo_item,
-            cargo: contractItemData.cargo,
-            haber_basico: contractItemData.haber_basico,
-            unidad_organizacional: contractItemData.unidad_organizacional,
-            tiempoJornada: contractItemData.tiempoJornada,
-            cantidad: contractItemData.cantidad,
-            fecha_creacion: new Date().toISOString()
-        };
-        
-        setContratos(prevContratos => [...prevContratos, newContrato]);
-        
-        setItemDetails(prevDetails => ({
-            ...prevDetails,
-            [itemId]: {
-                ...prevDetails[itemId],
-                tieneContrato: true
+    const saveContractItem = async (contractItemData) => {
+        setLoading(true);
+        try {
+            if (!contractItemData.id) {
+                console.error("Missing contractItemData.id in the data:", contractItemData);
+                throw new Error("ID del ítem estructural no encontrado");
             }
-        }));
-        
-        app.flashMsg("Éxito", "Contrato creado correctamente");
-        app.closeDialogs();
-        
-        setSelectedItemId(null);
-        setTimeout(() => setSelectedItemId(itemId), 100);
+
+            const formData = {
+                codigo_item: contractItemData.codigo_item,
+                cargo: contractItemData.cargo,
+                haber_basico: parseFloat(contractItemData.haber_basico).toFixed(2),
+                unidad_organizacional: contractItemData.unidad_organizacional,
+                tiempoJornada: contractItemData.tiempoJornada,
+                cantidad: parseInt(contractItemData.cantidad, 10),
+                item_estructural_id: contractItemData.id
+            };
+            
+            console.log("Sending contract data to API:", formData);
+            
+            try {
+                const response = await api.post('tblitem/add', formData);
+                console.log("API response:", response);
+                
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+                
+                const responseId = response.id || 
+                                  (response.record && response.record.id) || 
+                                  Date.now();
+                
+                console.log("Extracted ID from response:", responseId);
+                
+                const savedContrato = {
+                    ...formData,
+                    id: responseId,
+                    itemId: contractItemData.id,
+                    fecha_creacion: (response.record && response.record.fecha_creacion) || new Date().toISOString()
+                };
+                
+                console.log("Saving contract to local state:", savedContrato);
+                
+                setContratos(prevContratos => [...prevContratos, savedContrato]);
+                
+                setItemDetails(prevDetails => ({
+                    ...prevDetails,
+                    [contractItemData.id]: {
+                        ...prevDetails[contractItemData.id],
+                        tieneContrato: true
+                    }
+                }));
+                
+                app.flashMsg("Éxito", "Contrato creado correctamente");
+                app.closeDialogs();
+                
+                setSelectedItemId(null);
+                setTimeout(() => setSelectedItemId(contractItemData.id), 100);
+            } catch (apiError) {
+                if (apiError.response && apiError.response.status === 422) {
+                    const validationErrors = apiError.response.data.errors || {};
+                    let errorMessage = "Error de validación:\n";
+                    
+                    Object.keys(validationErrors).forEach(field => {
+                        errorMessage += `- ${field}: ${validationErrors[field].join(', ')}\n`;
+                    });
+                    
+                    console.error("Validation errors:", validationErrors);
+                    throw new Error(errorMessage);
+                } else {
+                    throw apiError;
+                }
+            }
+        } catch (error) {
+            console.error("Error al guardar el contrato:", error);
+            const errorMsg = error.response?.data?.message || error.message || "Error desconocido";
+            app.flashMsg("Error", `Error al guardar el contrato: ${errorMsg}`, "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDeleteContrato = (contratoId) => {
@@ -174,15 +235,29 @@ const EstructuraOrganizacional = (props) => {
             header: 'Confirmación de eliminación',
             icon: 'pi pi-exclamation-triangle',
             acceptClassName: 'p-button-danger',
-            accept: () => {
-                const updatedContratos = contratos.filter(c => c.id !== contratoId);
-                setContratos(updatedContratos);
-                
-                if (selectedContratoId === contratoId) {
-                    setSelectedContratoId(null);
+            accept: async () => {
+                setLoading(true);
+                try {
+                    const response = await api.delete(`tblitem/delete/${contratoId}`);
+                    
+                    if (response.error) {
+                        throw new Error(response.error);
+                    }
+                    
+                    const updatedContratos = contratos.filter(c => c.id !== contratoId);
+                    setContratos(updatedContratos);
+                    
+                    if (selectedContratoId === contratoId) {
+                        setSelectedContratoId(null);
+                    }
+                    
+                    app.flashMsg('Éxito', 'El contrato ha sido eliminado con éxito');
+                } catch (error) {
+                    console.error("Error al eliminar el contrato:", error);
+                    app.flashMsg("Error", "Error al eliminar el contrato de la base de datos", "error");
+                } finally {
+                    setLoading(false);
                 }
-                
-                app.flashMsg('Éxito', 'El contrato ha sido eliminado con éxito');
             }
         });
     };
@@ -209,16 +284,39 @@ const EstructuraOrganizacional = (props) => {
         );
     };
     
-    const handleUpdateContrato = (updatedContrato) => {
-        setContratos(prevContratos => 
-            prevContratos.map(c => c.id === updatedContrato.id ? updatedContrato : c)
-        );
-        
-        app.flashMsg("Éxito", "Contrato actualizado correctamente");
-        app.closeDialogs();
-        
-        setSelectedContratoId(null);
-        setTimeout(() => setSelectedContratoId(updatedContrato.id), 100);
+    const handleUpdateContrato = async (updatedContrato) => {
+        setLoading(true);
+        try {
+            const formData = {
+                codigo_item: updatedContrato.codigo_item,
+                cargo: updatedContrato.cargo,
+                haber_basico: updatedContrato.haber_basico,
+                unidad_organizacional: updatedContrato.unidad_organizacional,
+                tiempoJornada: updatedContrato.tiempoJornada,
+                cantidad: updatedContrato.cantidad
+            };
+            
+            const response = await api.post(`tblitem/edit/${updatedContrato.id}`, formData);
+            
+            if (response.error) {
+                throw new Error(response.error);
+            }
+            
+            setContratos(prevContratos => 
+                prevContratos.map(c => c.id === updatedContrato.id ? updatedContrato : c)
+            );
+            
+            app.flashMsg("Éxito", "Contrato actualizado correctamente");
+            app.closeDialogs();
+            
+            setSelectedContratoId(null);
+            setTimeout(() => setSelectedContratoId(updatedContrato.id), 100);
+        } catch (error) {
+            console.error("Error al actualizar el contrato:", error);
+            app.flashMsg("Error", "Error al actualizar el contrato en la base de datos", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const addNewItem = (formData) => {
@@ -370,9 +468,6 @@ const EstructuraOrganizacional = (props) => {
     if (selectedItem) {
         selectedItem.contratos = contratos.filter(c => c.itemId === selectedItem.id);
     }
-
-    console.log("Renderizando con ítem seleccionado:", selectedItemId);
-    console.log("Datos del ítem:", selectedItem);
 
     return (
         <main className="main-page">
