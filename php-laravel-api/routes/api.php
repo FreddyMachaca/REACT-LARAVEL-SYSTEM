@@ -268,15 +268,32 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoeventoacademico/edit/{rec_id}', 'TblTipoeventoAcademicoController@edit');	
 	Route::any('tbltipoeventoacademico/delete/{rec_id}', 'TblTipoeventoAcademicoController@delete');
 
-/* routes for TblItem Controller  */	
-	Route::get('tblitem/', 'TblItemController@index');
-	Route::get('tblitem/index', 'TblItemController@index');
-	Route::get('tblitem/index/{filter?}/{filtervalue?}', 'TblItemController@index');	
-	Route::get('tblitem/view/{rec_id}', 'TblItemController@view');	
-	Route::post('tblitem/add', 'TblItemController@add');	
-	Route::any('tblitem/edit/{rec_id}', 'TblItemController@edit');	
-	Route::any('tblitem/delete/{rec_id}', 'TblItemController@delete');
+/* routes for TblMpCargo Controller  */	
+	Route::get('tblmpcargo/', 'TblMpCargoController@index');
+	Route::get('tblmpcargo/index', 'TblMpCargoController@index');
+	Route::get('tblmpcargo/index/{filter?}/{filtervalue?}', 'TblMpCargoController@index');	
+	Route::get('tblmpcargo/view/{rec_id}', 'TblMpCargoController@view');	
+	Route::post('tblmpcargo/add', 'TblMpCargoController@add');	
+	Route::any('tblmpcargo/edit/{rec_id}', 'TblMpCargoController@edit');	
+	Route::any('tblmpcargo/delete/{rec_id}', 'TblMpCargoController@delete');
 
+/* routes for TblMpEscalaSalarial Controller  */	
+	Route::get('tblmpescalasalarial/', 'TblMpEscalaSalarialController@index');
+	Route::get('tblmpescalasalarial/index', 'TblMpEscalaSalarialController@index');
+	Route::get('tblmpescalasalarial/index/{filter?}/{filtervalue?}', 'TblMpEscalaSalarialController@index');	
+	Route::get('tblmpescalasalarial/view/{rec_id}', 'TblMpEscalaSalarialController@view');	
+	Route::post('tblmpescalasalarial/add', 'TblMpEscalaSalarialController@add');	
+	Route::any('tblmpescalasalarial/edit/{rec_id}', 'TblMpEscalaSalarialController@edit');	
+	Route::any('tblmpescalasalarial/delete/{rec_id}', 'TblMpEscalaSalarialController@delete');
+
+/* routes for TblMpNivelSalarial Controller  */	
+	Route::get('tblmpnivelsalarial/', 'TblMpNivelSalarialController@index');
+	Route::get('tblmpnivelsalarial/index', 'TblMpNivelSalarialController@index');
+	Route::get('tblmpnivelsalarial/index/{filter?}/{filtervalue?}', 'TblMpNivelSalarialController@index');	
+	Route::get('tblmpnivelsalarial/view/{rec_id}', 'TblMpNivelSalarialController@view');	
+	Route::post('tblmpnivelsalarial/add', 'TblMpNivelSalarialController@add');	
+	Route::any('tblmpnivelsalarial/edit/{rec_id}', 'TblMpNivelSalarialController@edit');	
+	Route::any('tblmpnivelsalarial/delete/{rec_id}', 'TblMpNivelSalarialController@delete');
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
