@@ -53,7 +53,7 @@ class TblitemsController extends Controller
                 
                 $combined_records[] = [
                     'id' => $cargo->ca_id,
-                    'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_eo_id,
+                    'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
                     'cargo' => $escala ? $escala->es_descripcion : '',
                     'haber_basico' => $nivel ? $nivel->ns_haber_basico : '',
                     'unidad_organizacional' => $estructura ? $estructura->eo_descripcion : '',
@@ -99,7 +99,7 @@ class TblitemsController extends Controller
             
             $combined_record = [
                 'id' => $cargo->ca_id,
-                'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_eo_id,
+                'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
                 'cargo' => $escala ? $escala->es_descripcion : '',
                 'haber_basico' => $nivel ? $nivel->ns_haber_basico : '',
                 'unidad_organizacional' => $estructura ? $estructura->eo_descripcion : '',
