@@ -304,6 +304,11 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpestructuraorganizacional/edit/{rec_id}', 'TblMpEstructuraOrganizacionalController@edit');	
 	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
 
+/* routes for Tblitems Controller - combined data routes  */	
+	Route::get('tblitems/', 'TblitemsController@index');
+	Route::get('tblitems/index', 'TblitemsController@index');
+	Route::get('tblitems/view/{rec_id}', 'TblitemsController@view');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');

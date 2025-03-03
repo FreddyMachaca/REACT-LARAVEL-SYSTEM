@@ -19,51 +19,15 @@ const TblitemsViewPage = (props) => {
             try {
                 setLoading(true);
                 
-                const cargoResponse = await axios.get(`/tblmpcargo/view/${pageid}`);
-                const cargo = cargoResponse.data;
+                // Use the new combined endpoint to get all data in one request
+                const response = await axios.get(`/tblitems/view/${pageid}`);
+                const item = response.data;
                 
-                if (!cargo || !cargo.ca_id) {
-                    throw new Error("No se pudo cargar la información del cargo");
+                if (!item || !item.id) {
+                    throw new Error("No se pudo cargar la información del item");
                 }
                 
-                let combinedItem = {
-                    id: cargo.ca_id,
-                    codigo: `${cargo.ca_ti_item || ''}-${cargo.ca_eo_id || ''}`,
-                    cargo: '',
-                    haber_basico: '',
-                    unidad_organizacional: '',
-                    fecha_creacion: cargo.ca_fecha_creacion || '',
-                    cargo_original: cargo
-                };
-                
-                try {
-                    if (cargo.ca_es_id) {
-                        const escalaResponse = await axios.get(`/tblmpescalasalarial/view/${cargo.ca_es_id}`);
-                        const escala = escalaResponse.data;
-                        combinedItem.cargo = escala.es_descripcion || '';
-                        combinedItem.escala_original = escala;
-                        
-                        if (escala.es_ns_id) {
-                            const nivelResponse = await axios.get(`/tblmpnivelsalarial/view/${escala.es_ns_id}`);
-                            combinedItem.haber_basico = nivelResponse.data.ns_haber_basico || '';
-                            combinedItem.nivel_original = nivelResponse.data;
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error fetching escala/nivel data:", error);
-                }
-                
-                try {
-                    if (cargo.ca_eo_id) {
-                        const estructuraResponse = await axios.get(`/tblmpestructuraorganizacional/view/${cargo.ca_eo_id}`);
-                        combinedItem.unidad_organizacional = estructuraResponse.data.eo_descripcion || '';
-                        combinedItem.estructura_original = estructuraResponse.data;
-                    }
-                } catch (error) {
-                    console.error("Error fetching estructura data:", error);
-                }
-                
-                setItem(combinedItem);
+                setItem(item);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching item details:", error);
