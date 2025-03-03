@@ -295,6 +295,15 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpnivelsalarial/edit/{rec_id}', 'TblMpNivelSalarialController@edit');	
 	Route::any('tblmpnivelsalarial/delete/{rec_id}', 'TblMpNivelSalarialController@delete');
 
+/* routes for TblMpEstructuraOrganizacional Controller  */	
+	Route::get('tblmpestructuraorganizacional/', 'TblMpEstructuraOrganizacionalController@index');
+	Route::get('tblmpestructuraorganizacional/index', 'TblMpEstructuraOrganizacionalController@index');
+	Route::get('tblmpestructuraorganizacional/index/{filter?}/{filtervalue?}', 'TblMpEstructuraOrganizacionalController@index');	
+	Route::get('tblmpestructuraorganizacional/view/{rec_id}', 'TblMpEstructuraOrganizacionalController@view');	
+	Route::post('tblmpestructuraorganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
+	Route::any('tblmpestructuraorganizacional/edit/{rec_id}', 'TblMpEstructuraOrganizacionalController@edit');	
+	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
