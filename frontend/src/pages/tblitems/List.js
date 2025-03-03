@@ -5,7 +5,6 @@ import { DataTable } from 'primereact/datatable';
 import { FilterTags } from 'components/FilterTags';
 import { InputText } from 'primereact/inputtext';
 import { Link } from 'react-router-dom';
-import { PageRequestError } from 'components/PageRequestError';
 import { Paginator } from 'primereact/paginator';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { SplitButton } from 'primereact/splitbutton';
@@ -18,12 +17,10 @@ import useListPage from 'hooks/useListPage';
 const TblitemsListPage = (props) => {
     const app = useApp();
     const [combinedData, setCombinedData] = useState([]);
-    const [cargoData, setCargoData] = useState([]);
-    const [escalaData, setEscalaData] = useState([]);
-    const [nivelData, setNivelData] = useState([]);
-    const [estructuraData, setEstructuraData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [apiRequestError, setApiRequestError] = useState(null);
+    const [loadedRecords, setLoadedRecords] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
     
     const filterSchema = {
         search: {
@@ -40,31 +37,133 @@ const TblitemsListPage = (props) => {
     const { filters, setFilterValue } = filterController;
     const { totalRecords, totalPages, recordsPosition, firstRow, limit, onPageChange } =  pagination;
 
-    // Load data from all four tables
     useEffect(() => {
-        const fetchAllData = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
                 
-                // Fix URLs to avoid the duplicate /api prefix
                 const cargoResponse = await axios.get('/tblmpcargo/index');
-                const escalaResponse = await axios.get('/tblmpescalasalarial/index');
-                const nivelResponse = await axios.get('/tblmpnivelsalarial/index');
-                const estructuraResponse = await axios.get('/tblmpestructuraorganizacional/index');
+                const cargoRecords = cargoResponse.data.records || [];
                 
-                setCargoData(cargoResponse.data.records || []);
-                setEscalaData(escalaResponse.data.records || []);
-                setNivelData(nivelResponse.data.records || []);
-                setEstructuraData(estructuraResponse.data.records || []);
+                console.log('Cargo records loaded:', cargoRecords.length);
+                console.log('Sample cargo record:', cargoRecords[0]);
                 
-                // Process data once all responses are received
-                processData(
-                    cargoResponse.data.records || [], 
-                    escalaResponse.data.records || [], 
-                    nivelResponse.data.records || [], 
-                    estructuraResponse.data.records || []
-                );
+                setTotalItems(cargoRecords.length);
                 
+                if (!cargoRecords.length) {
+                    setLoading(false);
+                    setCombinedData([]);
+                    return;
+                }
+                
+                console.log('Sample cargo IDs:', cargoRecords.slice(0, 5).map(c => c.ca_id));
+                console.log('Sample escala IDs from cargo:', cargoRecords.slice(0, 5).map(c => c.ca_es_id));
+                console.log('Sample estructura IDs from cargo:', cargoRecords.slice(0, 5).map(c => c.ca_eo_id));
+                
+                console.log('Fetching related data...');
+                const [escalaResponse, nivelResponse, estructuraResponse] = await Promise.all([
+                    axios.get('/tblmpescalasalarial/index'),
+                    axios.get('/tblmpnivelsalarial/index'),
+                    axios.get('/tblmpestructuraorganizacional/index')
+                ]);
+                
+                const escalaRecords = escalaResponse.data.records || [];
+                const nivelRecords = nivelResponse.data.records || [];
+                const estructuraRecords = estructuraResponse.data.records || [];
+                
+                console.log('Escala records loaded:', escalaRecords.length);
+                console.log('Nivel records loaded:', nivelRecords.length);
+                console.log('Estructura records loaded:', estructuraRecords.length);
+                
+                if (escalaRecords.length > 0) {
+                    console.log('Sample escala record:', escalaRecords[0]);
+                    console.log('Sample nivel IDs from escalas:', escalaRecords.slice(0, 5).map(e => e.es_ns_id));
+                }
+                
+                if (nivelRecords.length > 0) {
+                    console.log('Sample nivel record:', nivelRecords[0]);
+                }
+                
+                if (estructuraRecords.length > 0) {
+                    console.log('Sample estructura record:', estructuraRecords[0]);
+                }
+                
+                const escalaMap = {};
+                const nivelMap = {};
+                const estructuraMap = {};
+                
+                escalaRecords.forEach(escala => {
+                    if (escala && escala.es_id) {
+                        escalaMap[escala.es_id] = escala;
+                    }
+                });
+                
+                nivelRecords.forEach(nivel => {
+                    if (nivel && nivel.ns_id) {
+                        nivelMap[nivel.ns_id] = nivel;
+                    }
+                });
+                
+                estructuraRecords.forEach(estructura => {
+                    if (estructura && estructura.eo_id) {
+                        estructuraMap[estructura.eo_id] = estructura;
+                    }
+                });
+                
+                console.log('Data maps created successfully');
+                console.log('Escala map size:', Object.keys(escalaMap).length);
+                console.log('Nivel map size:', Object.keys(nivelMap).length);
+                console.log('Estructura map size:', Object.keys(estructuraMap).length);
+                
+                console.log('Processing cargo records with lookup data...');
+                const processedData = [];
+                let missingEscala = 0;
+                let missingNivel = 0;
+                let missingEstructura = 0;
+                
+                for (const cargo of cargoRecords) {
+                    let item = {
+                        id: cargo.ca_id,
+                        codigo: `${cargo.ca_ti_item || ''}-${cargo.ca_eo_id || ''}`,
+                        cargo: '',
+                        haber_basico: '',
+                        unidad_organizacional: '',
+                        fecha_creacion: cargo.ca_fecha_creacion || ''
+                    };
+                    
+                    if (cargo.ca_es_id && escalaMap[cargo.ca_es_id]) {
+                        const escala = escalaMap[cargo.ca_es_id];
+                        item.cargo = escala.es_descripcion || '';
+                        
+                        if (escala.es_ns_id && nivelMap[escala.es_ns_id]) {
+                            const nivel = nivelMap[escala.es_ns_id];
+                            item.haber_basico = nivel.ns_haber_basico || '';
+                        } else {
+                            missingNivel++;
+                        }
+                    } else {
+                        missingEscala++;
+                    }
+                    
+                    if (cargo.ca_eo_id && estructuraMap[cargo.ca_eo_id]) {
+                        const estructura = estructuraMap[cargo.ca_eo_id];
+                        item.unidad_organizacional = estructura.eo_descripcion || '';
+                    } else {
+                        missingEstructura++;
+                    }
+                    
+                    processedData.push(item);
+                }
+                
+                console.log('Processing complete. Records processed:', processedData.length);
+                console.log('Records with missing escala:', missingEscala);
+                console.log('Records with missing nivel:', missingNivel);
+                console.log('Records with missing estructura:', missingEstructura);
+                
+                console.log('Sample processed records:', processedData.slice(0, 3));
+                
+                setLoadedRecords(processedData.length);
+                setCombinedData(processedData);
                 setLoading(false);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -73,32 +172,9 @@ const TblitemsListPage = (props) => {
             }
         };
         
-        fetchAllData();
+        fetchData();
     }, []);
-    
-    // Process data to combine information from all tables
-    const processData = (cargoData, escalaData, nivelData, estructuraData) => {
-        if (!cargoData || !cargoData.length) return;
-        
-        const combined = cargoData.map(cargo => {
-            const escala = escalaData.find(e => e.es_id === cargo.ca_es_id) || {};
-            const nivel = nivelData.find(n => n.ns_id === escala.es_ns_id) || {};
-            const estructura = estructuraData.find(e => e.eo_id === cargo.ca_eo_id) || {};
-            
-            return {
-                id: cargo.ca_id,
-                codigo: `${cargo.ca_eo_id || ''} ${cargo.ca_ti_item || ''}`,
-                cargo: escala.es_descripcion || '',
-                haber_basico: nivel.ns_haber_basico || '',
-                unidad_organizacional: estructura.eo_descripcion || '',
-                fecha_creacion: cargo.ca_fecha_creacion || ''
-            };
-        });
-        
-        setCombinedData(combined);
-    };
 
-    // Apply search filter to the combined data
     const searchFilteredData = filters.search?.value 
         ? combinedData.filter(item => {
             const searchTerm = filters.search.value.toLowerCase();
@@ -262,37 +338,42 @@ const TblitemsListPage = (props) => {
                                 {loading ? (
                                     <div className="flex align-items-center justify-content-center text-gray-500 p-3">
                                         <div><ProgressSpinner style={{width:'30px', height:'30px'}} /> </div>
-                                        <div className="font-bold text-lg">Cargando...</div>
+                                        <div className="font-bold text-lg">Cargando datos...</div>
                                     </div>
                                 ) : (
-                                <DataTable 
-                                    value={searchFilteredData} 
-                                    lazy={false} 
-                                    loading={loading} 
-                                    selectionMode="checkbox" 
-                                    selection={selectedItems} 
-                                    onSelectionChange={e => setSelectedItems(e.value)}
-                                    dataKey="id" 
-                                    sortField={sortBy} 
-                                    sortOrder={sortOrder} 
-                                    onSort={onSort}
-                                    className=" p-datatable-sm" 
-                                    stripedRows={true}
-                                    showGridlines={false} 
-                                    rowHover={true} 
-                                    responsiveLayout="stack" 
-                                    emptyMessage={<EmptyRecordMessage />} 
-                                    >
-                                    {/*PageComponentStart*/}
-                                    <Column selectionMode="multiple" headerStyle={{width: '2rem'}}></Column>
-                                    <Column field="codigo" header="Código" body={CodigoTemplate}></Column>
-                                    <Column field="cargo" header="Cargo"></Column>
-                                    <Column field="haber_basico" header="Haber Básico"></Column>
-                                    <Column field="unidad_organizacional" header="Unidad Organizacional"></Column>
-                                    <Column field="fecha_creacion" header="Fecha Creación" body={FechaTemplate}></Column>
-                                    <Column headerStyle={{width: '2rem'}} headerClass="text-center" body={ActionButton}></Column>
-                                    {/*PageComponentEnd*/}
-                                </DataTable>
+                                <>
+                                    {!loading && loadedRecords > 0 && (
+                                        <div className="text-sm text-gray-500 mb-2">
+                                            Mostrando {loadedRecords} registros
+                                        </div>
+                                    )}
+                                    <DataTable 
+                                        value={searchFilteredData} 
+                                        lazy={false} 
+                                        loading={loading} 
+                                        selectionMode="checkbox" 
+                                        selection={selectedItems} 
+                                        onSelectionChange={e => setSelectedItems(e.value)}
+                                        dataKey="id" 
+                                        sortField={sortBy} 
+                                        sortOrder={sortOrder} 
+                                        onSort={onSort}
+                                        className=" p-datatable-sm" 
+                                        stripedRows={true}
+                                        showGridlines={false} 
+                                        rowHover={true} 
+                                        responsiveLayout="stack" 
+                                        emptyMessage={<EmptyRecordMessage />} 
+                                        >
+                                        <Column selectionMode="multiple" headerStyle={{width: '2rem'}}></Column>
+                                        <Column field="codigo" header="Código" body={CodigoTemplate} sortable></Column>
+                                        <Column field="cargo" header="Cargo" sortable></Column>
+                                        <Column field="haber_basico" header="Haber Básico" sortable></Column>
+                                        <Column field="unidad_organizacional" header="Unidad Organizacional" sortable></Column>
+                                        <Column field="fecha_creacion" header="Fecha Creación" body={FechaTemplate} sortable></Column>
+                                        <Column headerStyle={{width: '2rem'}} headerClass="text-center" body={ActionButton}></Column>
+                                    </DataTable>
+                                </>
                                 )}
                             </div>
                             <PageFooter />

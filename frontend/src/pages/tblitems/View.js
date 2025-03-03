@@ -19,7 +19,6 @@ const TblitemsViewPage = (props) => {
             try {
                 setLoading(true);
                 
-                // Fix URL to avoid duplicate /api prefix
                 const cargoResponse = await axios.get(`/tblmpcargo/view/${pageid}`);
                 const cargo = cargoResponse.data;
                 
@@ -27,10 +26,9 @@ const TblitemsViewPage = (props) => {
                     throw new Error("No se pudo cargar la información del cargo");
                 }
                 
-                // Initialize combined item with cargo data
                 let combinedItem = {
                     id: cargo.ca_id,
-                    codigo: `${cargo.ca_eo_id || ''} ${cargo.ca_ti_item || ''}`,
+                    codigo: `${cargo.ca_ti_item || ''}-${cargo.ca_eo_id || ''}`,
                     cargo: '',
                     haber_basico: '',
                     unidad_organizacional: '',
@@ -38,7 +36,6 @@ const TblitemsViewPage = (props) => {
                     cargo_original: cargo
                 };
                 
-                // Fetch related data from other tables - all URLs fixed
                 try {
                     if (cargo.ca_es_id) {
                         const escalaResponse = await axios.get(`/tblmpescalasalarial/view/${cargo.ca_es_id}`);
@@ -54,7 +51,6 @@ const TblitemsViewPage = (props) => {
                     }
                 } catch (error) {
                     console.error("Error fetching escala/nivel data:", error);
-                    // Continue with available data
                 }
                 
                 try {
@@ -65,7 +61,6 @@ const TblitemsViewPage = (props) => {
                     }
                 } catch (error) {
                     console.error("Error fetching estructura data:", error);
-                    // Continue with available data
                 }
                 
                 setItem(combinedItem);
@@ -233,7 +228,7 @@ TblitemsViewPage.defaultProps = {
     id: null,
     primaryKey: 'ca_id',
     pageName: 'tblitems',
-    apiPath: 'tblmpcargo/view', // This is correct as it will be combined with the base URL
+    apiPath: 'tblmpcargo/view',
     routeName: 'tblitemsview',
     msgBeforeDelete: "¿Seguro que quieres borrar este registro?",
     msgTitle: "Eliminar el registro",
