@@ -308,6 +308,9 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblitems/', 'TblitemsController@index');
 	Route::get('tblitems/index', 'TblitemsController@index');
 	Route::get('tblitems/view/{rec_id}', 'TblitemsController@view');
+	Route::get('tblitems/options', 'TblitemsController@getOptions');
+	Route::any('tblitems/edit/{rec_id}', 'TblitemsController@edit');
+	Route::any('tblitems/delete/{rec_id}', 'TblitemsController@delete');
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

@@ -105,6 +105,7 @@ import TbltipoeventoacademicoAdd from 'pages/tbltipoeventoacademico/Add';
 import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
 import TblitemsView from 'pages/tblitems/View';
 import TblitemsList from 'pages/tblitems/List';
+import TblitemsEdit from 'pages/tblitems/Edit';
 
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
@@ -125,6 +126,7 @@ const App = () => {
 				<Route path="/tblitems/:fieldName/:fieldValue" element={<TblitemsList />} />
 				<Route path="/tblitems/index/:fieldName/:fieldValue" element={<TblitemsList />} />
 				<Route path="/tblitems/view/:pageid" element={<TblitemsView />} />
+				<Route path="/tblitems/edit/:pageid" element={<TblitemsEdit />} />
 
 				{/* tblacreedores pages routes */}
 				<Route path="/tblacreedores" element={<TblacreedoresList />} />

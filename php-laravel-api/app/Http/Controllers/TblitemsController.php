@@ -116,4 +116,75 @@ class TblitemsController extends Controller
             return $this->respondWithError($e);
         }
     }
+    
+    /**
+     * Update item record
+     * @param Request $request
+     * @param string $rec_id
+     * @return \Illuminate\Http\Response
+     */
+    function edit(Request $request, $rec_id = null){
+        try {
+            $cargo = TblMpCargo::findOrFail($rec_id);
+            
+            if ($request->isMethod('post')) {
+                $modeldata = $this->normalizeFormData($request->all());
+                
+                $cargo->update([
+                    'ca_ti_item' => $modeldata['ca_ti_item'] ?? $cargo->ca_ti_item,
+                    'ca_num_item' => $modeldata['ca_num_item'] ?? $cargo->ca_num_item,
+                    'ca_es_id' => $modeldata['ca_es_id'] ?? $cargo->ca_es_id,
+                    'ca_eo_id' => $modeldata['ca_eo_id'] ?? $cargo->ca_eo_id
+                ]);
+                
+                return $this->view($rec_id);
+            } else {
+                return $this->view($rec_id);
+            }
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+    
+    /**
+     * Delete item record
+     * @param Request $request
+     * @param string $rec_id
+     * @return \Illuminate\Http\Response
+     */
+    function delete(Request $request, $rec_id = null){
+        try {
+            $arr_id = explode(",", $rec_id);
+            $query = TblMpCargo::query();
+            $query->whereIn("ca_id", $arr_id);
+            $query->delete();
+            
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Registro(s) eliminado(s) con éxito',
+                'deleted_ids' => $arr_id
+            ]);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+    
+    /**
+     * Get options for related fields
+     * @return \Illuminate\Http\Response
+     */
+    function getOptions(){
+        try {
+            $escalaOptions = TblMpEscalaSalarial::select('es_id', 'es_descripcion')->get();
+            
+            $estructuraOptions = TblMpEstructuraOrganizacional::select('eo_id', 'eo_descripcion')->get();
+            
+            return $this->respond([
+                'escalaOptions' => $escalaOptions,
+                'estructuraOptions' => $estructuraOptions
+            ]);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
 }
