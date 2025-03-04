@@ -19,7 +19,6 @@ const TblitemsViewPage = (props) => {
             try {
                 setLoading(true);
                 
-                // Use the new combined endpoint to get all data in one request
                 const response = await axios.get(`/tblitems/view/${pageid}`);
                 const item = response.data;
                 
@@ -52,14 +51,15 @@ const TblitemsViewPage = (props) => {
             label: "Delete",
             command: (event) => { 
                 if(confirm(props.msgBeforeDelete)) {
-                    // Fix URL here as well
-                    axios.delete(`/tblmpcargo/delete/${data.id}`)
+                    const id = typeof data === 'object' && data.id ? data.id : data;
+                    
+                    axios.delete(`/tblitems/delete/${id}`)
                         .then(() => {
                             app.flashMsg(props.msgTitle, props.msgAfterDelete);
                             app.navigate('/tblitems');
                         })
                         .catch(err => {
-                            console.error(err);
+                            console.error("Error al eliminar: ", err);
                             app.flashMsg("Error", "No se pudo eliminar el registro", "error");
                         });
                 }

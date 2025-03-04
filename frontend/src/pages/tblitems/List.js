@@ -12,6 +12,7 @@ import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { ConfirmDialog } from 'primereact/confirmdialog';
 
 import useListPage from 'hooks/useListPage';
 const TblitemsListPage = (props) => {
@@ -69,6 +70,53 @@ const TblitemsListPage = (props) => {
         setCurrentPage(1);
     };
 
+    const searchFilteredData = filters.search?.value 
+        ? items.filter(item => {
+            const searchTerm = filters.search.value.toLowerCase();
+            return (
+                (item.codigo && item.codigo.toLowerCase().includes(searchTerm)) ||
+                (item.cargo && item.cargo.toLowerCase().includes(searchTerm)) ||
+                (item.haber_basico && item.haber_basico.toString().toLowerCase().includes(searchTerm)) ||
+                (item.unidad_organizacional && item.unidad_organizacional.toLowerCase().includes(searchTerm)) ||
+                (item.fecha_creacion && new Date(item.fecha_creacion).toLocaleString().toLowerCase().includes(searchTerm))
+            );
+        })
+        : items;
+
+    const [displayConfirmDialog, setDisplayConfirmDialog] = useState(false);
+    const [itemsToDelete, setItemsToDelete] = useState(null);
+
+    const confirmMultiDelete = (selectedIds) => {
+        if (selectedIds && selectedIds.length) {
+            setItemsToDelete(selectedIds);
+            setDisplayConfirmDialog(true);
+        }
+    };
+    
+    const handleMultiDelete = async () => {
+        try {
+            const plainIds = Array.isArray(itemsToDelete) 
+                ? itemsToDelete.map(item => typeof item === 'object' && item.id ? item.id : item)
+                : [itemsToDelete];
+                
+            const idsString = plainIds.join(',');
+            
+            console.log("Deleting IDs:", idsString);
+            
+            await axios.delete(`/tblitems/delete/${idsString}`);
+            
+            app.flashMsg(props.msgTitle, props.msgAfterDelete);
+            
+            fetchPageData(currentPage, pageSize, filters.search?.value || '');
+            
+            setSelectedItems([]);
+            setItemsToDelete(null);
+        } catch (err) {
+            console.error("Error deleting records:", err);
+            app.flashMsg("Error", "No se pudieron eliminar los registros", "error");
+        }
+    };
+
     function ActionButton(data){
         const items = [
             {
@@ -83,7 +131,9 @@ const TblitemsListPage = (props) => {
             },
             {
                 label: "Delete",
-                command: (event) => { deleteItem(data.id) },
+                command: (event) => { 
+                    confirmMultiDelete([data.id]);
+                },
                 icon: "pi pi-trash"
             }
         ];
@@ -119,7 +169,12 @@ const TblitemsListPage = (props) => {
         if (selectedItems.length) {
             return (
                 <div className="m-2 flex-grow-0">
-                    <Button onClick={() => deleteItem(selectedItems)} icon="pi pi-trash" className="p-button-danger" title="Eliminar seleccionado"/>
+                    <Button 
+                        onClick={() => confirmMultiDelete(selectedItems)} 
+                        icon="pi pi-trash" 
+                        className="p-button-danger" 
+                        title="Eliminar seleccionado"
+                    />
                 </div>
             )
         }
@@ -186,6 +241,18 @@ const TblitemsListPage = (props) => {
 
     return (
 <main id="TblitemsListPage" className="main-page">
+    <ConfirmDialog 
+        visible={displayConfirmDialog} 
+        onHide={() => setDisplayConfirmDialog(false)}
+        message={props.msgBeforeDelete}
+        header={props.msgTitle}
+        icon="pi pi-exclamation-triangle"
+        acceptClassName="p-button-danger"
+        accept={handleMultiDelete}
+        reject={() => setDisplayConfirmDialog(false)}
+        acceptLabel="Sí, eliminar"
+        rejectLabel="No, cancelar"
+    />
     { (props.showHeader) && 
     <section className="page-section mb-3" >
         <div className="container-fluid">
@@ -223,7 +290,7 @@ const TblitemsListPage = (props) => {
                                     </div>
                                 ) : (
                                 <DataTable 
-                                    value={items} 
+                                    value={searchFilteredData} 
                                     lazy={true} 
                                     loading={loading} 
                                     selectionMode="checkbox" 

@@ -154,17 +154,39 @@ class TblitemsController extends Controller
      */
     function delete(Request $request, $rec_id = null){
         try {
+            \Log::debug("Delete request received for ID(s): {$rec_id}");
+            
+            if (empty($rec_id)) {
+                return $this->respondWithError(new \Exception("ID no proporcionado para la eliminación"));
+            }
+            
             $arr_id = explode(",", $rec_id);
+            
+            \Log::debug("IDs to delete:", $arr_id);
+            
+            if (empty($arr_id)) {
+                return $this->respondWithError(new \Exception("No se pudo procesar los IDs para eliminación"));
+            }
+            
             $query = TblMpCargo::query();
             $query->whereIn("ca_id", $arr_id);
+            
+            $count = $query->count();
+            if ($count === 0) {
+                return $this->respondWithError(new \Exception("No se encontraron registros para eliminar"));
+            }
+            
             $query->delete();
             
             return $this->respond([
                 'status' => 'success',
                 'message' => 'Registro(s) eliminado(s) con éxito',
-                'deleted_ids' => $arr_id
+                'deleted_ids' => $arr_id,
+                'count' => $count
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            \Log::error("Error al eliminar registros: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             return $this->respondWithError($e);
         }
     }
