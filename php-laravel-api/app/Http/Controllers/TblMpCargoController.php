@@ -23,7 +23,7 @@ class TblMpCargoController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
-			$query->where($fieldname , $fieldvalue); //filter by a single field name
+			$query->where($fieldname , $fieldvalue);
 		}
 		$records = $this->paginate($query, TblMpCargo::listFields());
 		return $this->respond($records);

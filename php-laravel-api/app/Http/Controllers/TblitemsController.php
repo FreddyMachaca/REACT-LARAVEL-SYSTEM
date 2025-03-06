@@ -209,4 +209,31 @@ class TblitemsController extends Controller
             return $this->respondWithError($e);
         }
     }
+    
+    /**
+     * Add a new item record
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    function add(Request $request){
+        try {
+            $modeldata = $this->normalizeFormData($request->all());
+            
+            $cargo = TblMpCargo::create([
+                'ca_ti_item' => $modeldata['ca_ti_item'],
+                'ca_num_item' => $modeldata['ca_num_item'],
+                'ca_es_id' => $modeldata['ca_es_id'],
+                'ca_eo_id' => $modeldata['ca_eo_id'],
+                'ca_fecha_creacion' => now()
+            ]);
+            
+            return $this->respond([
+                'status' => 'success',
+                'message' => 'Item creado correctamente',
+                'record' => $cargo
+            ]);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
 }

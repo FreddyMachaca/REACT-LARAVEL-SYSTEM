@@ -303,12 +303,14 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblmpestructuraorganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
 	Route::any('tblmpestructuraorganizacional/edit/{rec_id}', 'TblMpEstructuraOrganizacionalController@edit');	
 	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
+	Route::get('tblmpestructuraorganizacional/tree', 'TblMpEstructuraOrganizacionalController@getTree');
 
 /* routes for Tblitems Controller - combined data routes  */	
 	Route::get('tblitems/', 'TblitemsController@index');
 	Route::get('tblitems/index', 'TblitemsController@index');
 	Route::get('tblitems/view/{rec_id}', 'TblitemsController@view');
 	Route::get('tblitems/options', 'TblitemsController@getOptions');
+	Route::post('tblitems/add', 'TblitemsController@add');
 	Route::any('tblitems/edit/{rec_id}', 'TblitemsController@edit');
 	Route::any('tblitems/delete/{rec_id}', 'TblitemsController@delete');
 

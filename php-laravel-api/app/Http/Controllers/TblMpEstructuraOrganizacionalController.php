@@ -23,7 +23,7 @@ class TblMpEstructuraOrganizacionalController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
-			$query->where($fieldname , $fieldvalue); //filter by a single field name
+			$query->where($fieldname , $fieldvalue);
 		}
 		$records = $this->paginate($query, TblMpEstructuraOrganizacional::listFields());
 		return $this->respond($records);
@@ -81,5 +81,65 @@ class TblMpEstructuraOrganizacionalController extends Controller
 		$query->whereIn("eo_id", $arr_id);
 		$query->delete();
 		return $this->respond($arr_id);
+	}
+	
+	/**
+     * Get tree structure of organizational structure
+     * @return \Illuminate\Http\Response
+     */
+	function getTree(){
+		try {
+			$query = TblMpEstructuraOrganizacional::query();
+			$allNodes = $query->get(['eo_id', 'eo_descripcion', 'eo_cod_superior']);
+			
+			$parentCounts = [];
+			foreach ($allNodes as $node) {
+				$parentCounts[$node->eo_cod_superior] = ($parentCounts[$node->eo_cod_superior] ?? 0) + 1;
+			}
+			
+			$nodeMap = [];
+			foreach ($allNodes as $node) {
+				$nodeMap[$node->eo_id] = [
+					'key' => $node->eo_id,
+					'label' => $node->eo_descripcion,
+					'data' => $node->eo_id,
+					'eo_cod_superior' => $node->eo_cod_superior,
+					'children' => []
+				];
+			}
+			
+			$nodeTree = $nodeMap;
+			
+			$rootNodes = [];
+			foreach ($nodeTree as $id => $node) {
+				if ($node['eo_cod_superior'] == 0) {
+					$rootNodes[$id] = $node;
+				}
+			}
+			
+			foreach ($nodeTree as $id => $node) {
+				if ($node['eo_cod_superior'] != 0 && isset($nodeTree[$node['eo_cod_superior']])) {
+					$nodeTree[$node['eo_cod_superior']]['children'][] = &$nodeTree[$id];
+				}
+			}
+			
+			$tree = array_values(array_filter($nodeTree, function($node) {
+				return $node['eo_cod_superior'] == 0;
+			}));
+			
+			$stats = [
+				'total_nodes' => count($allNodes),
+				'root_nodes' => count($rootNodes),
+				'parent_counts' => $parentCounts,
+			];
+			
+			return $this->respond([
+				'tree' => $tree,
+				'all_nodes' => $allNodes,
+				'stats' => $stats
+			]);
+		} catch (Exception $e) {
+			return $this->respondWithError($e);
+		}
 	}
 }
