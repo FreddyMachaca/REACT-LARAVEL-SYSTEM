@@ -90,12 +90,20 @@ class TblMpEstructuraOrganizacionalController extends Controller
 	function getTree(){
 		try {
 			$query = TblMpEstructuraOrganizacional::query();
-			$allNodes = $query->get(['eo_id', 'eo_descripcion', 'eo_cod_superior']);
+			$query->where('eo_pr_id', 21);
+			$allNodes = $query->get(['eo_id', 'eo_descripcion', 'eo_cp_id', 'eo_pr_id', 'eo_cod_superior']);
 			
-			$parentCounts = [];
+			\Log::info("Total nodes found with eo_pr_id = 21: " . count($allNodes));
+			
+			$cpidCounts = [];
+			$supCounts = [];
 			foreach ($allNodes as $node) {
-				$parentCounts[$node->eo_cod_superior] = ($parentCounts[$node->eo_cod_superior] ?? 0) + 1;
+				$cpidCounts[$node->eo_cp_id] = ($cpidCounts[$node->eo_cp_id] ?? 0) + 1;
+				$supCounts[$node->eo_cod_superior] = ($supCounts[$node->eo_cod_superior] ?? 0) + 1;
 			}
+			
+			\Log::info("Distribution by eo_cp_id:", $cpidCounts);
+			\Log::info("Distribution by eo_cod_superior:", $supCounts);
 			
 			$nodeMap = [];
 			foreach ($allNodes as $node) {
@@ -103,42 +111,63 @@ class TblMpEstructuraOrganizacionalController extends Controller
 					'key' => $node->eo_id,
 					'label' => $node->eo_descripcion,
 					'data' => $node->eo_id,
+					'eo_cp_id' => $node->eo_cp_id,
 					'eo_cod_superior' => $node->eo_cod_superior,
+					'eo_pr_id' => $node->eo_pr_id,
 					'children' => []
 				];
 			}
 			
-			$nodeTree = $nodeMap;
-			
 			$rootNodes = [];
-			foreach ($nodeTree as $id => $node) {
-				if ($node['eo_cod_superior'] == 0) {
-					$rootNodes[$id] = $node;
+			foreach ($nodeMap as $id => $node) {
+				if ($node['eo_cp_id'] == 0) {
+					$rootNodes[$id] = $id;
+				}
+			}
+			\Log::info("Root nodes (eo_cp_id = 0) found: " . count($rootNodes));
+			
+			foreach ($nodeMap as $id => $node) {
+				if ($node['eo_cp_id'] == 0) {
+					continue;
+				}
+				
+				if (isset($nodeMap[$node['eo_cod_superior']])) {
+					$nodeMap[$node['eo_cod_superior']]['children'][] = &$nodeMap[$id];
+				} else {
+					\Log::warning("Node {$id} has invalid eo_cod_superior: {$node['eo_cod_superior']}");
 				}
 			}
 			
-			foreach ($nodeTree as $id => $node) {
-				if ($node['eo_cod_superior'] != 0 && isset($nodeTree[$node['eo_cod_superior']])) {
-					$nodeTree[$node['eo_cod_superior']]['children'][] = &$nodeTree[$id];
+			$tree = [];
+			foreach ($nodeMap as $id => $node) {
+				if ($node['eo_cp_id'] == 0) {
+					$tree[] = $node;
 				}
 			}
 			
-			$tree = array_values(array_filter($nodeTree, function($node) {
-				return $node['eo_cod_superior'] == 0;
-			}));
+			$nodesWithChildren = 0;
+			foreach ($nodeMap as $id => $node) {
+				if (count($node['children']) > 0) {
+					$nodesWithChildren++;
+					\Log::debug("Node {$id} has " . count($node['children']) . " children");
+				}
+			}
 			
 			$stats = [
 				'total_nodes' => count($allNodes),
 				'root_nodes' => count($rootNodes),
-				'parent_counts' => $parentCounts,
+				'child_nodes' => count($allNodes) - count($rootNodes),
+				'nodes_with_children' => $nodesWithChildren,
+				'filter_pr_id' => 21
 			];
 			
 			return $this->respond([
 				'tree' => $tree,
-				'all_nodes' => $allNodes,
 				'stats' => $stats
 			]);
 		} catch (Exception $e) {
+			\Log::error("Error building tree: " . $e->getMessage());
+			\Log::error($e->getTraceAsString());
 			return $this->respondWithError($e);
 		}
 	}
