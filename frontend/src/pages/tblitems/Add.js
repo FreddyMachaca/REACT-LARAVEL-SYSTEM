@@ -256,20 +256,6 @@ const TblitemsAddPage = (props) => {
                         </div>
                     </div>
                 )}
-                
-                {debugStats && (
-                    <div className="mt-2 py-2 px-3 surface-50 border-round text-sm">
-                        <div>Total de nodos: {debugStats.total_nodes}</div>
-                        <div>Nodos raíz: {debugStats.root_nodes}</div>
-                    </div>
-                )}
-                
-                <div className="mt-2 p-2 surface-50 border-round">
-                    <div className="flex align-items-center">
-                        <i className="pi pi-info-circle mr-2 text-primary"></i>
-                        <span className="text-sm">Haga clic en los nodos para expandirlos o contraerlos.</span>
-                    </div>
-                </div>
             </div>
         );
     };
@@ -329,10 +315,6 @@ const TblitemsAddPage = (props) => {
                             <div className="col-12">
                                 <Card header={renderHeader}>
                                     <div className="tree-container" style={{minHeight: '500px', maxHeight: '600px', overflow: 'auto'}}>
-                                        <div className="mb-3 px-2 py-1 surface-200 border-round">
-                                            <i className="pi pi-info-circle mr-2"></i>
-                                            <span className="text-sm">Los nodos principales son las unidades de nivel superior. <strong>Haga clic en un nodo para expandirlo</strong>.</span>
-                                        </div>
                                         
                                         {treeData.length > 0 ? (
                                             <Tree 
