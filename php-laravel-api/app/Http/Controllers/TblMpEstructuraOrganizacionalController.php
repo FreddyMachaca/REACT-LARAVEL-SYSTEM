@@ -47,7 +47,6 @@ class TblMpEstructuraOrganizacionalController extends Controller
 	function add(Request $request){
 		$modeldata = $this->normalizeFormData($request->all());
 		
-		//save TblMpEstructuraOrganizacional record
 		$record = TblMpEstructuraOrganizacional::create($modeldata);
 		$rec_id = $record->eo_id;
 		return $this->respond($record);

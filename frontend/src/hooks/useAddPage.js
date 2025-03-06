@@ -7,8 +7,8 @@ const useAddPage = ({ props, formDefaultValues, afterSubmit }) => {
 	const app = useApp();
 	const api = useApi();
 	const [pageReady] = useState(true);
-	const contextFormData = app.getPageFormData(props.pageName); // from data from store
-	const propsFormData = props.formData; // when form default values is passed by component props
+	const contextFormData = app.getPageFormData(props.pageName); 
+	const propsFormData = props.formData;
 	const computedFormData = { ...formDefaultValues, ...propsFormData, ...contextFormData };
 	const [formData, setFormData] = useState(computedFormData);
 	const queryClient = useQueryClient();
@@ -84,7 +84,6 @@ const useAddPage = ({ props, formDefaultValues, afterSubmit }) => {
 					mutation.mutate(validatedFormData);
 				},
 				reject: () => {
-					//callback to execute when user rejects the action
 				}
 			});
 		}
@@ -109,7 +108,6 @@ const useAddPage = ({ props, formDefaultValues, afterSubmit }) => {
 		saving: mutation.isLoading,
 	}
 	return useMemo(() => pageData,
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[formData, pageReady, mutation.isLoading]
 	);
 }

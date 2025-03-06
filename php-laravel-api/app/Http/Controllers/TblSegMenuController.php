@@ -27,7 +27,7 @@ class TblSegMenuController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
-			$query->where($fieldname , $fieldvalue); //filter by a single field name
+			$query->where($fieldname , $fieldvalue);
 		}
 		$records = $this->paginate($query, TblSegMenu::listFields());
 		return $this->respond($records);
@@ -54,19 +54,16 @@ class TblSegMenuController extends Controller
 		try {
 			$modeldata = $request->all();
 			
-			// Establecer valores predeterminados si no están presentes
 			$modeldata['me_vista'] = $modeldata['me_vista'] ?? 1;
 			$modeldata['me_orden'] = $modeldata['me_orden'] ?? 0;
 			$modeldata['me_estado'] = $modeldata['me_estado'] ?? '1';
 			$modeldata['me_usuario_creacion'] = $modeldata['me_usuario_creacion'] ?? 1;
 			$modeldata['me_fecha_creacion'] = $modeldata['me_fecha_creacion'] ?? now();
 
-			// Validar datos requeridos
 			if (empty($modeldata['me_descripcion'])) {
 				return response()->json(['error' => 'La descripción es requerida'], 422);
 			}
 
-			// Si es un hijo, validar que exista el padre
 			if (!empty($modeldata['me_id_padre'])) {
 				$parent = TblSegMenu::find($modeldata['me_id_padre']);
 				if (!$parent) {
@@ -74,7 +71,6 @@ class TblSegMenuController extends Controller
 				}
 			}
 
-			// Crear el registro
 			$record = TblSegMenu::create($modeldata);
 			
 			return response()->json($record, 200);
@@ -121,7 +117,6 @@ class TblSegMenuController extends Controller
 			->get(['me_id', 'me_descripcion', 'me_url', 'me_icono', 
 				   'me_id_padre', 'me_orden', 'me_estado']);
 		
-		// Convertir la lista plana en una estructura de árbol
 		$tree = $this->buildTree($menu);
 		
 		return $this->respond($tree);
@@ -132,7 +127,6 @@ class TblSegMenuController extends Controller
 			->get(['me_id', 'me_descripcion', 'me_url', 'me_icono', 
 				   'me_id_padre', 'me_orden', 'me_estado']);
 		
-		// Convertir la lista plana en una estructura de árbol
 		$tree = $this->buildTree($menu);
 		
 		return $this->respond($tree);
@@ -141,14 +135,13 @@ class TblSegMenuController extends Controller
 	private function buildTree($elements, $parentId = null) {
 		$branch = [];
 		foreach ($elements as $element) {
-			// Para nodos raíz: me_id_padre es nulo o 0, o coincide con $parentId en otros casos
 			if (
 				($parentId === null && (empty($element->me_id_padre) || $element->me_id_padre == 0)) ||
 				($element->me_id_padre == $parentId)
 			) {
 				$children = $this->buildTree($elements, $element->me_id);
 				$element->children = $children ? $children : [];
-				$element->expanded = true; // Flag para forzar la expansión
+				$element->expanded = true;
 				$branch[] = $element;
 			}
 		}

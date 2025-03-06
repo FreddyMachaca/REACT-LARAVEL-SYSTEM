@@ -20,7 +20,7 @@ function useApi() {
             return axios({
                 url: apiPath,
                 method: 'GET',
-                responseType: 'blob', // important
+                responseType: 'blob',
             })
         },
         post(apiPath, data) {

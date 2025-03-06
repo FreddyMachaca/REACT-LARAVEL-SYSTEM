@@ -305,7 +305,7 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
 	Route::get('tblmpestructuraorganizacional/tree', 'TblMpEstructuraOrganizacionalController@getTree');
 
-/* routes for Tblitems Controller - combined data routes  */	
+/* routes for Tblitems Controller */	
 	Route::get('tblitems/', 'TblitemsController@index');
 	Route::get('tblitems/index', 'TblitemsController@index');
 	Route::get('tblitems/view/{rec_id}', 'TblitemsController@view');

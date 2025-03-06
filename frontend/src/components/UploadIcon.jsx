@@ -9,7 +9,6 @@ const UploadIcon = ({ onUpload }) => {
 
     const customBase64Uploader = async (event) => {
         try {
-            // Validaciones de seguridad
             if (!event.files || !event.files[0]) {
                 toast.current.show({ 
                     severity: 'error', 
@@ -21,7 +20,6 @@ const UploadIcon = ({ onUpload }) => {
 
             const file = event.files[0];
             
-            // Validar tipo de archivo
             if (!file.type.startsWith('image/')) {
                 toast.current.show({ 
                     severity: 'error', 

@@ -3,7 +3,7 @@ import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
-import { Checkbox } from 'primereact/checkbox';  // Agregar esta importación
+import { Checkbox } from 'primereact/checkbox';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
@@ -22,35 +22,31 @@ const TblsegmenuAddPage = (props) => {
     
     const formDefaultValues = {
         me_descripcion: '', 
-        me_url: '#',  // Siempre será '#' para menús padre
+        me_url: '#',  
         me_icono: '', 
-        me_id_padre: null,  // Valor por defecto null para menús padre
-        me_vista: 1,  // Valor por defecto
-        me_orden: 0,  // Valor por defecto
-        me_estado: 'V', // Activo por defecto ahora se guarda "V"
-        me_usuario_creacion: '1', // Usuario por defecto
+        me_id_padre: null, 
+        me_vista: 1,  
+        me_orden: 0,  
+        me_estado: 'V', 
+        me_usuario_creacion: '1', 
         me_fecha_creacion: new Date()
     };
 
-    //page hook where logics resides
     const pageController =  useAddPage({ props, formDefaultValues, afterSubmit });
-    
-    // destructure and grab what the page needs
+
     const { formData, resetForm, handleSubmit, submitForm, pageReady, loading, saving, inputClassName } = pageController;
     
-    //event raised after form submit
     function afterSubmit(response){
         app.flashMsg(props.msgTitle, props.msgAfterSave);
         resetForm();
         if(app.isDialogOpen()){
-            app.closeDialogs(); // if page is open as dialog, close dialog
+            app.closeDialogs();
         }
         else if(props.redirect) {
             app.navigate(`/tblsegmenu`);
         }
     }
     
-    // page loading form data from api
     if(loading){
         return (
             <div className="p-3 text-center">
@@ -59,7 +55,6 @@ const TblsegmenuAddPage = (props) => {
         );
     }
     
-    //page has loaded any required data and ready to render
     if(pageReady){
         return (
 <main id="TblsegmenuAddPage" className="main-page">
@@ -103,7 +98,7 @@ const TblsegmenuAddPage = (props) => {
                                     <div className="col-12">
                                         <div className="formgrid grid">
                                             <div className="col-12 md:col-3">
-                                                URL {/** Solo editable para hijos */}
+                                                URL
                                             </div>
                                             <div className="col-12 md:col-9">
                                                 <InputText 
@@ -124,7 +119,6 @@ const TblsegmenuAddPage = (props) => {
                                                 Icono
                                             </div>
                                             <div className="col-12 md:col-9">
-                                                {/* Removed InputText for icon name */}
                                                 <UploadIcon onUpload={(url) => formik.setFieldValue('me_icono', url)} />
                                             </div>
                                         </div>
@@ -168,7 +162,6 @@ const TblsegmenuAddPage = (props) => {
     }
 }
 
-//page props and default values
 TblsegmenuAddPage.defaultProps = {
     primaryKey: 'me_id',
     pageName: 'tblsegmenu',

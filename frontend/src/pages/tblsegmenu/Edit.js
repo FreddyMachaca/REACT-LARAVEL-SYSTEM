@@ -3,7 +3,7 @@ import * as yup from 'yup';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
-import { Checkbox } from 'primereact/checkbox';  // Agregar esta importación
+import { Checkbox } from 'primereact/checkbox'; 
 import { PageRequestError } from 'components/PageRequestError';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Title } from 'components/Title';
@@ -20,7 +20,6 @@ const TblsegmenuEditPage = (props) => {
         me_estado: yup.string().required('El estado es requerido')
     });
 
-    // form default values
     const formDefaultValues = {
         me_descripcion: '', 
         me_url: '', 
@@ -32,24 +31,21 @@ const TblsegmenuEditPage = (props) => {
         me_usuario_creacion: '', 
         me_fecha_creacion: new Date(), 
     }
-    //where page logics resides
     const pageController = useEditPage({ props, formDefaultValues, afterSubmit });
-    //destructure and grab what we need
     const { formData, handleSubmit, submitForm, pageReady, loading, saving, apiRequestError, inputClassName } = pageController
-    //Event raised on form submit success
+    
     function afterSubmit(response){
         app.flashMsg(props.msgTitle, props.msgAfterSave);
         if(props.onSave) {
             props.onSave(response);
         }
         else if(app.isDialogOpen()){
-            app.closeDialogs(); // if page is open as dialog, close dialog
+            app.closeDialogs();
         }
         else if(props.redirect) {
             app.navigate(`/tblsegmenu`);
         }
     }
-    // loading form data from api
     if(loading){
         return (
             <div className="p-3 text-center">
@@ -57,13 +53,11 @@ const TblsegmenuEditPage = (props) => {
             </div>
         );
     }
-    //display error page 
     if(apiRequestError){
         return (
             <PageRequestError error={apiRequestError} />
         );
     }
-    //page is ready when formdata loaded successfully
     if(pageReady){
         return (
             <main id="TblsegmenuEditPage" className="main-page">
@@ -146,7 +140,6 @@ const TblsegmenuEditPage = (props) => {
                                                                 Icono
                                                             </div>
                                                             <div className="col-12 md:col-9">
-                                                                {/* Removed InputText for icon name */}
                                                                 <UploadIcon onUpload={(url) => formik.setFieldValue('me_icono', url)} />
                                                             </div>
                                                         </div>
@@ -161,7 +154,7 @@ const TblsegmenuEditPage = (props) => {
                                                             <div className="col-12 md:col-9">
                                                                 <div className="p-field-checkbox">
                                                                     <Checkbox
-                                                                        checked={formik.values.me_estado === 'V'} // verificar estado activo con "V"
+                                                                        checked={formik.values.me_estado === 'V'}
                                                                         onChange={e => formik.setFieldValue('me_estado', e.checked ? 'V' : 'F')}
                                                                     />
                                                                 </div>
@@ -211,6 +204,6 @@ TblsegmenuEditPage.defaultProps = {
     showFooter: true,
     redirect: true,
     isSubPage: false,
-    onSave: null, // Agregar esta nueva prop
+    onSave: null,
 }
 export default TblsegmenuEditPage;

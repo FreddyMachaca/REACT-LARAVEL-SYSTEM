@@ -8,15 +8,10 @@ import { Formik, Form, ErrorMessage } from 'formik';
 import * as yup from 'yup';
 import axios from 'axios';
 
-/**
- * Función auxiliar para transformar la estructura recibida del backend
- * en el formato que requiere el componente Tree de PrimeReact.
- */
 const mapToTreeNodes = (nodes) => {
     return nodes.map(node => ({
-        key: String(node.me_id), // la key debe ser de tipo string
+        key: String(node.me_id), 
         label: node.me_descripcion,
-        // Conservamos la información original para utilizarla en el formulario
         me_id: node.me_id,
         me_descripcion: node.me_descripcion,
         me_url: node.me_url,
@@ -28,30 +23,26 @@ const mapToTreeNodes = (nodes) => {
 };
 
 const MenuTreePage = () => {
-    // Estados para almacenar la estructura del árbol, carga, elemento seleccionado, etc.
     const [treeData, setTreeData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedNode, setSelectedNode] = useState(null);
-    const [formMode, setFormMode] = useState(null); // 'edit' o 'add'
+    const [formMode, setFormMode] = useState(null); 
     const [formValues, setFormValues] = useState(null);
     const [refresh, setRefresh] = useState(false);
 
-    // Valores iniciales para el formulario
     const initialFormValues = {
         me_descripcion: '',
         me_url: '',
         me_icono: '',
-        me_estado: true, // asumiendo que true es "mostrar"
+        me_estado: true, 
         me_id_padre: null
     };
 
-    // Obtención de la estructura del menú en forma de árbol
     useEffect(() => {
         const fetchTree = async () => {
             setLoading(true);
             try {
                 const response = await axios.get('/tblsegmenu/manageMenuTree');
-                // Transformamos la respuesta al formato que requiere Tree
                 setTreeData(mapToTreeNodes(response.data));
             } catch (err) {
                 console.error('Error al cargar el menú:', err);
@@ -62,7 +53,6 @@ const MenuTreePage = () => {
         fetchTree();
     }, [refresh]);
 
-    // Cuando se selecciona un nodo, se pasa al modo "edit" y se cargan los datos en el formulario
     const onNodeSelect = (e) => {
         setSelectedNode(e.node);
         setFormMode('edit');
@@ -72,54 +62,45 @@ const MenuTreePage = () => {
             me_icono: e.node.me_icono || '',
             me_estado: (e.node.me_estado === '1' || e.node.me_estado === true),
             me_id_padre: e.node.me_id_padre || null,
-            me_id: e.node.me_id // lo usaremos para la edición
+            me_id: e.node.me_id
         });
     };
 
-    // Inicia el formulario en modo "agregar" para crear una nueva raíz
     const onAddRoot = () => {
         setSelectedNode(null);
         setFormMode('add');
         setFormValues({ ...initialFormValues, me_id_padre: null });
     };
 
-    // Inicia el formulario en modo "agregar" para añadir una rama al nodo seleccionado
     const onAddBranch = () => {
         if (!selectedNode) return;
         setFormMode('add');
         setFormValues({ ...initialFormValues, me_id_padre: selectedNode.me_id });
     };
 
-    // Esquema de validación con Yup
     const validationSchema = yup.object().shape({
         me_descripcion: yup.string().required('La descripción es obligatoria'),
         me_url: yup.string().nullable(),
         me_icono: yup.string().nullable(),
         me_estado: yup.boolean().required('Este campo es obligatorio')
-        // me_id_padre puede ser nulo
     });
 
-    // Función para enviar el formulario: edita o agrega según el modo
     const onSubmit = async (values, actions) => {
         try {
             if (formMode === 'edit') {
-                // Se asume que el endpoint de edición recibe POST y el id en la URL
                 await axios.post(`/tblsegmenu/edit/${values.me_id}`, values);
             } else if (formMode === 'add') {
                 await axios.post('/tblsegmenu/add', values);
             }
-            // Luego de guardar se refresca el árbol y se resetea el formulario
             setRefresh(!refresh);
             actions.resetForm();
             setFormMode(null);
             setSelectedNode(null);
         } catch (err) {
             console.error('Error al guardar:', err);
-            // Puedes agregar manejo de error aquí
         }
     };
 
-    // Función para eliminar el nodo seleccionado
     const onDelete = async () => {
         if (!selectedNode) return;
         if (!window.confirm('¿Seguro que deseas eliminar este registro?')) return;
@@ -135,7 +116,6 @@ const MenuTreePage = () => {
 
     return (
         <div className="p-grid" style={{ padding: '1em' }}>
-            {/* Columna izquierda: árbol del menú */}
             <div className="p-col-4" style={{ borderRight: '1px solid #ccc' }}>
                 <h3>Menú del Sistema</h3>
                 <div className="p-mb-2">
@@ -161,7 +141,6 @@ const MenuTreePage = () => {
                 )}
             </div>
 
-            {/* Columna derecha: formulario para editar o agregar */}
             <div className="p-col-8">
                 <h3>
                     {formMode === 'edit'

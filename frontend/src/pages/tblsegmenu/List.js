@@ -8,8 +8,8 @@ import { InputText } from 'primereact/inputtext';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { Toast } from 'primereact/toast';
 import { Dialog } from 'primereact/dialog';
-import { Formik, Form, ErrorMessage } from 'formik';  // Agregar estas importaciones
-import * as yup from 'yup';  // Agregar esta importación
+import { Formik, Form, ErrorMessage } from 'formik';  
+import * as yup from 'yup'; 
 import TblsegmenuEditPage from './Edit';
 import useApp from 'hooks/useApp';
 import UploadIcon from 'components/UploadIcon';
@@ -39,7 +39,7 @@ const TblsegmenuListPage = (props) => {
                 try {
                     await axios.delete(`/tblsegmenu/delete/${node.key}`);
                     toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Registro eliminado' });
-                    fetchMenuTree(); // Recargar el árbol
+                    fetchMenuTree();
                 } catch (error) {
                     toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el registro' });
                 }
@@ -147,14 +147,14 @@ const TblsegmenuListPage = (props) => {
             me_url: '',
             me_icono: '',
             me_id_padre: selectedParentNode?.key,
-            me_estado: 'V' // Valor activo "V" por defecto; "F" para inactivo
+            me_estado: 'V'
         };
 
         const handleSubmit = async (values, { setSubmitting }) => {
             try {
                 await axios.post('/tblsegmenu/add', {
                     ...values,
-                    me_icono: values.me_icono || null, // Asegurarse de que el icono sea null si no se seleccionó ninguno
+                    me_icono: values.me_icono || null, 
                 });
                 toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Menú agregado correctamente' });
                 setAddChildDialogVisible(false);
@@ -249,7 +249,7 @@ const TblsegmenuListPage = (props) => {
                         showHeader={false}
                         onSave={() => {
                             setEditDialogVisible(false);
-                            fetchMenuTree(); // Recargar el árbol después de guardar
+                            fetchMenuTree();
                         }}
                     />
                 )}
