@@ -305,6 +305,17 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
 	Route::get('tblmpestructuraorganizacional/tree', 'TblMpEstructuraOrganizacionalController@getTree');
 
+/* routes for TblMpCategoriaProgramatica Controller */
+	Route::get('tblmpcategoriaprogramatica/', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/index', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/index/{filter?}/{filtervalue?}', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/view/{rec_id}', 'TblMpCategoriaProgramaticaController@view');
+	Route::post('tblmpcategoriaprogramatica/add', 'TblMpCategoriaProgramaticaController@add');
+	Route::any('tblmpcategoriaprogramatica/edit/{rec_id}', 'TblMpCategoriaProgramaticaController@edit');
+	Route::any('tblmpcategoriaprogramatica/delete/{rec_id}', 'TblMpCategoriaProgramaticaController@delete');
+	Route::get('tblmpcategoriaprogramatica/counts', 'TblMpCategoriaProgramaticaController@getCounts');
+	Route::get('tblmpcategoriaprogramatica/bypr/{pr_id}', 'TblMpCategoriaProgramaticaController@getByPrId');
+
 /* routes for Tblitems Controller */	
 	Route::get('tblitems/', 'TblitemsController@index');
 	Route::get('tblitems/index', 'TblitemsController@index');
