@@ -316,6 +316,16 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblmpcategoriaprogramatica/counts', 'TblMpCategoriaProgramaticaController@getCounts');
 	Route::get('tblmpcategoriaprogramatica/bypr/{pr_id}', 'TblMpCategoriaProgramaticaController@getByPrId');
 
+/* routes for TblMpTipoItem Controller  */	
+	Route::get('tblmptipoitem/', 'TblMpTipoItemController@index');
+	Route::get('tblmptipoitem/index', 'TblMpTipoItemController@index');
+	Route::get('tblmptipoitem/index/{filter?}/{filtervalue?}', 'TblMpTipoItemController@index');	
+	Route::get('tblmptipoitem/view/{ti_item}/{ti_tipo}', 'TblMpTipoItemController@view');	
+	Route::post('tblmptipoitem/add', 'TblMpTipoItemController@add');	
+	Route::any('tblmptipoitem/edit/{ti_item}/{ti_tipo}', 'TblMpTipoItemController@edit');	
+	Route::post('tblmptipoitem/delete', 'TblMpTipoItemController@delete');
+	Route::get('tblmptipoitem/bytipo/{tipo}', 'TblMpTipoItemController@getByTipo');
+
 /* routes for Tblitems Controller */	
 	Route::get('tblitems/', 'TblitemsController@index');
 	Route::get('tblitems/index', 'TblitemsController@index');
