@@ -171,4 +171,12 @@ class TblMpEstructuraOrganizacional extends Model
      * @var bool
      */
 	public $timestamps = false;
+	
+	/**
+     * Obtenga la categoría programática asociada con la estructura organizacional.
+     */
+    public function categoriaProgramatica()
+    {
+        return $this->belongsTo(TblMpCategoriaProgramatica::class, 'eo_cp_id', 'cp_id');
+    }
 }

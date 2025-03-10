@@ -180,4 +180,22 @@ class TblMpCargo extends Model
      * @var bool
      */
 	public $timestamps = false;
+	
+	/**
+     * Get the escala salarial associated with the cargo.
+     */
+    public function escalaSalarial()
+    {
+        return $this->belongsTo(TblMpEscalaSalarial::class, 'ca_es_id', 'es_id')
+            ->with('nivelSalarial');
+    }
+    
+    /**
+     * Get the estructura organizacional associated with the cargo.
+     */
+    public function estructuraOrganizacional()
+    {
+        return $this->belongsTo(TblMpEstructuraOrganizacional::class, 'ca_eo_id', 'eo_id')
+            ->with('categoriaProgramatica');
+    }
 }

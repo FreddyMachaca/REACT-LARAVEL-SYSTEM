@@ -156,4 +156,14 @@ class TblMpEscalaSalarial extends Model
      * @var bool
      */
 	public $timestamps = false;
+	
+	/**
+     * Definir relación con nivel salarial
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+	public function nivelSalarial()
+	{
+		return $this->belongsTo(TblMpNivelSalarial::class, 'es_ns_id', 'ns_id');
+	}
 }

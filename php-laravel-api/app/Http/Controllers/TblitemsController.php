@@ -5,6 +5,8 @@ use App\Models\TblMpCargo;
 use App\Models\TblMpEscalaSalarial;
 use App\Models\TblMpNivelSalarial;
 use App\Models\TblMpEstructuraOrganizacional;
+use App\Models\TblMpCategoriaProgramatica;
+use App\Models\TblMpTipoItem;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
@@ -21,6 +23,8 @@ class TblitemsController extends Controller
             $page = $request->page ?? 1;
             $limit = $request->limit ?? 10;
             $search = $request->search ?? '';
+            $filter = $request->filter ?? null;
+            $filtervalue = $request->filtervalue ?? null;
             
             $query = TblMpCargo::query();
             
@@ -28,47 +32,57 @@ class TblitemsController extends Controller
                 TblMpCargo::search($query, $search);
             }
             
+            if ($filter && $filtervalue) {
+                if ($filter === 'ca_eo_id') {
+                    $query->where('ca_eo_id', $filtervalue);
+                    
+                    // Obtener estructura con categoria programatica 
+                    $estructura = TblMpEstructuraOrganizacional::with('categoriaProgramatica')
+                        ->where('eo_id', $filtervalue)
+                        ->first();
+                        
+                    if ($estructura) {
+                        $cp_descripcion = $estructura->categoriaProgramatica ? 
+                            $estructura->categoriaProgramatica->cp_descripcion : 'No disponible';
+                            
+                        $responseStruct = [
+                            'eo_id' => $estructura->eo_id,
+                            'eo_descripcion' => $estructura->eo_descripcion,
+                            'cp_descripcion' => $cp_descripcion
+                        ];
+                    }
+                }
+            }
+            
+            $query->with(['escalaSalarial', 'estructuraOrganizacional.categoriaProgramatica']);
+            
             $total_records = $query->count();
-            
-            $query->skip(($page - 1) * $limit)->take($limit);
-            
             $cargo_records = $query->get();
             
-            $es_ids = $cargo_records->pluck('ca_es_id')->filter()->unique()->toArray();
-            $eo_ids = $cargo_records->pluck('ca_eo_id')->filter()->unique()->toArray();
-            
-            $escalas = TblMpEscalaSalarial::whereIn('es_id', $es_ids)->get()->keyBy('es_id');
-            
-            $ns_ids = $escalas->pluck('es_ns_id')->filter()->unique()->toArray();
-            
-            $niveles = TblMpNivelSalarial::whereIn('ns_id', $ns_ids)->get()->keyBy('ns_id');
-            
-            $estructuras = TblMpEstructuraOrganizacional::whereIn('eo_id', $eo_ids)->get()->keyBy('eo_id');
-            
-            $combined_records = [];
-            foreach($cargo_records as $cargo) {
-                $escala = isset($escalas[$cargo->ca_es_id]) ? $escalas[$cargo->ca_es_id] : null;
-                $nivel = $escala && isset($niveles[$escala->es_ns_id]) ? $niveles[$escala->es_ns_id] : null;
-                $estructura = isset($estructuras[$cargo->ca_eo_id]) ? $estructuras[$cargo->ca_eo_id] : null;
-                
-                $combined_records[] = [
+            $combined_records = $cargo_records->map(function($cargo) {
+                return [
                     'id' => $cargo->ca_id,
                     'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
-                    'cargo' => $escala ? $escala->es_descripcion : '',
-                    'haber_basico' => $nivel ? $nivel->ns_haber_basico : '',
-                    'unidad_organizacional' => $estructura ? $estructura->eo_descripcion : '',
-                    'fecha_creacion' => $cargo->ca_fecha_creacion
+                    'cargo' => $cargo->escalaSalarial ? $cargo->escalaSalarial->es_descripcion : '',
+                    'tipo_jornada' => $cargo->ca_tipo_jornada,
+                    'haber_basico' => $cargo->escalaSalarial && $cargo->escalaSalarial->nivelSalarial ? 
+                        $cargo->escalaSalarial->nivelSalarial->ns_haber_basico : '',
+                    'unidad_organizacional' => $cargo->estructuraOrganizacional ? 
+                        $cargo->estructuraOrganizacional->eo_descripcion : ''
                 ];
-            }
+            })->toArray();
             
             return $this->respond([
                 'records' => $combined_records,
                 'total_records' => $total_records,
                 'page' => $page,
-                'limit' => $limit
+                'limit' => $limit,
+                'estructura_info' => $responseStruct ?? null
             ]);
             
         } catch (Exception $e) {
+            \Log::error("Error in TblitemsController@index: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             return $this->respondWithError($e);
         }
     }
@@ -201,9 +215,14 @@ class TblitemsController extends Controller
             
             $estructuraOptions = TblMpEstructuraOrganizacional::select('eo_id', 'eo_descripcion')->get();
             
+            $tipoItems = TblMpTipoItem::whereIn('ti_item', ['A', 'C', 'E', 'P', 'S'])
+                ->orderBy('ti_orden')
+                ->get(['ti_item', 'ti_descripcion']);
+                
             return $this->respond([
                 'escalaOptions' => $escalaOptions,
-                'estructuraOptions' => $estructuraOptions
+                'estructuraOptions' => $estructuraOptions,
+                'tipoItems' => $tipoItems
             ]);
         } catch (Exception $e) {
             return $this->respondWithError($e);
@@ -224,6 +243,7 @@ class TblitemsController extends Controller
                 'ca_num_item' => $modeldata['ca_num_item'],
                 'ca_es_id' => $modeldata['ca_es_id'],
                 'ca_eo_id' => $modeldata['ca_eo_id'],
+                'ca_tipo_jornada' => $modeldata['ca_tipo_jornada'] ?? 'TT',
                 'ca_fecha_creacion' => now()
             ]);
             

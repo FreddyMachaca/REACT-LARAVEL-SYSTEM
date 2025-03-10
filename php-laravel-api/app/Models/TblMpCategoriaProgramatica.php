@@ -19,7 +19,7 @@ class TblMpCategoriaProgramatica extends Model
 	protected $primaryKey = 'cp_id';
 	
 	/**
-     * Table fillable fields
+     * Table fillable fields - updated to match actual DB schema
      *
      * @var array
      */
@@ -50,14 +50,12 @@ class TblMpCategoriaProgramatica extends Model
 	public static function search($query, $text){
 		$search_condition = '(
 				CAST(cp_id AS TEXT) LIKE ?  OR 
-				cp_da_descripcion LIKE ?  OR 
-				cp_ue_descripcion LIKE ?  OR 
 				cp_descripcion LIKE ?  OR 
-				cp_estado LIKE ?  OR 
-				cp_tipo_gasto LIKE ? 
+				cp_estado LIKE ?  OR
+				CAST(cp_programa AS TEXT) LIKE ?
 		)';
 		$search_params = [
-			"%$text%","%$text%","%$text%","%$text%","%$text%","%$text%"
+			"%$text%","%$text%","%$text%","%$text%"
 		];
 		$query->whereRaw($search_condition, $search_params);
 	}
@@ -70,20 +68,20 @@ class TblMpCategoriaProgramatica extends Model
 	public static function listFields(){
 		return [ 
 			"cp_id", 
-			"cp_da", 
+			"cp_pr_id",
+			"cp_da",
 			"cp_da_descripcion", 
-			"cp_ue", 
-			"cp_ue_descripcion", 
-			"cp_programa", 
-			"cp_proyecto", 
-			"cp_actividad", 
-			"cp_cod_poa", 
+			"cp_ue",
+			"cp_ue_descripcion",
+			"cp_programa",
+			"cp_proyecto",
+			"cp_actividad",
+			"cp_cod_poa",
 			"cp_descripcion", 
-			"cp_estado", 
-			"cp_tipo_gasto", 
-			"cp_fuente", 
-			"cp_organismo", 
-			"cp_pr_id", 
+			"cp_estado",
+			"cp_tipo_gasto",
+			"cp_fuente",
+			"cp_organismo",
 			"cp_fecha_modificacion" 
 		];
 	}
@@ -96,20 +94,20 @@ class TblMpCategoriaProgramatica extends Model
 	public static function exportListFields(){
 		return [ 
 			"cp_id", 
-			"cp_da", 
+			"cp_pr_id",
+			"cp_da",
 			"cp_da_descripcion", 
-			"cp_ue", 
-			"cp_ue_descripcion", 
-			"cp_programa", 
-			"cp_proyecto", 
-			"cp_actividad", 
-			"cp_cod_poa", 
+			"cp_ue",
+			"cp_ue_descripcion",
+			"cp_programa",
+			"cp_proyecto",
+			"cp_actividad",
+			"cp_cod_poa",
 			"cp_descripcion", 
-			"cp_estado", 
-			"cp_tipo_gasto", 
-			"cp_fuente", 
-			"cp_organismo", 
-			"cp_pr_id", 
+			"cp_estado",
+			"cp_tipo_gasto",
+			"cp_fuente",
+			"cp_organismo",
 			"cp_fecha_modificacion" 
 		];
 	}
@@ -122,20 +120,20 @@ class TblMpCategoriaProgramatica extends Model
 	public static function viewFields(){
 		return [ 
 			"cp_id", 
-			"cp_da", 
+			"cp_pr_id",
+			"cp_da",
 			"cp_da_descripcion", 
-			"cp_ue", 
-			"cp_ue_descripcion", 
-			"cp_programa", 
-			"cp_proyecto", 
-			"cp_actividad", 
-			"cp_cod_poa", 
+			"cp_ue",
+			"cp_ue_descripcion",
+			"cp_programa",
+			"cp_proyecto",
+			"cp_actividad",
+			"cp_cod_poa",
 			"cp_descripcion", 
-			"cp_estado", 
-			"cp_tipo_gasto", 
-			"cp_fuente", 
-			"cp_organismo", 
-			"cp_pr_id", 
+			"cp_estado",
+			"cp_tipo_gasto",
+			"cp_fuente",
+			"cp_organismo",
 			"cp_fecha_modificacion" 
 		];
 	}
@@ -148,20 +146,20 @@ class TblMpCategoriaProgramatica extends Model
 	public static function exportViewFields(){
 		return [ 
 			"cp_id", 
-			"cp_da", 
+			"cp_pr_id",
+			"cp_da",
 			"cp_da_descripcion", 
-			"cp_ue", 
-			"cp_ue_descripcion", 
-			"cp_programa", 
-			"cp_proyecto", 
-			"cp_actividad", 
-			"cp_cod_poa", 
+			"cp_ue",
+			"cp_ue_descripcion",
+			"cp_programa",
+			"cp_proyecto",
+			"cp_actividad",
+			"cp_cod_poa",
 			"cp_descripcion", 
-			"cp_estado", 
-			"cp_tipo_gasto", 
-			"cp_fuente", 
-			"cp_organismo", 
-			"cp_pr_id", 
+			"cp_estado",
+			"cp_tipo_gasto",
+			"cp_fuente",
+			"cp_organismo",
 			"cp_fecha_modificacion" 
 		];
 	}
@@ -174,20 +172,20 @@ class TblMpCategoriaProgramatica extends Model
 	public static function editFields(){
 		return [ 
 			"cp_id", 
-			"cp_da", 
+			"cp_pr_id",
+			"cp_da",
 			"cp_da_descripcion", 
-			"cp_ue", 
-			"cp_ue_descripcion", 
-			"cp_programa", 
-			"cp_proyecto", 
-			"cp_actividad", 
-			"cp_cod_poa", 
+			"cp_ue",
+			"cp_ue_descripcion",
+			"cp_programa",
+			"cp_proyecto",
+			"cp_actividad",
+			"cp_cod_poa",
 			"cp_descripcion", 
-			"cp_estado", 
-			"cp_tipo_gasto", 
-			"cp_fuente", 
-			"cp_organismo", 
-			"cp_pr_id", 
+			"cp_estado",
+			"cp_tipo_gasto",
+			"cp_fuente",
+			"cp_organismo",
 			"cp_fecha_modificacion" 
 		];
 	}

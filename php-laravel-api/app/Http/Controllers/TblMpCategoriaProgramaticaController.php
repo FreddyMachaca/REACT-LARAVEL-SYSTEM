@@ -36,9 +36,33 @@ class TblMpCategoriaProgramaticaController extends Controller
      * @return \Illuminate\Http\Response
      */
 	function view($rec_id = null){
-		$query = TblMpCategoriaProgramatica::query();
-		$record = $query->findOrFail($rec_id, TblMpCategoriaProgramatica::viewFields());
-		return $this->respond($record);
+		try {
+			if (!$rec_id || $rec_id == 0) {
+				return $this->respond([
+					'cp_id' => 0,
+					'cp_descripcion' => 'No asignado'
+				]);
+			}
+			
+			$query = TblMpCategoriaProgramatica::query();
+			$record = $query->find($rec_id);
+			
+			if(!$record){
+				return $this->respond([
+					'cp_id' => $rec_id,
+					'cp_descripcion' => 'No encontrado'
+				]);
+			}
+			
+			return $this->respond($record);
+		} catch (Exception $e) {
+			\Log::error("Error in TblMpCategoriaProgramaticaController@view: " . $e->getMessage());
+			\Log::error($e->getTraceAsString());
+			return $this->respond([
+				'cp_id' => $rec_id,
+				'cp_descripcion' => 'Error: ' . $e->getMessage()
+			]);
+		}
 	}
 	
 	/**
