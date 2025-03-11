@@ -317,7 +317,7 @@ const TblitemsListPage = (props) => {
                                     <Column field="cargo" header="Cargo" sortable></Column>
                                     <Column field="haber_basico" header="Haber Básico" sortable></Column>
                                     <Column field="unidad_organizacional" header="Unidad Organizacional" sortable></Column>
-                                    <Column field="fecha_creacion" header="Fecha Creación" body={FechaTemplate} sortable></Column>
+                                    <Column field="fecha_creacion" header="Fecha Creación" body={(rowData) => FechaTemplate(rowData)} sortable></Column>
                                     <Column headerStyle={{width: '2rem'}} headerClass="text-center" body={ActionButton}></Column>
                                     {/*PageComponentEnd*/}
                                 </DataTable>

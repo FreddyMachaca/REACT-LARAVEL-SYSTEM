@@ -74,7 +74,8 @@ class TblitemsController extends Controller
                     'haber_basico' => $cargo->escalaSalarial && $cargo->escalaSalarial->nivelSalarial ? 
                         $cargo->escalaSalarial->nivelSalarial->ns_haber_basico : '',
                     'unidad_organizacional' => $cargo->estructuraOrganizacional ? 
-                        $cargo->estructuraOrganizacional->eo_descripcion : ''
+                        $cargo->estructuraOrganizacional->eo_descripcion : '',
+                    'fecha_creacion' => $cargo->ca_fecha_creacion
                 ];
             })->toArray();
             
