@@ -199,16 +199,45 @@ const TblitemsAddPage = (props) => {
         }
     };
     
+    const fetchItemDetails = async (itemId) => {
+        try {
+            setLoadingRelatedData(true);
+            const response = await axios.get(`/tblitems/view/${itemId}`);
+            const itemData = response.data;
+            setSelectedNode({
+                key: `item_${itemData.id}`,
+                label: itemData.codigo,
+                type: 'item',
+                itemData: {
+                    id: itemData.id,
+                    codigo: itemData.codigo,
+                    cargo: itemData.cargo,
+                    tipo_jornada: itemData.tipo_jornada,
+                    estado: itemData.estado
+                }
+            });
+            setLoadingRelatedData(false);
+        } catch (err) {
+            console.error("Error fetching item details:", err);
+            setLoadingRelatedData(false);
+        }
+    };
+
     const handleNodeSelect = (e) => {
         const node = e.node;
         setSelectedNode(node);
-            
+        
         if (node && node.key) {
-            setFormData(prev => ({
-                ...prev,
-                ca_eo_id: node.key
-            }));
-            fetchRelatedData(node.key);
+            if (node.type === 'item') {
+                const itemId = node.key.replace('item_', '');
+                fetchItemDetails(itemId);
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    ca_eo_id: node.key
+                }));
+                fetchRelatedData(node.key);
+            }
         }
     };
     const expandNode = (path) => {
@@ -455,206 +484,201 @@ const TblitemsAddPage = (props) => {
     };
 
     const renderNodeDetails = () => {
-        return (
-            <Card title="Datos del Item" className="mt-0 shadow-3 border-round">
-                {loadingRelatedData ? (
+        if (loadingRelatedData) {
+            return (
+                <Card title="Detalles" className="mt-0 shadow-3 border-round">
                     <div className="flex align-items-center justify-content-center p-3">
                         <ProgressSpinner style={{ width: '30px', height: '30px' }} />
                         <span className="ml-2">Cargando datos...</span>
                     </div>
-                ) : (
+                </Card>
+            );
+        }
+        
+        if (!selectedNode) {
+            return (
+                <Card title="Detalles" className="mt-0 shadow-3 border-round">
+                    <div className="p-3 text-center">
+                        <i className="pi pi-arrow-left text-5xl text-300 mb-3"></i>
+                        <p className="text-600">Seleccione una unidad organizacional o un ítem en el árbol para ver detalles</p>
+                    </div>
+                </Card>
+            );
+        }
+        
+        if (selectedNode.type === 'item') {
+            const itemData = selectedNode.itemData || {};
+            
+            return (
+                <Card title="Detalles del Item" className="mt-0 shadow-3 border-round">
                     <div className="p-3">
-                        {selectedNode ? (
-                            <div className="p-fluid">                                
-                                {/* Categoria Programatica */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Categoría Programática</label>
-                                    <div className="p-2 border-round surface-50 text-900 font-medium">
-                                        {categoriaPragmatica || 'No disponible'}
-                                    </div>
-                                </div>
-                                
-                                {/* Categoria Administrativa */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Categoría Administrativa</label>
-                                    <div className="p-2 border-round surface-50 text-900 font-medium">
-                                        {categoriaAdministrativa || 'No disponible'}
-                                    </div>
-                                </div>
-                                
-                                {/* Cargo */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Cargo</label>
-                                    <Dropdown 
-                                        value={formData.ca_es_id}
-                                        options={escalaOptions}
-                                        onChange={handleCargoChange}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Seleccione un Cargo"
-                                        className="w-full"
-                                        showClear
-                                        filter
-                                    />
-                                </div>
-                                
-                                {/* Cargo detalles */}
-                                {formData.ca_es_id && (
-                                    <div className="field mb-3 p-2 border-round surface-50">
-                                        <div className="grid">
-                                            <div className="col-12 col-md-6 mb-2">
-                                                <span className="font-medium text-600">Código Escalafón:</span>
-                                                <span className="ml-2">{cargoDetails.codigoEscalafon}</span>
-                                            </div>
-                                            <div className="col-12 col-md-6 mb-2">
-                                                <span className="font-medium text-600">Clase:</span>
-                                                <span className="ml-2">{cargoDetails.clase}</span>
-                                            </div>
-                                            <div className="col-12 col-md-6 mb-2">
-                                                <span className="font-medium text-600">Nivel Salarial:</span>
-                                                <span className="ml-2">{cargoDetails.nivelSalarial}</span>
-                                            </div>
-                                            <div className="col-12 col-md-6">
-                                                <span className="font-medium text-600">Haber Básico:</span>
-                                                <span className="ml-2 font-bold text-primary">{cargoDetails.haberBasico}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                
-                                {/* Tipo Item */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Tipo Item</label>
-                                    <Dropdown 
-                                        value={formData.ca_ti_item}
-                                        options={tipoItemOptions}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, ca_ti_item: e.value }))}
-                                        optionLabel="label"
-                                        optionValue="value"
-                                        placeholder="Seleccione un Tipo Item"
-                                        className="w-full"
-                                        showClear
-                                    />
-                                </div>
-
-                                {/* Tiempo Jornada */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Tiempo Jornada</label>
-                                    <Dropdown
-                                        value={formData.ca_tipo_jornada}
-                                        options={[
-                                            {label: 'Tiempo Completo', value: 'TT'},
-                                            {label: 'Medio Tiempo', value: 'MT'}
-                                        ]}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, ca_tipo_jornada: e.value }))}
-                                        placeholder="Seleccione el tiempo de jornada"
-                                        className="w-full"
-                                    />
-                                </div>
-                                
-                                {/* Cantidad */}
-                                <div className="field mb-3">
-                                    <label className="font-medium text-600">Cantidad de Items</label>
-                                    <div className="p-inputgroup">
-                                        <span className="p-inputgroup-addon">
-                                            <i className="pi pi-hashtag"></i>
-                                        </span>
-                                        <InputText
-                                            type="number"
-                                            min="1"
-                                            max="100"
-                                            value={formData.cantidad}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, cantidad: parseInt(e.target.value) || 1 }))}
-                                            placeholder="Cantidad de items a crear"
-                                        />
-                                    </div>
-                                    <small className="text-500">Número de items que se crearán con los mismos datos</small>
-                                </div>
-                                
-                                {/* Items Table */}
-                                <div className="field mb-3">
-                                    <div className="flex justify-content-between align-items-center mb-2">
-                                        <label className="font-medium text-600">Items en esta Unidad</label>
-                                        <span className="badge bg-blue-100 text-blue-900 border-round p-1 font-medium">
-                                            {nodeItems.length} items
-                                        </span>
-                                    </div>
-                                    {loadingNodeItems ? (
-                                        <div className="flex align-items-center justify-content-center p-2">
-                                            <ProgressSpinner style={{ width: '20px', height: '20px' }} />
-                                            <span className="ml-2">Cargando items...</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {nodeItems && nodeItems.length > 0 ? (
-                                                <DataTable 
-                                                    value={nodeItems} 
-                                                    className="p-datatable-sm" 
-                                                    stripedRows 
-                                                    size="small"
-                                                    showGridlines
-                                                    responsiveLayout="scroll"
-                                                    emptyMessage="No hay items definidos para esta unidad"
-                                                >
-                                                    <Column field="codigo" header="Código" style={{ width: '100px' }} />
-                                                    <Column field="cargo" header="Cargo" />
-                                                    <Column 
-                                                        field="haber_basico" 
-                                                        header="Haber Básico"
-                                                        style={{ width: '130px' }}
-                                                        body={(rowData) => (
-                                                            <span className="font-bold">
-                                                                {rowData.haber_basico ? 
-                                                                    new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB', minimumFractionDigits: 2 }).format(rowData.haber_basico)
-                                                                    : 'N/A'}
-                                                            </span>
-                                                        )}
-                                                    />
-                                                    <Column 
-                                                        field="tipo_jornada" 
-                                                        header="Jornada" 
-                                                        style={{ width: '110px' }}
-                                                        body={(rowData) => (
-                                                            <span className={`badge ${rowData.tipo_jornada === 'TT' ? 'bg-blue-100 text-blue-900' : 'bg-orange-100 text-orange-900'} p-1 border-round`}>
-                                                                {rowData.tipo_jornada === 'TT' ? 'Tiempo Completo' : 'Medio Tiempo'}
-                                                            </span>
-                                                        )}
-                                                    />
-                                                </DataTable>
-                                            ) : (
-                                                <div className="p-3 border-round surface-50 text-center">
-                                                    <i className="pi pi-inbox text-4xl text-300 mb-3"></i>
-                                                    <div className="text-600 mb-2">No hay items en esta unidad</div>
-                                                    <div className="text-400 text-sm">Utilice el botón de abajo para crear uno nuevo</div>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                                
-                                <Divider />
-                                
-                                <div className="flex justify-content-center">
-                                    <Button 
-                                        label="Crear Item" 
-                                        icon="pi pi-plus-circle"
-                                        className="p-button-primary"
-                                        onClick={handleOpenForm}
-                                    />
-                                </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Código</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.codigo}
                             </div>
-                        ) : (
-                            <div className="p-3 text-center">
-                                <i className="pi pi-arrow-left text-5xl text-300 mb-3"></i>
-                                <p className="text-600">Seleccione una unidad organizacional del árbol para ver los detalles</p>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cargo</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.cargo}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tipo de Jornada</label>
+                            <div className="p-2 border-round surface-50">
+                                <span className={`badge ${itemData.tipo_jornada === 'TT' ? 'bg-blue-100 text-blue-900' : 'bg-orange-100 text-orange-900'} p-1 border-round`}>
+                                    {itemData.tipo_jornada === 'TT' ? 'Tiempo Completo' : 'Medio Tiempo'}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Estado</label>
+                            <div className="p-2 border-round surface-50">
+                                <span className="badge bg-green-100 text-green-900 p-1 border-round">
+                                    Libre
+                                </span>
+                            </div>
+                        </div>
+                        <Divider />
+                        <div className="flex justify-content-center">
+                            <Button 
+                                label="Ver detalles completos" 
+                                icon="pi pi-eye"
+                                className="p-button-outlined"
+                                onClick={() => app.navigate(`/tblitems/view/${itemData.id}`)}
+                            />
+                        </div>
+                    </div>
+                </Card>
+            );
+        }
+        
+        return (
+            <Card title="Datos de la Unidad" className="mt-0 shadow-3 border-round">
+                <div className="p-3">
+                    <div className="p-fluid">                                
+                        {/* Categoria Programatica */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Categoría Programática</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {categoriaPragmatica || 'No disponible'}
+                            </div>
+                        </div>
+                        
+                        {/* Categoria Administrativa */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Categoría Administrativa</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {categoriaAdministrativa || 'No disponible'}
+                            </div>
+                        </div>
+                        
+                        {/* Cargo */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cargo</label>
+                            <Dropdown 
+                                value={formData.ca_es_id}
+                                options={escalaOptions}
+                                onChange={handleCargoChange}
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Seleccione un Cargo"
+                                className="w-full"
+                                showClear
+                                filter
+                            />
+                        </div>
+                        
+                        {/* Cargo detalles */}
+                        {formData.ca_es_id && (
+                            <div className="field mb-3 p-2 border-round surface-50">
+                                <div className="grid">
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Código Escalafón:</span>
+                                        <span className="ml-2">{cargoDetails.codigoEscalafon}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Clase:</span>
+                                        <span className="ml-2">{cargoDetails.clase}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Nivel Salarial:</span>
+                                        <span className="ml-2">{cargoDetails.nivelSalarial}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <span className="font-medium text-600">Haber Básico:</span>
+                                        <span className="ml-2 font-bold text-primary">{cargoDetails.haberBasico}</span>
+                                    </div>
+                                </div>
                             </div>
                         )}
+                        
+                        {/* Tipo Item */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tipo Item</label>
+                            <Dropdown 
+                                value={formData.ca_ti_item}
+                                options={tipoItemOptions}
+                                onChange={(e) => setFormData(prev => ({ ...prev, ca_ti_item: e.value }))}
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Seleccione un Tipo Item"
+                                className="w-full"
+                                showClear
+                            />
+                        </div>
+
+                        {/* Tiempo Jornada */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tiempo Jornada</label>
+                            <Dropdown
+                                value={formData.ca_tipo_jornada}
+                                options={[
+                                    {label: 'Tiempo Completo', value: 'TT'},
+                                    {label: 'Medio Tiempo', value: 'MT'}
+                                ]}
+                                onChange={(e) => setFormData(prev => ({ ...prev, ca_tipo_jornada: e.value }))}
+                                placeholder="Seleccione el tiempo de jornada"
+                                className="w-full"
+                            />
+                        </div>
+                        
+                        {/* Cantidad */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cantidad de Items</label>
+                            <div className="p-inputgroup">
+                                <span className="p-inputgroup-addon">
+                                    <i className="pi pi-hashtag"></i>
+                                </span>
+                                <InputText
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={formData.cantidad}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, cantidad: parseInt(e.target.value) || 1 }))}
+                                    placeholder="Cantidad de items a crear"
+                                />
+                            </div>
+                            <small className="text-500">Número de items que se crearán con los mismos datos</small>
+                        </div>
+                        
+                        <Divider />
+                        
+                        <div className="flex justify-content-center">
+                            <Button 
+                                label="Crear Item" 
+                                icon="pi pi-plus-circle"
+                                className="p-button-primary"
+                                onClick={handleOpenForm}
+                            />
+                        </div>
                     </div>
-                )}
+                </div>
             </Card>
         );
     };
-    
+
     if (loading) {
         return (
             <div className="p-3 text-center">
