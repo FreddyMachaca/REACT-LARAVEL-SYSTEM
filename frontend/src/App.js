@@ -103,6 +103,7 @@ import TbltipoeventoacademicoList from 'pages/tbltipoeventoacademico/List';
 import TbltipoeventoacademicoView from 'pages/tbltipoeventoacademico/View';
 import TbltipoeventoacademicoAdd from 'pages/tbltipoeventoacademico/Add';
 import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
+import TblestructuraorganizacionalView from 'pages/tblestructuraorganizacional/View'
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -334,6 +335,11 @@ const App = () => {
 				<Route path="/tbltipoeventoacademico/view/:pageid" element={<TbltipoeventoacademicoView />} />
 				<Route path="/tbltipoeventoacademico/add" element={<TbltipoeventoacademicoAdd />} />
 				<Route path="/tbltipoeventoacademico/edit/:pageid" element={<TbltipoeventoacademicoEdit />} />
+
+				{/* section manual de supuestos */}
+				<Route path="/ManualPuestos/EstructuraOrganizacional" element={<TblestructuraorganizacionalView />} />
+
+
 			</Route>
 			<Route exact element={<IndexLayout />}>
 				<Route path="/*" element={<IndexPages />} />

@@ -268,6 +268,15 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoeventoacademico/edit/{rec_id}', 'TblTipoeventoAcademicoController@edit');	
 	Route::any('tbltipoeventoacademico/delete/{rec_id}', 'TblTipoeventoAcademicoController@delete');
 
+/* routes form TblMpEstructuraOrganizacional */
+	Route::post('tblmpestructuraoraganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
+	Route::get('tblmpestructuraoraganizacional/', 'TblMpEstructuraOrganizacionalController@getTreeOrganizationalEstructure');
+	Route::get('tblmpestructuraoraganizacional/structures-and-categories/{rec_id}', 'TblMpEstructuraOrganizacionalController@getOrgStructureAndCategory');
+
+	/* routes form TblMpCategoriaProgramatica */
+	Route::get('tblmpcategoriaprogramatica/index', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/index/{filter?}/{filtervalue?}', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/period-and-da/{cp_da}/{cp_pr_id}', 'TblMpCategoriaProgramaticaController@filterByDaAndPr');
 
 
 /* routes for FileUpload Controller  */	
