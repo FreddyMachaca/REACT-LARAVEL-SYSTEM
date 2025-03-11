@@ -211,7 +211,17 @@ class TblitemsController extends Controller
      */
     function getOptions(){
         try {
-            $escalaOptions = TblMpEscalaSalarial::select('es_id', 'es_descripcion')->get();
+            $escalaOptions = TblMpEscalaSalarial::select(
+                    'tbl_mp_escala_salarial.es_id', 
+                    'tbl_mp_escala_salarial.es_descripcion',
+                    'tbl_mp_escala_salarial.es_escalafon',
+                    'tbl_mp_nivel_salarial.ns_clase',
+                    'tbl_mp_nivel_salarial.ns_nivel',
+                    'tbl_mp_nivel_salarial.ns_haber_basico'
+                )
+                ->leftJoin('tbl_mp_nivel_salarial', 'tbl_mp_escala_salarial.es_ns_id', '=', 'tbl_mp_nivel_salarial.ns_id')
+                ->orderBy('tbl_mp_escala_salarial.es_escalafon')
+                ->get();
             
             $estructuraOptions = TblMpEstructuraOrganizacional::select('eo_id', 'eo_descripcion')->get();
             
@@ -238,21 +248,104 @@ class TblitemsController extends Controller
         try {
             $modeldata = $this->normalizeFormData($request->all());
             
-            $cargo = TblMpCargo::create([
-                'ca_ti_item' => $modeldata['ca_ti_item'],
-                'ca_num_item' => $modeldata['ca_num_item'],
-                'ca_es_id' => $modeldata['ca_es_id'],
-                'ca_eo_id' => $modeldata['ca_eo_id'],
-                'ca_tipo_jornada' => $modeldata['ca_tipo_jornada'] ?? 'TT',
-                'ca_fecha_creacion' => now()
-            ]);
+            \Log::info("Received data for new item:", $modeldata);
             
-            return $this->respond([
-                'status' => 'success',
-                'message' => 'Item creado correctamente',
-                'record' => $cargo
-            ]);
+            $currentGestion = 21; // Gestión actual
+            $cantidad = isset($modeldata['cantidad']) ? intval($modeldata['cantidad']) : 1;
+            
+            if ($cantidad < 1) {
+                $cantidad = 1;
+            }
+            
+            // Capacidad máxima de creación de items
+            if ($cantidad > 100) {
+                $cantidad = 100;
+            }
+            
+            if (empty($modeldata['ca_ti_item'])) {
+                return $this->respondWithError(new \Exception("El campo Tipo Item es requerido"));
+            }
+            
+            if (empty($modeldata['ca_es_id'])) {
+                return $this->respondWithError(new \Exception("El campo Cargo es requerido"));
+            }
+            
+            if (empty($modeldata['ca_eo_id'])) {
+                return $this->respondWithError(new \Exception("La Unidad Organizacional es requerida"));
+            }
+            
+            $baseTiItem = $modeldata['ca_ti_item'];
+            
+            $existingItems = TblMpCargo::where('ca_eo_id', $modeldata['ca_eo_id'])
+                ->where('ca_ti_item', $baseTiItem)
+                ->orderBy('ca_num_item', 'desc')
+                ->get(['ca_num_item']);
+            
+            \Log::info("Found " . $existingItems->count() . " existing items with the same tipo_item and eo_id");
+            
+            $highestNumItem = 1;
+            if ($existingItems->count() > 0) {
+                foreach ($existingItems as $item) {
+                    if (!empty($item->ca_num_item) && intval($item->ca_num_item) > $highestNumItem) {
+                        $highestNumItem = intval($item->ca_num_item);
+                    }
+                }
+                \Log::info("Highest existing item number: " . $highestNumItem);
+            }
+            
+            $startNumItem = $highestNumItem;
+            $createdItems = [];
+            
+            \Log::info("Will create {$cantidad} items starting from number: " . ($startNumItem + 1));
+            
+            DB::beginTransaction();
+            try {
+                $maxId = DB::table('tbl_mp_cargo')->max('ca_id') ?? 0;
+                \Log::info("Current max ca_id is: {$maxId}");
+                
+                for ($i = 0; $i < $cantidad; $i++) {
+                    $numItem = $startNumItem + 1 + $i;
+                    
+                    $newId = $maxId + 1 + $i;
+                    
+                    $cargoData = [
+                        'ca_id' => $newId, 
+                        'ca_ti_item' => $baseTiItem,
+                        'ca_num_item' => $numItem,
+                        'ca_es_id' => $modeldata['ca_es_id'],
+                        'ca_eo_id' => $modeldata['ca_eo_id'],
+                        'ca_tipo_jornada' => $modeldata['ca_tipo_jornada'] ?? 'TT',
+                        'ca_pr_id' => $currentGestion,
+                        'ca_estado' => 'L',
+                        'ca_fecha_creacion' => now()
+                    ];
+                    
+                    \Log::info("Creating item with data:", $cargoData);
+                    
+                    $cargo = TblMpCargo::create($cargoData);
+                    
+                    $createdItems[] = [
+                        'id' => $cargo->ca_id,
+                        'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
+                        'estado' => 'Libre'
+                    ];
+                }
+                
+                DB::commit();
+                
+                return $this->respond([
+                    'status' => 'success',
+                    'message' => $cantidad > 1 ? "{$cantidad} items creados correctamente" : "Item creado correctamente",
+                    'records' => $createdItems,
+                    'count' => $cantidad
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
         } catch (Exception $e) {
+            \Log::error("Error creating items: " . $e->getMessage());
+            \Log::error("Stack trace: " . $e->getTraceAsString());
             return $this->respondWithError($e);
         }
     }

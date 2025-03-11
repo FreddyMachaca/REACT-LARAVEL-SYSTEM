@@ -23,7 +23,7 @@ class TblMpCargo extends Model
      * @var array
      */
 	protected $fillable = [
-		"ca_id",
+		"ca_id", 
 		"ca_es_id",
 		"ca_eo_id",
 		"ca_ti_item",
@@ -37,6 +37,13 @@ class TblMpCargo extends Model
 		"ca_usuario_creacion",
 		"ca_fecha_creacion"
 	];
+	
+	/**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+	public $incrementing = false;
 	
 	/**
      * Set search query for the model
@@ -180,22 +187,17 @@ class TblMpCargo extends Model
      * @var bool
      */
 	public $timestamps = false;
-	
+
 	/**
-     * Get the escala salarial associated with the cargo.
+     * Define relationships
      */
     public function escalaSalarial()
     {
-        return $this->belongsTo(TblMpEscalaSalarial::class, 'ca_es_id', 'es_id')
-            ->with('nivelSalarial');
+        return $this->belongsTo(TblMpEscalaSalarial::class, 'ca_es_id', 'es_id');
     }
-    
-    /**
-     * Get the estructura organizacional associated with the cargo.
-     */
+
     public function estructuraOrganizacional()
     {
-        return $this->belongsTo(TblMpEstructuraOrganizacional::class, 'ca_eo_id', 'eo_id')
-            ->with('categoriaProgramatica');
+        return $this->belongsTo(TblMpEstructuraOrganizacional::class, 'ca_eo_id', 'eo_id');
     }
 }

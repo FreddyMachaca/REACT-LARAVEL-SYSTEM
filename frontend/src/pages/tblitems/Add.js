@@ -23,10 +23,10 @@ const TblitemsAddPage = (props) => {
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         ca_ti_item: '',
-        ca_num_item: '',
         ca_es_id: '',
         ca_eo_id: '',
-        ca_tipo_jornada: 'TT' 
+        ca_tipo_jornada: 'TT',
+        cantidad: 1
     });
     
     const [escalaOptions, setEscalaOptions] = useState([]);
@@ -42,6 +42,13 @@ const TblitemsAddPage = (props) => {
     
     const [nodeItems, setNodeItems] = useState([]);
     const [loadingNodeItems, setLoadingNodeItems] = useState(false);
+
+    const [cargoDetails, setCargoDetails] = useState({
+        codigoEscalafon: '',
+        clase: '',
+        nivelSalarial: '',
+        haberBasico: ''
+    });
     
     useEffect(() => {
         const fetchData = async () => {
@@ -76,10 +83,19 @@ const TblitemsAddPage = (props) => {
                 setTreeData(hierarchyData);
                 
                 const optionsResponse = await axios.get('/tblitems/options');
-                setEscalaOptions(optionsResponse.data.escalaOptions.map(opt => ({ 
-                    value: opt.es_id, 
-                    label: opt.es_descripcion 
-                })));
+                if (optionsResponse.data && optionsResponse.data.escalaOptions) {
+                    const enhancedOptions = optionsResponse.data.escalaOptions.map(opt => ({
+                        value: opt.es_id,
+                        label: opt.es_descripcion,
+                        es_escalafon: opt.es_escalafon || '',
+                        ns_clase: opt.ns_clase || '',
+                        ns_nivel: opt.ns_nivel || '',
+                        ns_haber_basico: opt.ns_haber_basico || ''
+                    }));
+                    setEscalaOptions(enhancedOptions);
+                } else {
+                    setEscalaOptions([]);
+                }
                 
                 try {
                     const tipoItemResponse = await axios.get('/tblmptipoitem/getTiposItem');
@@ -254,22 +270,106 @@ const TblitemsAddPage = (props) => {
             [fieldName]: e.value
         }));
     };
+
+    const handleCargoChange = (e) => {
+        const selectedEscala = escalaOptions.find(option => option.value === e.value);
+        
+        setFormData(prev => ({
+            ...prev,
+            ca_es_id: e.value
+        }));
+        
+        if (selectedEscala) {
+            setCargoDetails({
+                codigoEscalafon: selectedEscala.es_escalafon || 'No disponible',
+                clase: selectedEscala.ns_clase || 'No disponible',
+                nivelSalarial: selectedEscala.ns_nivel || 'No disponible',
+                haberBasico: selectedEscala.ns_haber_basico ? 
+                    new Intl.NumberFormat('es-BO', { 
+                        style: 'currency', 
+                        currency: 'BOB', 
+                        minimumFractionDigits: 2 
+                    }).format(selectedEscala.ns_haber_basico) : 'No disponible'
+            });
+        } else {
+            setCargoDetails({
+                codigoEscalafon: '',
+                clase: '',
+                nivelSalarial: '',
+                haberBasico: ''
+            });
+        }
+    };
+
     const handleSubmit = async () => {
-        if (!formData.ca_ti_item || !formData.ca_num_item || !formData.ca_es_id || !formData.ca_eo_id || !formData.ca_tipo_jornada) {
+        if (!formData.ca_ti_item || !formData.ca_es_id || !formData.ca_eo_id || !formData.ca_tipo_jornada) {
             app.flashMsg("Error", "Todos los campos son requeridos", "error");
             return;
         }
+        
         try {
-            setSaving(true);            
-            await axios.post('/tblitems/add', formData);            
-            app.flashMsg("Éxito", "Item creado correctamente");
-            app.navigate('/tblitems');
+            setSaving(true);
+            console.log("Submitting form data:", formData);
+            
+            const response = await axios.post('/tblitems/add', formData);
+            console.log("Server response:", response.data);
+            
+            setShowForm(false);
+            
+            app.flashMsg("Éxito", `${formData.cantidad} item(s) creado(s) correctamente`);
+            
+            try {
+                const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
+                if (treeResponse.data && treeResponse.data.tree) {
+                    setTreeData(treeResponse.data.tree);
+                    
+                    if (selectedNode && selectedNode.key) {
+                        const path = findNodePath(treeResponse.data.tree, selectedNode.key);
+                        if (path) {
+                            let newExpandedKeys = { ...expandedKeys };
+                            path.forEach(key => {
+                                newExpandedKeys[key] = true;
+                            });
+                            setExpandedKeys(newExpandedKeys);
+                        }
+                    }
+                }
+            } catch (treeError) {
+                console.error("Error refreshing tree:", treeError);
+            }
+            
+            if (selectedNode && selectedNode.key) {
+                try {
+                    setLoadingNodeItems(true);
+                    const itemsResponse = await axios.get(`/tblitems/index?filter=ca_eo_id&filtervalue=${selectedNode.key}`);
+                    
+                    if (itemsResponse.data && itemsResponse.data.records && Array.isArray(itemsResponse.data.records)) {
+                        setNodeItems(itemsResponse.data.records);
+                    }
+                } catch (fetchErr) {
+                    console.error("Error refreshing items list:", fetchErr);
+                } finally {
+                    setLoadingNodeItems(false);
+                    setSaving(false);
+                }
+            } else {
+                setSaving(false);
+            }
         } catch (err) {
             console.error("Error saving data:", err);
-            app.flashMsg("Error", err.message || "Error al guardar los datos", "error");
+            if (err.response) {
+                console.error("Response data:", err.response.data);
+                console.error("Response status:", err.response.status);
+                
+                const errorMessage = err.response.data?.message || err.message || "Error al guardar los datos";
+                app.flashMsg("Error", errorMessage, "error");
+            } else {
+                app.flashMsg("Error", err.message || "Error al guardar los datos", "error");
+            }
             setSaving(false);
         }
     };
+
     const treeStyles = {
         customTree: {
             border: 'none',
@@ -296,12 +396,24 @@ const TblitemsAddPage = (props) => {
     };
     const nodeTemplate = (node, options) => {
         const isLeaf = !node.children || node.children.length === 0;
-        const iconClassName = isLeaf ? 'pi pi-folder' : options.expanded ? 'pi pi-folder-open' : 'pi pi-folder';
+        let iconClassName = '';
+        
+        if (node.type === 'item') {
+            iconClassName = 'pi pi-user';
+        } else {
+            iconClassName = isLeaf ? 'pi pi-folder' : options.expanded ? 'pi pi-folder-open' : 'pi pi-folder';
+        }
+        
         const selectedNodeStyle = (selectedNode && selectedNode.key === node.key) ? treeStyles.selectedNode : {};
         const hasChildrenStyle = !isLeaf ? { cursor: 'pointer', fontWeight: options.expanded ? 'bold' : 'normal' } : {};
+        
+        const nodeTypeStyle = node.type === 'item' ? 
+            { backgroundColor: 'var(--surface-50)', borderRadius: '4px', padding: '2px 4px' } : {};
+        
         return (
-            <div className="tree-node flex align-items-center" style={{...selectedNodeStyle, ...hasChildrenStyle}}>
-                <i className={iconClassName + " mr-2 text-primary"} style={{ fontSize: '1.2rem' }}></i>
+            <div className="tree-node flex align-items-center" style={{...selectedNodeStyle, ...hasChildrenStyle, ...nodeTypeStyle}}>
+                <i className={iconClassName + " mr-2 " + (node.type === 'item' ? 'text-blue-600' : 'text-primary')} 
+                   style={{ fontSize: '1.2rem' }}></i>
                 <span className="node-content">
                     {node.label}
                 </span>
@@ -370,6 +482,46 @@ const TblitemsAddPage = (props) => {
                                     </div>
                                 </div>
                                 
+                                {/* Cargo */}
+                                <div className="field mb-3">
+                                    <label className="font-medium text-600">Cargo</label>
+                                    <Dropdown 
+                                        value={formData.ca_es_id}
+                                        options={escalaOptions}
+                                        onChange={handleCargoChange}
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Seleccione un Cargo"
+                                        className="w-full"
+                                        showClear
+                                        filter
+                                    />
+                                </div>
+                                
+                                {/* Cargo detalles */}
+                                {formData.ca_es_id && (
+                                    <div className="field mb-3 p-2 border-round surface-50">
+                                        <div className="grid">
+                                            <div className="col-12 col-md-6 mb-2">
+                                                <span className="font-medium text-600">Código Escalafón:</span>
+                                                <span className="ml-2">{cargoDetails.codigoEscalafon}</span>
+                                            </div>
+                                            <div className="col-12 col-md-6 mb-2">
+                                                <span className="font-medium text-600">Clase:</span>
+                                                <span className="ml-2">{cargoDetails.clase}</span>
+                                            </div>
+                                            <div className="col-12 col-md-6 mb-2">
+                                                <span className="font-medium text-600">Nivel Salarial:</span>
+                                                <span className="ml-2">{cargoDetails.nivelSalarial}</span>
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <span className="font-medium text-600">Haber Básico:</span>
+                                                <span className="ml-2 font-bold text-primary">{cargoDetails.haberBasico}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
                                 {/* Tipo Item */}
                                 <div className="field mb-3">
                                     <label className="font-medium text-600">Tipo Item</label>
@@ -400,37 +552,24 @@ const TblitemsAddPage = (props) => {
                                     />
                                 </div>
                                 
-                                {/* Informacion de la Unidad 
+                                {/* Cantidad */}
                                 <div className="field mb-3">
-                                    <label className="font-medium text-600">Detalles de la Unidad</label>
-                                    <div className="p-3 border-round surface-50">
-                                        <div className="grid">
-                                            <div className="col-12 mb-2 flex align-items-center">
-                                                <i className="pi pi-id-card mr-2 text-primary"></i>
-                                                <strong>ID:</strong>
-                                                <span className="ml-2">{selectedNode.key}</span>
-                                            </div>
-                                            <div className="col-12 mb-2 flex align-items-center">
-                                                <i className="pi pi-tag mr-2 text-primary"></i>
-                                                <strong>Nombre:</strong>
-                                                <span className="ml-2">{selectedNode.label}</span>
-                                            </div>
-                                            <div className="col-12 mb-2 flex align-items-center">
-                                                <i className="pi pi-sitemap mr-2 text-primary"></i>
-                                                <strong>Código Superior:</strong>
-                                                <span className="ml-2">{selectedNode.eo_cod_superior || 'Ninguno'}</span>
-                                            </div>
-                                            <div className="col-12 flex align-items-center">
-                                                <i className="pi pi-hashtag mr-2 text-primary"></i>
-                                                <strong>Programa:</strong>
-                                                <span className="ml-2">
-                                                    {selectedNode.eo_prog || '0'} - {selectedNode.eo_sprog || '0'} - {selectedNode.eo_proy || '0'}
-                                                </span>
-                                            </div>
-                                        </div>
+                                    <label className="font-medium text-600">Cantidad de Items</label>
+                                    <div className="p-inputgroup">
+                                        <span className="p-inputgroup-addon">
+                                            <i className="pi pi-hashtag"></i>
+                                        </span>
+                                        <InputText
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={formData.cantidad}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, cantidad: parseInt(e.target.value) || 1 }))}
+                                            placeholder="Cantidad de items a crear"
+                                        />
                                     </div>
+                                    <small className="text-500">Número de items que se crearán con los mismos datos</small>
                                 </div>
-                                */}
                                 
                                 {/* Items Table */}
                                 <div className="field mb-3">
@@ -650,25 +789,15 @@ const TblitemsAddPage = (props) => {
                         </div>
                         
                         <div className="col-12 mb-3">
-                            <label htmlFor="ca_num_item" className="font-medium text-900 mb-2 block">Número de Item</label>
-                            <InputText 
-                                id="ca_num_item" 
-                                name="ca_num_item"
-                                value={formData.ca_num_item}
-                                onChange={handleInputChange}
-                                className="w-full"
-                                required
-                                placeholder="Ej: 001"
-                            />
-                        </div>
-                        
-                        <div className="col-12 mb-3">
                             <label htmlFor="ca_es_id" className="font-medium text-900 mb-2 block">Cargo</label>
                             <Dropdown
                                 id="ca_es_id" 
                                 value={formData.ca_es_id}
                                 options={escalaOptions}
-                                onChange={(e) => handleDropdownChange(e, 'ca_es_id')}
+                                onChange={(e) => {
+                                    handleDropdownChange(e, 'ca_es_id');
+                                    handleCargoChange(e);
+                                }}
                                 optionValue="value"
                                 optionLabel="label"
                                 placeholder="Seleccione un cargo"
@@ -676,6 +805,29 @@ const TblitemsAddPage = (props) => {
                                 required
                                 filtered
                             />
+                            
+                            {formData.ca_es_id && (
+                                <div className="mt-2 p-2 border-round surface-50 text-sm">
+                                    <div className="grid">
+                                        <div className="col-6">
+                                            <span className="font-medium">Código Escalafón:</span>
+                                            <span className="ml-1">{cargoDetails.codigoEscalafon}</span>
+                                        </div>
+                                        <div className="col-6">
+                                            <span className="font-medium">Clase:</span>
+                                            <span className="ml-1">{cargoDetails.clase}</span>
+                                        </div>
+                                        <div className="col-6">
+                                            <span className="font-medium">Nivel Salarial:</span>
+                                            <span className="ml-1">{cargoDetails.nivelSalarial}</span>
+                                        </div>
+                                        <div className="col-6">
+                                            <span className="font-medium">Haber Básico:</span>
+                                            <span className="ml-1 font-bold text-primary">{cargoDetails.haberBasico}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         
                         <div className="col-12 mb-3">
@@ -704,6 +856,29 @@ const TblitemsAddPage = (props) => {
                             </div>
                         </div>
                         
+                        <div className="col-12 mb-3">
+                            <label htmlFor="cantidad" className="font-medium text-900 mb-2 block">Cantidad de Items</label>
+                            <div className="p-inputgroup">
+                                <span className="p-inputgroup-addon">
+                                    <i className="pi pi-hashtag"></i>
+                                </span>
+                                <InputText
+                                    id="cantidad"
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={formData.cantidad}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                        ...prev, 
+                                        cantidad: parseInt(e.target.value) || 1 
+                                    }))}
+                                    className="w-full"
+                                    placeholder="Cantidad"
+                                />
+                            </div>
+                            <small className="text-600">Define cuántos items se crearán con estos datos</small>
+                        </div>
+                        
                         <Divider />
                         
                         <div className="col-12">
@@ -716,7 +891,7 @@ const TblitemsAddPage = (props) => {
                             </div>
                         </div>
                         
-                        <div className="col-12 mt-3">
+                        <div className="col-12 mt-3"></div>
                             <div className="p-3 border-round surface-100">
                                 <div className="font-medium text-900 mb-2">Categoría Programática</div>
                                 <div className="flex align-items-center">
@@ -734,7 +909,6 @@ const TblitemsAddPage = (props) => {
                                     <span className="font-medium text-primary">{categoriaAdministrativa || "No disponible"}</span>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </Dialog>
             </main>

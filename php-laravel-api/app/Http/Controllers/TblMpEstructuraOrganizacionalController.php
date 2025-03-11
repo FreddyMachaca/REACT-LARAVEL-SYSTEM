@@ -113,8 +113,34 @@ class TblMpEstructuraOrganizacionalController extends Controller
 					'eo_cp_id' => $node->eo_cp_id,
 					'eo_cod_superior' => $node->eo_cod_superior,
 					'eo_pr_id' => $node->eo_pr_id,
+					'type' => 'organizational_unit',
 					'children' => []
 				];
+			}
+			
+			$items = \App\Models\TblMpCargo::with(['escalaSalarial'])
+				->whereIn('ca_eo_id', array_keys($nodeMap))
+				->get();
+			
+			\Log::info("Found " . count($items) . " items to add to tree");
+			
+			foreach ($items as $item) {
+				if (isset($nodeMap[$item->ca_eo_id])) {
+					$escalaSalarial = $item->escalaSalarial ? $item->escalaSalarial->es_descripcion : 'Sin cargo';
+					$nodeMap[$item->ca_eo_id]['children'][] = [
+						'key' => 'item_' . $item->ca_id,
+						'label' => $item->ca_ti_item . '-' . $item->ca_num_item . ' (' . $escalaSalarial . ')',
+						'data' => $item->ca_id,
+						'type' => 'item',
+						'itemData' => [
+							'id' => $item->ca_id,
+							'codigo' => $item->ca_ti_item . '-' . $item->ca_num_item,
+							'cargo' => $escalaSalarial,
+							'tipo_jornada' => $item->ca_tipo_jornada
+						],
+						'children' => [] 
+					];
+				}
 			}
 			
 			$rootNodes = [];
@@ -157,6 +183,7 @@ class TblMpEstructuraOrganizacionalController extends Controller
 				'root_nodes' => count($rootNodes),
 				'child_nodes' => count($allNodes) - count($rootNodes),
 				'nodes_with_children' => $nodesWithChildren,
+				'total_items' => count($items),
 				'filter_pr_id' => 21
 			];
 			
