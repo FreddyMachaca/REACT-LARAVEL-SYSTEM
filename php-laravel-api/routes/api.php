@@ -325,6 +325,7 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmptipoitem/edit/{ti_item}/{ti_tipo}', 'TblMpTipoItemController@edit');	
 	Route::post('tblmptipoitem/delete', 'TblMpTipoItemController@delete');
 	Route::get('tblmptipoitem/bytipo/{tipo}', 'TblMpTipoItemController@getByTipo');
+	Route::get('tblmptipoitem/getTiposItem', 'TblMpTipoItemController@getTiposItem');
 
 /* routes for Tblitems Controller */	
 	Route::get('tblitems/', 'TblitemsController@index');

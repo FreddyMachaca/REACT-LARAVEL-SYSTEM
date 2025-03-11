@@ -81,17 +81,22 @@ const TblitemsAddPage = (props) => {
                     label: opt.es_descripcion 
                 })));
                 
-                const tipoItemResponse = await axios.get('/tblmptipoitem/index');
-                if (tipoItemResponse.data && tipoItemResponse.data.records) {
-                    // Filter only types A,C,E,P,S
-                    const filteredTypes = tipoItemResponse.data.records.filter(
-                        item => ['A', 'C', 'E', 'P', 'S'].includes(item.ti_item)
-                    );
+                try {
+                    const tipoItemResponse = await axios.get('/tblmptipoitem/getTiposItem');
+                    console.log("Tipo Item Response:", tipoItemResponse.data);
                     
-                    setTipoItemOptions(filteredTypes.map(item => ({
-                        value: item.ti_item,
-                        label: `${item.ti_item} - ${item.ti_descripcion}`
-                    })));
+                    if (tipoItemResponse.data && Array.isArray(tipoItemResponse.data)) {
+                        setTipoItemOptions(tipoItemResponse.data.map(item => ({
+                            value: item.ti_item,
+                            label: `${item.ti_item} - ${item.ti_descripcion}`
+                        })));
+                    } else {
+                        console.error("Invalid response format from getTiposItem endpoint");
+                        setTipoItemOptions([]);
+                    }
+                } catch (typeError) {
+                    console.error("Error fetching tipo items:", typeError);
+                    setTipoItemOptions([]);
                 }
                 
                 setLoading(false);
@@ -365,7 +370,37 @@ const TblitemsAddPage = (props) => {
                                     </div>
                                 </div>
                                 
-                                {/* Informacion de la Unidad */}
+                                {/* Tipo Item */}
+                                <div className="field mb-3">
+                                    <label className="font-medium text-600">Tipo Item</label>
+                                    <Dropdown 
+                                        value={formData.ca_ti_item}
+                                        options={tipoItemOptions}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, ca_ti_item: e.value }))}
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Seleccione un Tipo Item"
+                                        className="w-full"
+                                        showClear
+                                    />
+                                </div>
+
+                                {/* Tiempo Jornada */}
+                                <div className="field mb-3">
+                                    <label className="font-medium text-600">Tiempo Jornada</label>
+                                    <Dropdown
+                                        value={formData.ca_tipo_jornada}
+                                        options={[
+                                            {label: 'Tiempo Completo', value: 'TT'},
+                                            {label: 'Medio Tiempo', value: 'MT'}
+                                        ]}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, ca_tipo_jornada: e.value }))}
+                                        placeholder="Seleccione el tiempo de jornada"
+                                        className="w-full"
+                                    />
+                                </div>
+                                
+                                {/* Informacion de la Unidad 
                                 <div className="field mb-3">
                                     <label className="font-medium text-600">Detalles de la Unidad</label>
                                     <div className="p-3 border-round surface-50">
@@ -395,6 +430,7 @@ const TblitemsAddPage = (props) => {
                                         </div>
                                     </div>
                                 </div>
+                                */}
                                 
                                 {/* Items Table */}
                                 <div className="field mb-3">

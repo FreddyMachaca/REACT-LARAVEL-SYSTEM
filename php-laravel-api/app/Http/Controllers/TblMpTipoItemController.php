@@ -154,4 +154,17 @@ class TblMpTipoItemController extends Controller
 			return $this->respondWithError($e);
 		}
 	}
+	
+	/**
+     * Return list of Tipo Item with only ti_item and ti_descripcion fields.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getTiposItem(){
+        $records = TblMpTipoItem::select('ti_item', 'ti_descripcion')
+                    ->whereIn('ti_item', ['A','C','E','P','S'])
+                    ->orderBy('ti_orden', 'asc')
+                    ->get();
+        return $this->respond($records);
+    }
 }
