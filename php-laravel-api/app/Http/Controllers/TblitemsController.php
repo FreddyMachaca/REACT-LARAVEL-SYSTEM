@@ -21,7 +21,7 @@ class TblitemsController extends Controller
     function index(Request $request){
         try {
             $page = $request->page ?? 1;
-            $limit = $request->limit ?? 10;
+            $limit = $request->limit ?? 20;
             $search = $request->search ?? '';
             $filter = $request->filter ?? null;
             $filtervalue = $request->filtervalue ?? null;
@@ -56,7 +56,13 @@ class TblitemsController extends Controller
             
             $query->with(['escalaSalarial', 'estructuraOrganizacional.categoriaProgramatica']);
             
+            // Ordenar por fecha de creación
+            $query->orderBy('ca_fecha_creacion', 'desc');
+            
             $total_records = $query->count();
+            
+            $query->skip(($page - 1) * $limit)->take($limit);
+            
             $cargo_records = $query->get();
             
             $combined_records = $cargo_records->map(function($cargo) {
@@ -255,11 +261,6 @@ class TblitemsController extends Controller
             
             if ($cantidad < 1) {
                 $cantidad = 1;
-            }
-            
-            // Capacidad máxima de creación de items
-            if ($cantidad > 100) {
-                $cantidad = 100;
             }
             
             if (empty($modeldata['ca_ti_item'])) {

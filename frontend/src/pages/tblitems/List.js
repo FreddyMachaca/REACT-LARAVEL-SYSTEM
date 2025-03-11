@@ -22,7 +22,7 @@ const TblitemsListPage = (props) => {
     const [apiRequestError, setApiRequestError] = useState(null);
     
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(20);
     const [totalRecords, setTotalRecords] = useState(0);
     
     const filterSchema = {
@@ -39,7 +39,7 @@ const TblitemsListPage = (props) => {
     const { selectedItems, sortBy, sortOrder, setSelectedItems, getPageBreadCrumbs, onSort, deleteItem } = pageController;
     const { filters, setFilterValue } = filterController;
     
-    const fetchPageData = useCallback(async (page = 1, size = 10, search = '') => {
+    const fetchPageData = useCallback(async (page = 1, size = 20, search = '') => {
         try {
             setLoading(true);
             
@@ -62,12 +62,16 @@ const TblitemsListPage = (props) => {
     }, [fetchPageData, currentPage, pageSize, filters.search?.value]);
     
     const handlePageChange = (event) => {
-        setCurrentPage(event.page + 1);
+        const newPage = event.page + 1;
+        setCurrentPage(newPage);
+        fetchPageData(newPage, pageSize, filters.search?.value || '');
     };
     
     const handleRowsPerPageChange = (event) => {
-        setPageSize(event.rows);
+        const newSize = event.rows;
+        setPageSize(newSize);
         setCurrentPage(1);
+        fetchPageData(1, newSize, filters.search?.value || '');
     };
 
     const searchFilteredData = filters.search?.value 
@@ -181,21 +185,21 @@ const TblitemsListPage = (props) => {
     }
 
     function PagerControl() {
-        if (totalRecords > pageSize) {
-            return (
-                <div className="flex-grow-1">
-                    <Paginator 
-                        first={(currentPage - 1) * pageSize} 
-                        rows={pageSize} 
-                        totalRecords={totalRecords} 
-                        onPageChange={handlePageChange}
-                        template="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-                        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-                    />
-                </div>
-            );
-        }
-        return null;
+        return (
+            <div className="flex-grow-1">
+                <Paginator 
+                    first={(currentPage - 1) * pageSize} 
+                    rows={pageSize} 
+                    totalRecords={totalRecords} 
+                    rowsPerPageOptions={[10, 20, 50, 100]}
+                    onPageChange={handlePageChange}
+                    rowsPerPage={pageSize}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                    template="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+                />
+            </div>
+        );
     }
 
     function PageActionButtons() {
@@ -355,7 +359,7 @@ TblitemsListPage.defaultProps = {
     sortField: '',
     sortDir: '',
     pageNo: 1,
-    limit: 10,
+    limit: 20,
 }
 
 export default TblitemsListPage;
