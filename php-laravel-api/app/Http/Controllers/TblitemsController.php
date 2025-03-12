@@ -26,19 +26,42 @@ class TblitemsController extends Controller
             $filter = $request->filter ?? null;
             $filtervalue = $request->filtervalue ?? null;
             
-            $query = TblMpCargo::query();
+            // Consulta directa con DB para mejor rendimiento y claridad
+            $query = DB::table('tbl_mp_cargo AS c')
+                ->select([
+                    'c.ca_id AS id', 
+                    'c.ca_ti_item', 
+                    'c.ca_num_item', 
+                    'c.ca_tipo_jornada AS tipo_jornada',
+                    'c.ca_fecha_creacion AS fecha_creacion',
+                    'es.es_descripcion AS cargo',
+                    'ns.ns_haber_basico AS haber_basico',
+                    'eo.eo_descripcion AS unidad_organizacional'
+                ])
+                ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
+                ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
+                ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
+                // Filtrar por gestión 2
+                ->where('eo.eo_pr_id', 2);
             
-            if($search){
-                TblMpCargo::search($query, $search);
+            if($search) {
+                $searchTerm = "%{$search}%";
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('c.ca_ti_item', 'ILIKE', $searchTerm)
+                      ->orWhere('c.ca_num_item', 'ILIKE', $searchTerm)
+                      ->orWhere('es.es_descripcion', 'ILIKE', $searchTerm)
+                      ->orWhere('eo.eo_descripcion', 'ILIKE', $searchTerm);
+                });
             }
             
             if ($filter && $filtervalue) {
                 if ($filter === 'ca_eo_id') {
-                    $query->where('ca_eo_id', $filtervalue);
+                    $query->where('c.ca_eo_id', $filtervalue);
                     
-                    // Obtener estructura con categoria programatica 
-                    $estructura = TblMpEstructuraOrganizacional::with('categoriaProgramatica')
-                        ->where('eo_id', $filtervalue)
+                    // Obtener estructura con categoria programatica
+                    $estructura = TblMpEstructuraOrganizacional::where('eo_id', $filtervalue)
+                        ->where('eo_pr_id', 2)
+                        ->with('categoriaProgramatica')
                         ->first();
                         
                     if ($estructura) {
@@ -54,30 +77,22 @@ class TblitemsController extends Controller
                 }
             }
             
-            $query->with(['escalaSalarial', 'estructuraOrganizacional.categoriaProgramatica']);
-            
             // Ordenar por fecha de creación
-            $query->orderBy('ca_fecha_creacion', 'desc');
+            $query->orderBy('c.ca_fecha_creacion', 'desc');
             
+            // Contar total de registros
             $total_records = $query->count();
             
-            $query->skip(($page - 1) * $limit)->take($limit);
+            // Aplicar paginación
+            $cargo_records = $query->skip(($page - 1) * $limit)
+                                   ->take($limit)
+                                   ->get();
             
-            $cargo_records = $query->get();
-            
+            // Formatear registros para incluir el código compuesto
             $combined_records = $cargo_records->map(function($cargo) {
-                return [
-                    'id' => $cargo->ca_id,
-                    'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
-                    'cargo' => $cargo->escalaSalarial ? $cargo->escalaSalarial->es_descripcion : '',
-                    'tipo_jornada' => $cargo->ca_tipo_jornada,
-                    'haber_basico' => $cargo->escalaSalarial && $cargo->escalaSalarial->nivelSalarial ? 
-                        $cargo->escalaSalarial->nivelSalarial->ns_haber_basico : '',
-                    'unidad_organizacional' => $cargo->estructuraOrganizacional ? 
-                        $cargo->estructuraOrganizacional->eo_descripcion : '',
-                    'fecha_creacion' => $cargo->ca_fecha_creacion
-                ];
-            })->toArray();
+                $cargo->codigo = $cargo->ca_ti_item . '-' . $cargo->ca_num_item;
+                return $cargo;
+            });
             
             return $this->respond([
                 'records' => $combined_records,
@@ -226,11 +241,15 @@ class TblitemsController extends Controller
                     'tbl_mp_nivel_salarial.ns_nivel',
                     'tbl_mp_nivel_salarial.ns_haber_basico'
                 )
+                ->where('tbl_mp_escala_salarial.es_pr_id', 2) // Filtrar por gestión 2
                 ->leftJoin('tbl_mp_nivel_salarial', 'tbl_mp_escala_salarial.es_ns_id', '=', 'tbl_mp_nivel_salarial.ns_id')
                 ->orderBy('tbl_mp_escala_salarial.es_escalafon')
                 ->get();
             
-            $estructuraOptions = TblMpEstructuraOrganizacional::select('eo_id', 'eo_descripcion')->get();
+            $estructuraOptions = TblMpEstructuraOrganizacional::select('eo_id', 'eo_descripcion')
+                ->where('eo_pr_id', 2) // Filtrar por gestión 2
+                ->orderBy('eo_descripcion')
+                ->get();
             
             $tipoItems = TblMpTipoItem::whereIn('ti_item', ['A', 'C', 'E', 'P', 'S'])
                 ->orderBy('ti_orden')
@@ -257,7 +276,7 @@ class TblitemsController extends Controller
             
             \Log::info("Received data for new item:", $modeldata);
             
-            $currentGestion = 21; // Gestión actual
+            $currentGestion = 2; // Gestión 2
             $cantidad = isset($modeldata['cantidad']) ? intval($modeldata['cantidad']) : 1;
             
             if ($cantidad < 1) {
@@ -274,6 +293,12 @@ class TblitemsController extends Controller
             
             if (empty($modeldata['ca_eo_id'])) {
                 return $this->respondWithError(new \Exception("La Unidad Organizacional es requerida"));
+            }
+            
+            // Verificar que la estructura organizacional pertenezca a la gestión 2
+            $estructura = TblMpEstructuraOrganizacional::find($modeldata['ca_eo_id']);
+            if (!$estructura || $estructura->eo_pr_id != 2) {
+                return $this->respondWithError(new \Exception("La Unidad Organizacional debe pertenecer a la gestión 2"));
             }
             
             $baseTiItem = $modeldata['ca_ti_item'];
@@ -318,7 +343,7 @@ class TblitemsController extends Controller
                         'ca_eo_id' => $modeldata['ca_eo_id'],
                         'ca_tipo_jornada' => $modeldata['ca_tipo_jornada'] ?? 'TT',
                         'ca_pr_id' => $currentGestion,
-                        'ca_estado' => 'L',
+                        'ca_estado' => 'V',
                         'ca_fecha_creacion' => now()
                     ];
                     
@@ -329,7 +354,7 @@ class TblitemsController extends Controller
                     $createdItems[] = [
                         'id' => $cargo->ca_id,
                         'codigo' => $cargo->ca_ti_item . '-' . $cargo->ca_num_item,
-                        'estado' => 'Libre'
+                        'estado' => 'Vigente'
                     ];
                 }
                 

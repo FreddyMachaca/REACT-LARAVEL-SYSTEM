@@ -89,10 +89,10 @@ class TblMpEstructuraOrganizacionalController extends Controller
 	function getTree(){
 		try {
 			$query = TblMpEstructuraOrganizacional::query();
-			$query->where('eo_pr_id', 21);
+			$query->where('eo_pr_id', 2);
 			$allNodes = $query->get(['eo_id', 'eo_descripcion', 'eo_cp_id', 'eo_pr_id', 'eo_cod_superior']);
 			
-			\Log::info("Total nodes found with eo_pr_id = 21: " . count($allNodes));
+			\Log::info("Total nodes found with eo_pr_id = 2: " . count($allNodes));
 			
 			$cpidCounts = [];
 			$supCounts = [];
@@ -184,7 +184,7 @@ class TblMpEstructuraOrganizacionalController extends Controller
 				'child_nodes' => count($allNodes) - count($rootNodes),
 				'nodes_with_children' => $nodesWithChildren,
 				'total_items' => count($items),
-				'filter_pr_id' => 21
+				'filter_pr_id' => 2
 			];
 			
 			return $this->respond([

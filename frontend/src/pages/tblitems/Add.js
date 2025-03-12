@@ -204,6 +204,13 @@ const TblitemsAddPage = (props) => {
             setLoadingRelatedData(true);
             const response = await axios.get(`/tblitems/view/${itemId}`);
             const itemData = response.data;
+            
+            // Extraer información salarial completa
+            const haberBasico = itemData.haber_basico || 'No disponible';
+            const clase = itemData.nivel_original?.ns_clase || 'No disponible';
+            const nivelSalarial = itemData.nivel_original?.ns_nivel || 'No disponible';
+            const codigoEscalafon = itemData.escala_original?.es_escalafon || 'No disponible';
+            
             setSelectedNode({
                 key: `item_${itemData.id}`,
                 label: itemData.codigo,
@@ -213,7 +220,11 @@ const TblitemsAddPage = (props) => {
                     codigo: itemData.codigo,
                     cargo: itemData.cargo,
                     tipo_jornada: itemData.tipo_jornada,
-                    estado: itemData.estado
+                    estado: itemData.cargo_original?.ca_estado || 'L',
+                    haber_basico: haberBasico,
+                    clase: clase,
+                    nivel_salarial: nivelSalarial,
+                    codigo_escalafon: codigoEscalafon
                 }
             });
             setLoadingRelatedData(false);
@@ -509,6 +520,13 @@ const TblitemsAddPage = (props) => {
         if (selectedNode.type === 'item') {
             const itemData = selectedNode.itemData || {};
             
+            const haberBasicoFormatted = itemData.haber_basico ? 
+                new Intl.NumberFormat('es-BO', { 
+                    style: 'currency', 
+                    currency: 'BOB', 
+                    minimumFractionDigits: 2 
+                }).format(itemData.haber_basico) : 'No disponible';
+            
             return (
                 <Card title="Detalles del Item" className="mt-0 shadow-3 border-round">
                     <div className="p-3">
@@ -525,18 +543,34 @@ const TblitemsAddPage = (props) => {
                             </div>
                         </div>
                         <div className="field mb-3">
+                            <label className="font-medium text-600">Código Escalafón</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.codigo_escalafon || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Clase</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.clase || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Nivel Salarial</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.nivel_salarial || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Haber Básico</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium text-primary">
+                                {haberBasicoFormatted}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
                             <label className="font-medium text-600">Tipo de Jornada</label>
                             <div className="p-2 border-round surface-50">
                                 <span className={`badge ${itemData.tipo_jornada === 'TT' ? 'bg-blue-100 text-blue-900' : 'bg-orange-100 text-orange-900'} p-1 border-round`}>
                                     {itemData.tipo_jornada === 'TT' ? 'Tiempo Completo' : 'Medio Tiempo'}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="field mb-3">
-                            <label className="font-medium text-600">Estado</label>
-                            <div className="p-2 border-round surface-50">
-                                <span className="badge bg-green-100 text-green-900 p-1 border-round">
-                                    Libre
                                 </span>
                             </div>
                         </div>

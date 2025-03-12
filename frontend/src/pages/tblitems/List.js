@@ -160,13 +160,17 @@ const TblitemsListPage = (props) => {
     }
 
     function EmptyRecordMessage(){
-        if(!loading && !items.length){
+        if(!loading && (!items || !items.length)){
             return (
-                <div className="text-lg mt-3 p-3 text-center text-400 font-bold">
-                    ningún record fue encontrado
+                <div className="p-3 text-center">
+                    <div className="text-xl text-500 mb-2">No se encontraron registros</div>
+                    <div className="text-sm text-400">
+                        No hay items disponibles en la gestión 2
+                    </div>
                 </div>
             );
         }
+        return null;
     }
 
     function MultiDelete() {
