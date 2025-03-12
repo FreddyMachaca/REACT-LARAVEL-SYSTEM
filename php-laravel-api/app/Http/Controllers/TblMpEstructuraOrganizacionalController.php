@@ -39,11 +39,11 @@ class TblMpEstructuraOrganizacionalController extends Controller
         return response()->json($data);
     }
 
-    public function getTreeOrganizationalEstructure() {
+    public function getTreeOrganizationalEstructure($eo_pr_id) {
         // Obtener todos los registros relacionados en una sola consulta
         $allRecords = TblMpEstructuraOrganizacional::from('tbl_mp_estructura_organizacional as eo')
             ->leftJoin('tbl_mp_categoria_programatica as cp', 'cp.cp_id', '=', 'eo.eo_cp_id') 
-            ->where('eo.eo_pr_id', 21)
+            ->where('eo.eo_pr_id', $eo_pr_id)
             ->where('eo.eo_obract', 0)
             ->where(function ($query) {
                 $query->where('cp.cp_pr_id', 21)

@@ -270,7 +270,7 @@ Route::get('home', 'HomeController@index');
 
 /* routes form TblMpEstructuraOrganizacional */
 	Route::post('tblmpestructuraoraganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
-	Route::get('tblmpestructuraoraganizacional/', 'TblMpEstructuraOrganizacionalController@getTreeOrganizationalEstructure');
+	Route::get('tblmpestructuraoraganizacional/{eo_pr_id}', 'TblMpEstructuraOrganizacionalController@getTreeOrganizationalEstructure');
 	Route::get('tblmpestructuraoraganizacional/structures-and-categories/{rec_id}', 'TblMpEstructuraOrganizacionalController@getOrgStructureAndCategory');
 
 	/* routes form TblMpCategoriaProgramatica */

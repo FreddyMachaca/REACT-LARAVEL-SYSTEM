@@ -1,8 +1,8 @@
-import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
+import { classNames } from 'primereact/utils';
+import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
-import { classNames } from 'primereact/utils';
 
 const DialogEOrganizacional = ({display, node, formik, data, onHide}) => {
 

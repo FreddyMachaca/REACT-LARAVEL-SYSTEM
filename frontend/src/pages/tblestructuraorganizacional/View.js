@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import 'primeicons/primeicons.css';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { classNames } from 'primereact/utils';
@@ -7,11 +7,11 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { Tree } from 'primereact/tree';
 import { useFormik } from 'formik';
-import useApp from 'hooks/useApp';
 import axios from 'axios'
-import 'primeicons/primeicons.css';
-import PageLoading from '../../components/PageLoading'
 import DialogEOrganizacional from './DialogEOrganizacional.jsx';
+import PageLoading from '../../components/PageLoading'
+import React, { useState, useEffect } from 'react';
+import useApp from 'hooks/useApp';
 
 
 function TblestructuraorganizacionalView() {
@@ -40,8 +40,9 @@ function TblestructuraorganizacionalView() {
     
     const fetchData = async () => {
         try {
+            const eo_pr_id = 21;
             const [response1, response2] = await Promise.all([
-                axios.get("tblmpestructuraoraganizacional"),
+                axios.get(`tblmpestructuraoraganizacional/${eo_pr_id}`),
             ]);
 
             const data1 = response1.data;
