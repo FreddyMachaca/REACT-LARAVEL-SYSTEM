@@ -98,13 +98,15 @@ const TblitemsAddPage = (props) => {
                 }
                 
                 try {
-                    const tipoItemResponse = await axios.get('/tblmptipoitem/getTiposItem');
+                    const tipoItemResponse = await axios.get('/tblitems/options');
                     console.log("Tipo Item Response:", tipoItemResponse.data);
                     
-                    if (tipoItemResponse.data && Array.isArray(tipoItemResponse.data)) {
-                        setTipoItemOptions(tipoItemResponse.data.map(item => ({
+                    if (tipoItemResponse.data && tipoItemResponse.data.tipoItems) {
+                        setTipoItemOptions(tipoItemResponse.data.tipoItems.map(item => ({
                             value: item.ti_item,
-                            label: `${item.ti_item} - ${item.ti_descripcion}`
+                            label: item.ti_item === 'P' 
+                                ? `${item.ti_item} - ${item.ti_descripcion} - ${item.ti_tipo}`
+                                : `${item.ti_item} - ${item.ti_descripcion}`
                         })));
                     } else {
                         console.error("Invalid response format from getTiposItem endpoint");
@@ -205,7 +207,6 @@ const TblitemsAddPage = (props) => {
             const response = await axios.get(`/tblitems/view/${itemId}`);
             const itemData = response.data;
             
-            // Extraer información salarial completa
             const haberBasico = itemData.haber_basico || 'No disponible';
             const clase = itemData.nivel_original?.ns_clase || 'No disponible';
             const nivelSalarial = itemData.nivel_original?.ns_nivel || 'No disponible';

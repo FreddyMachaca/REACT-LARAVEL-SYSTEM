@@ -253,7 +253,7 @@ class TblitemsController extends Controller
             
             $tipoItems = TblMpTipoItem::whereIn('ti_item', ['A', 'C', 'E', 'P', 'S'])
                 ->orderBy('ti_orden')
-                ->get(['ti_item', 'ti_descripcion']);
+                ->get(['ti_item', 'ti_descripcion', 'ti_tipo']);
                 
             return $this->respond([
                 'escalaOptions' => $escalaOptions,
