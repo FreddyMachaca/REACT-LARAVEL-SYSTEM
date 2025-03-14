@@ -75,6 +75,8 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblcatalogo/edit/{rec_id}', 'TblCatalogoController@edit');	
 	Route::any('tblcatalogo/delete/{rec_id}', 'TblCatalogoController@delete');
 
+	Route::get('tblcatalogo/get/movimiento/general', 'TblCatalogoController@getMovGeneral');
+
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
 	Route::get('tblcategorialicencias/index', 'TblCategoriaLicenciasController@index');
@@ -268,15 +270,25 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoeventoacademico/edit/{rec_id}', 'TblTipoeventoAcademicoController@edit');	
 	Route::any('tbltipoeventoacademico/delete/{rec_id}', 'TblTipoeventoAcademicoController@delete');
 
-/* routes form TblMpEstructuraOrganizacional */
+/* routes for TblMpEstructuraOrganizacional */
 	Route::post('tblmpestructuraoraganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
 	Route::get('tblmpestructuraoraganizacional/{eo_pr_id}', 'TblMpEstructuraOrganizacionalController@getTreeOrganizationalEstructure');
 	Route::get('tblmpestructuraoraganizacional/structures-and-categories/{rec_id}', 'TblMpEstructuraOrganizacionalController@getOrgStructureAndCategory');
 
-	/* routes form TblMpCategoriaProgramatica */
+/* routes for TblMpCategoriaProgramatica */
 	Route::get('tblmpcategoriaprogramatica/index', 'TblMpCategoriaProgramaticaController@index');
 	Route::get('tblmpcategoriaprogramatica/index/{filter?}/{filtervalue?}', 'TblMpCategoriaProgramaticaController@index');
 	Route::get('tblmpcategoriaprogramatica/period-and-da/{cp_da}/{cp_pr_id}', 'TblMpCategoriaProgramaticaController@filterByDaAndPr');
+	
+/* routes for TblMpMemosHistorico*/
+	
+	Route::get('tblmpmemoshistoricos/prueba', 'TblMpMemosHistoricosController@prueba');
+	
+/* routes for TblMpTenor */
+	
+	Route::get('tblmtenor/index', 'TblMpTenorController@index');
+	Route::get('tblmtenor/delete/{rec_id}', 'TblMpTenorController@delete');
+	Route::get('tblmtenor/get/{rec_id}', 'TblMpTenorController@getById');
 
 
 /* routes for FileUpload Controller  */	

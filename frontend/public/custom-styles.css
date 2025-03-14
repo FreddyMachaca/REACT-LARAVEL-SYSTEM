@@ -269,3 +269,8 @@ body{
     align-items: center;
     z-index: 1000;
 }
+
+option {
+	color: black !important;
+	background-color: white !important;
+  }

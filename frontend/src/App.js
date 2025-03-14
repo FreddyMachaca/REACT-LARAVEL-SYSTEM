@@ -104,6 +104,8 @@ import TbltipoeventoacademicoView from 'pages/tbltipoeventoacademico/View';
 import TbltipoeventoacademicoAdd from 'pages/tbltipoeventoacademico/Add';
 import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
 import TblestructuraorganizacionalView from 'pages/tblestructuraorganizacional/View'
+import TbltenoresAdd from 'pages/tbltenores/Add';
+import TbltenoresList from 'pages/tbltenores/List';
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -339,6 +341,9 @@ const App = () => {
 				{/* section manual de supuestos */}
 				<Route path="/ManualPuestos/EstructuraOrganizacional" element={<TblestructuraorganizacionalView />} />
 
+				{/* TODO creacion de tenores */}
+				<Route path="/MovimientoPersonal/Tenor/:te_id" element={<TbltenoresAdd/>}/>
+				<Route path="/MovimientoPersonal/ListaTenor" element={<TbltenoresList/>}/>
 
 			</Route>
 			<Route exact element={<IndexLayout />}>

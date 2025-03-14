@@ -90,4 +90,12 @@ class TblCatalogoController extends Controller
 		$query->delete();
 		return $this->respond($arr_id);
 	}
+
+	function getMovGeneral(){
+		$records = TblCatalogo::where('cat_tabla', 'tipo_mov_general')
+		->where('cat_estado', 'V')
+		->get();
+		
+		return response()->json($records);
+	}
 }

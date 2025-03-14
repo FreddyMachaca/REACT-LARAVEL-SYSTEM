@@ -226,16 +226,16 @@ export default function useMenus() {
         try {
             const response = await axios.get('/tblsegmenu/getMenuTree');
             const rawData = response.data?.data || response.data || [];
-            console.log('Datos crudos en useMenus:', rawData);
+            //console.log('Datos crudos en useMenus:', rawData);
             
             // Si la respuesta ya tiene "children", asume que es un árbol
             const hierarchicalData = (rawData.length && rawData[0].children !== undefined)
                   ? rawData
                   : buildMenuTree(rawData);
-            console.log('Datos jerárquicos:', hierarchicalData);
+            //console.log('Datos jerárquicos:', hierarchicalData);
             
             const menuItems = transformMenuData(hierarchicalData);
-            console.log('Menús dinámicos cargados:', menuItems);
+            //console.log('Menús dinámicos cargados:', menuItems);
             
             setDynamicMenus(menuItems);
         } catch (error) {
