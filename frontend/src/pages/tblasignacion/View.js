@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from 'primereact/card';
 import { Title } from 'components/Title';
 import { Button } from 'primereact/button';
-import { RadioButton } from 'primereact/radiobutton';
+import { Checkbox } from 'primereact/checkbox';
 import { InputText } from 'primereact/inputtext';
+import { Dialog } from 'primereact/dialog';
+import { Tree } from 'primereact/tree';
+import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
@@ -14,66 +17,170 @@ const TblasignacionView = () => {
     const app = useApp();
     const [loading, setLoading] = useState(true);
     const [persona, setPersona] = useState(null);
-    const [tieneItem, setTieneItem] = useState(null);
-    const [itemNumber, setItemNumber] = useState('');
-    const [tiposAlta] = useState([
-        { label: 'Nuevo', value: 'N' },
-        { label: 'Reingreso', value: 'R' },
-        { label: 'Transferencia', value: 'T' }
-    ]);
-    const [selectedTipoAlta, setSelectedTipoAlta] = useState(null);
+    const [tieneNumItem, setTieneNumItem] = useState(false);
+    const [numItemBusqueda, setNumItemBusqueda] = useState('');
+    const [showTreeDialog, setShowTreeDialog] = useState(false);
+    const [treeData, setTreeData] = useState([]);
+    const [selectedNode, setSelectedNode] = useState(null);
+    const [expandedKeys, setExpandedKeys] = useState({});
+    const treeRef = useRef(null);
+    
+    const [itemSeleccionado, setItemSeleccionado] = useState(null);
+    
+    const [fechaInicio, setFechaInicio] = useState(null);
+    const [fechaFin, setFechaFin] = useState(null);
 
     useEffect(() => {
-        const loadPersona = async () => {
-            try {
-                const response = await axios.get(`/tblpersona/view/${personaId}`);
-                setPersona(response.data);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error loading persona:', error);
-                app.flashMsg('Error', 'No se pudo cargar los datos de la persona', 'error');
-                setLoading(false);
-            }
-        };
-
-        if (personaId) {
-            loadPersona();
-        }
+        loadInitialData();
     }, [personaId]);
 
-    const PersonaCard = () => (
-        <Card title="Información de la Persona" className="mb-3">
+    const loadInitialData = async () => {
+        try {
+            const [personaResponse, treeResponse] = await Promise.all([
+                axios.get(`/tblpersona/view/${personaId}`),
+                axios.get('/tblmpestructuraorganizacional/tree')
+            ]);
+
+            setPersona(personaResponse.data);
+            setTreeData(treeResponse.data.tree);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error loading data:', error);
+            app.flashMsg('Error', 'Error al cargar los datos', 'error');
+            setLoading(false);
+        }
+    };
+
+    const handleNumItemSearch = async () => {
+        if (!numItemBusqueda) return;
+        
+        try {
+            const response = await axios.get(`/tblitems/index?filter=ca_num_item&filtervalue=${numItemBusqueda}`);
+            if (response.data.records?.length > 0) {
+                const item = response.data.records[0];
+                setItemSeleccionado(item);
+                // Encontrar y expandir nodo en el árbol
+                findAndExpandNode(item.ca_id);
+            } else {
+                app.flashMsg('Info', 'No se encontró el item', 'info');
+            }
+        } catch (error) {
+            console.error('Error searching item:', error);
+            app.flashMsg('Error', 'Error al buscar el item', 'error');
+        }
+    };
+
+    const findAndExpandNode = (itemId) => {
+    };
+
+    const handleExpandAll = () => {
+        const allKeys = {};
+        const collectKeys = (nodes) => {
+            if (!nodes) return;
+            nodes.forEach(node => {
+                if (node.children && node.children.length) {
+                    allKeys[node.key] = true;
+                    collectKeys(node.children);
+                }
+            });
+        };
+        collectKeys(treeData);
+        setExpandedKeys(allKeys);
+    };
+    
+    const handleCollapseAll = () => {
+        setExpandedKeys({});
+    };
+
+    const nodeTemplate = (node, options) => {
+        const isLeaf = !node.children || node.children.length === 0;
+        let iconClassName = '';
+        
+        if (node.type === 'item') {
+            iconClassName = 'pi pi-user';
+        } else {
+            iconClassName = isLeaf ? 'pi pi-folder' : options.expanded ? 'pi pi-folder-open' : 'pi pi-folder';
+        }
+        
+        const selectedNodeStyle = (selectedNode && selectedNode.key === node.key) ? 
+            { fontWeight: 'bold', color: 'var(--primary-700)' } : {};
+        const hasChildrenStyle = !isLeaf ? 
+            { cursor: 'pointer', fontWeight: options.expanded ? 'bold' : 'normal' } : {};
+        
+        const nodeTypeStyle = node.type === 'item' ? 
+            { backgroundColor: 'var(--surface-50)', borderRadius: '4px', padding: '2px 4px' } : {};
+        
+        return (
+            <div className="tree-node flex align-items-center" 
+                 style={{...selectedNodeStyle, ...hasChildrenStyle, ...nodeTypeStyle}}>
+                <i className={iconClassName + " mr-2 " + (node.type === 'item' ? 'text-blue-600' : 'text-primary')} 
+                   style={{ fontSize: '1.2rem' }}></i>
+                <span className="node-content">
+                    {node.label}
+                </span>
+                {!isLeaf && !options.expanded && (
+                    <i className="pi pi-chevron-right ml-auto text-500" style={{ fontSize: '0.8rem' }}></i>
+                )}
+                {!isLeaf && options.expanded && (
+                    <i className="pi pi-chevron-down ml-auto text-500" style={{ fontSize: '0.8rem' }}></i>
+                )}
+            </div>
+        );
+    };
+
+    const handleNodeSelect = async (e) => {
+        if (!e.node) return;
+        
+        if (e.node.type === 'item') {
+            try {
+                const response = await axios.get(`/tblmpasignacion/getItemDetails/${e.node.itemId}`);
+                if (response.data) {
+                    setItemSeleccionado(response.data);
+                    setShowTreeDialog(false);
+                }
+            } catch (error) {
+                console.error('Error fetching item details:', error);
+                app.flashMsg('Error', 'Error al obtener detalles del item', 'error');
+            }
+        }
+    };
+
+    const PersonaInfoCard = () => (
+        <Card className="mb-3">
+            <div className="flex flex-column align-items-center text-center mb-4">
+                <div className="p-4 border-circle bg-primary-100 mb-3" style={{ width: '150px', height: '150px' }}>
+                    <i className="pi pi-user text-8xl text-primary" style={{ fontSize: '5rem' }}></i>
+                </div>
+                <h2 className="text-xl font-bold mb-2">{`${persona?.per_nombres} ${persona?.per_ap_paterno} ${persona?.per_ap_materno}`}</h2>
+                <div className="flex align-items-center gap-2 text-500">
+                    <i className="pi pi-id-card"></i>
+                    <span className="font-semibold">{persona?.per_num_doc}</span>
+                </div>
+            </div>
+
             <div className="grid">
-                <div className="col-12 md:col-6 lg:col-3">
-                    <label className="block text-600">CI</label>
-                    <div className="text-900 font-medium">{persona?.per_num_doc}</div>
+                <div className="col-12 md:col-6">
+                    <div className="p-3 border-round surface-100">
+                        <div className="text-500 mb-2">Nombres</div>
+                        <div className="text-900 font-medium">{persona?.per_nombres}</div>
+                    </div>
                 </div>
-                <div className="col-12 md:col-6 lg:col-3">
-                    <label className="block text-600">Nombres</label>
-                    <div className="text-900 font-medium">{persona?.per_nombres}</div>
+                <div className="col-12 md:col-6">
+                    <div className="p-3 border-round surface-100">
+                        <div className="text-500 mb-2">Apellido Paterno</div>
+                        <div className="text-900 font-medium">{persona?.per_ap_paterno}</div>
+                    </div>
                 </div>
-                <div className="col-12 md:col-6 lg:col-3">
-                    <label className="block text-600">Apellido Paterno</label>
-                    <div className="text-900 font-medium">{persona?.per_ap_paterno}</div>
+                <div className="col-12 md:col-6">
+                    <div className="p-3 border-round surface-100">
+                        <div className="text-500 mb-2">Apellido Materno</div>
+                        <div className="text-900 font-medium">{persona?.per_ap_materno}</div>
+                    </div>
                 </div>
-                <div className="col-12 md:col-6 lg:col-3">
-                    <label className="block text-600">Apellido Materno</label>
-                    <div className="text-900 font-medium">{persona?.per_ap_materno}</div>
-                </div>
-                <div className="col-12 md:col-6 lg:col-3">
-                    <label className="block text-600">Estado Item</label>
-                    <div className={`text-900 font-medium ${persona?.tiene_item ? 'text-green-500' : 'text-red-500'}`}>
-                        {persona?.tiene_item ? (
-                            <>
-                                <i className="pi pi-check-circle mr-2"></i>
-                                Tiene Item ({persona?.ca_ti_item}-{persona?.ca_num_item})
-                            </>
-                        ) : (
-                            <>
-                                <i className="pi pi-times-circle mr-2"></i>
-                                Sin Item Asignado
-                            </>
-                        )}
+                <div className="col-12 md:col-6">
+                    <div className="p-3 border-round surface-100">
+                        <div className="text-500 mb-2">Apellido Casada</div>
+                        <div className="text-900 font-medium">{persona?.per_ap_casada || 'No registrado'}</div>
                     </div>
                 </div>
             </div>
@@ -81,40 +188,45 @@ const TblasignacionView = () => {
     );
 
     const BusquedaItemCard = () => (
-        <Card title="Búsqueda de Item" className="mb-3">
-            <div className="grid">
-                <div className="col-12">
-                    <label className="block text-600 mb-2">¿Tiene número de item?</label>
-                    <div className="flex gap-4">
-                        <div className="flex align-items-center">
-                            <RadioButton 
-                                inputId="si" 
-                                value="si" 
-                                checked={tieneItem === 'si'} 
-                                onChange={e => setTieneItem(e.value)}
-                            />
-                            <label htmlFor="si" className="ml-2">Sí</label>
-                        </div>
-                        <div className="flex align-items-center">
-                            <RadioButton 
-                                inputId="no" 
-                                value="no" 
-                                checked={tieneItem === 'no'} 
-                                onChange={e => setTieneItem(e.value)}
-                            />
-                            <label htmlFor="no" className="ml-2">No</label>
-                        </div>
-                    </div>
+        <Card className="mb-3 shadow-2">
+            <div className="flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 className="m-0 font-semibold">Búsqueda de Item</h3>
+                    <span className="text-500">Seleccione el método de búsqueda</span>
                 </div>
-                {tieneItem === 'si' && (
-                    <div className="col-12 md:col-6">
-                        <label htmlFor="itemNumber" className="block text-600 mb-2">Número de Item</label>
+                <Button 
+                    label="Buscar en árbol" 
+                    icon="pi pi-sitemap"
+                    className="p-button-rounded p-button-outlined"
+                    onClick={() => setShowTreeDialog(true)}
+                />
+            </div>
+
+            <div className="surface-100 p-3 border-round mb-3">
+                <div className="flex align-items-center mb-3">
+                    <Checkbox 
+                        checked={tieneNumItem} 
+                        onChange={e => setTieneNumItem(e.checked)} 
+                        id="tieneItem"
+                    />
+                    <label htmlFor="tieneItem" className="ml-2 font-medium">¿Tiene número de item?</label>
+                </div>
+                
+                {tieneNumItem && (
+                    <div className="p-inputgroup">
+                        <span className="p-inputgroup-addon">
+                            <i className="pi pi-hashtag"></i>
+                        </span>
                         <InputText 
-                            id="itemNumber"
-                            value={itemNumber}
-                            onChange={e => setItemNumber(e.target.value)}
+                            value={numItemBusqueda}
+                            onChange={e => setNumItemBusqueda(e.target.value)}
+                            placeholder="Ingrese número de item"
                             className="w-full"
-                            placeholder="Ingrese el número de item"
+                        />
+                        <Button 
+                            icon="pi pi-search" 
+                            onClick={handleNumItemSearch}
+                            className="p-button-primary"
                         />
                     </div>
                 )}
@@ -122,64 +234,173 @@ const TblasignacionView = () => {
         </Card>
     );
 
-    const DatosRequeridosCard = () => (
-        <Card title="Datos Requeridos" className="mb-3">
-            <div className="grid">
-                <div className="col-12 md:col-6">
-                    <label htmlFor="tipoAlta" className="block text-600 mb-2">Tipo de Alta</label>
-                    <Dropdown
-                        id="tipoAlta"
-                        value={selectedTipoAlta}
-                        options={tiposAlta}
-                        onChange={e => setSelectedTipoAlta(e.value)}
-                        className="w-full"
-                        placeholder="Seleccione el tipo de alta"
-                    />
+    const ItemInfoCards = () => (
+        <>
+            <Card title="Información del Item" className="mb-3">
+                <div className="grid">
+                    <div className="col-3">
+                        <label className="block font-bold mb-2">Escalafón</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.es_escalafon || 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-3">
+                        <label className="block font-bold mb-2">Cargo</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.cargo_descripcion || 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-3">
+                        <label className="block font-bold mb-2">Nivel Salarial</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.ns_nivel || 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-3">
+                        <label className="block font-bold mb-2">Haber Básico</label>
+                        <div className="p-3 border-round surface-100 text-primary font-bold">
+                            {itemSeleccionado?.ns_haber_basico 
+                                ? new Intl.NumberFormat('es-BO', { 
+                                    style: 'currency', 
+                                    currency: 'BOB' 
+                                  }).format(itemSeleccionado.ns_haber_basico)
+                                : 'No seleccionado'}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </Card>
-    );
+            </Card>
 
-    if (loading) {
-        return <div>Cargando...</div>;
-    }
+            <Card title="Información de Asignación" className="mb-3">
+                <div className="grid">
+                    <div className="col-4">
+                        <label className="block font-bold mb-2">Fecha Inicio</label>
+                        <Calendar 
+                            value={fechaInicio}
+                            onChange={e => setFechaInicio(e.value)}
+                            showIcon
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="col-4">
+                        <label className="block font-bold mb-2">Fecha Fin</label>
+                        <Calendar 
+                            value={fechaFin}
+                            onChange={e => setFechaFin(e.value)}
+                            showIcon
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="col-4">
+                        <label className="block font-bold mb-2">Tipo Jornada</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.ca_tipo_jornada === 'TT' ? 'Tiempo Completo' : 
+                             itemSeleccionado?.ca_tipo_jornada === 'MT' ? 'Medio Tiempo' : 
+                             'No seleccionado'}
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
+            <Card title="Categorías" className="mb-3">
+                <div className="grid">
+                    <div className="col-6">
+                        <label className="block font-bold mb-2">Categoría Administrativa</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.categoria_administrativa || 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-6">
+                        <label className="block font-bold mb-2">Categoría Programática</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado?.categoria_programatica || 'No seleccionado'}
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </>
+    );
 
     return (
         <div className="card">
             <Title title="Administración de Asignación" />
             
-            <PersonaCard />
-            
-            {persona?.tiene_item ? (
-                <Card className="mb-3 border-yellow-500">
-                    <div className="flex align-items-center gap-2">
-                        <i className="pi pi-exclamation-triangle text-yellow-500 text-xl"></i>
-                        <span>Esta persona ya tiene un item asignado. No se puede realizar una nueva asignación.</span>
+            <div className="grid">
+                <div className="col-12 lg:col-4">
+                    <div className="sticky" style={{ top: '20px' }}>
+                        <PersonaInfoCard />
+                        <BusquedaItemCard />
                     </div>
-                </Card>
-            ) : (
-                <>
-                    <BusquedaItemCard />
-                    <DatosRequeridosCard />
-                </>
-            )}
-
-            <div className="flex justify-content-end gap-2">
-                <Button 
-                    label="Cancelar" 
-                    icon="pi pi-times" 
-                    className="p-button-text"
-                    onClick={() => app.navigate('/asignacionItems')}
-                />
-                {!persona?.tiene_item && (
-                    <Button 
-                        label="Continuar" 
-                        icon="pi pi-arrow-right"
-                        onClick={() => {
-                        }}
-                    />
-                )}
+                </div>
+                
+                <div className="col-12 lg:col-8">
+                    <ItemInfoCards />
+                </div>
             </div>
+
+            <Dialog 
+                visible={showTreeDialog} 
+                onHide={() => setShowTreeDialog(false)}
+                header={
+                    <div className="flex justify-content-between align-items-center w-full">
+                        <div className="flex align-items-center gap-2">
+                            <i className="pi pi-sitemap text-xl"></i>
+                            <span className="font-bold">Seleccionar Item</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button 
+                                icon="pi pi-plus" 
+                                label="Expandir todo"
+                                className="p-button-outlined p-button-sm" 
+                                onClick={handleExpandAll}
+                            />
+                            <Button 
+                                icon="pi pi-minus" 
+                                label="Contraer todo"
+                                className="p-button-outlined p-button-sm" 
+                                onClick={handleCollapseAll}
+                            />
+                        </div>
+                    </div>
+                }
+                style={{ width: '80vw' }}
+                className="p-dialog-custom"
+            >
+                <div className="p-3 surface-100 border-round mb-3">
+                    <i className="pi pi-info-circle text-primary mr-2"></i>
+                    <span className="text-600">Seleccione un item disponible del árbol organizacional</span>
+                </div>
+                <Tree
+                    ref={treeRef}
+                    value={treeData}
+                    selectionMode="single"
+                    selectionKeys={selectedNode}
+                    expandedKeys={expandedKeys}
+                    onToggle={e => setExpandedKeys(e.value)}
+                    onSelect={handleNodeSelect}
+                    onSelectionChange={(e) => {
+                        const key = Object.keys(e.value)[0];
+                        if (key) {
+                            const findNode = (nodes) => {
+                                for (let node of nodes) {
+                                    if (node.key === key) return node;
+                                    if (node.children) {
+                                        const found = findNode(node.children);
+                                        if (found) return found;
+                                    }
+                                }
+                                return null;
+                            };
+                            const selectedNodeData = findNode(treeData);
+                            setSelectedNode(selectedNodeData);
+                        }
+                    }}
+                    className="w-full"
+                    filter
+                    filterMode="lenient"
+                    filterPlaceholder="Buscar unidad organizacional"
+                    nodeTemplate={nodeTemplate}
+                />
+            </Dialog>
         </div>
     );
 };

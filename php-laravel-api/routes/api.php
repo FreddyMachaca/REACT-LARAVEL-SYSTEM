@@ -344,6 +344,8 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblmpasignacion/add', 'TblMpAsignacionController@add');
 	Route::any('tblmpasignacion/edit/{rec_id}', 'TblMpAsignacionController@edit');
 	Route::any('tblmpasignacion/delete/{rec_id}', 'TblMpAsignacionController@delete');
+	Route::get('tblmpasignacion/available', 'TblMpAsignacionController@getAvailableItems');
+	Route::get('tblmpasignacion/item/{itemId}', 'TblMpAsignacionController@getItemDetails');
 
 /* routes for TblPersona Controller */	
 	Route::get('tblpersona/', 'TblPersonaController@index');

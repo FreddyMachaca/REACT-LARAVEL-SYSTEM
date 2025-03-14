@@ -124,4 +124,79 @@ class TblMpAsignacionController extends Controller
             return $this->respondWithError($e);
         }
     }
+
+    /**
+     * Get item details for assignment
+     */
+    public function getItemDetails($itemId)
+    {
+        try {
+            $query = DB::table('tbl_mp_cargo AS c')
+                ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
+                ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
+                ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
+                ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')
+                ->select([
+                    'c.*',
+                    'es.es_descripcion AS cargo_descripcion',
+                    'es.es_escalafon',
+                    'ns.ns_clase',
+                    'ns.ns_nivel',
+                    'ns.ns_haber_basico',
+                    'eo.eo_descripcion AS categoria_administrativa',
+                    'cp.cp_descripcion AS categoria_programatica'
+                ])
+                ->where('c.ca_id', $itemId)
+                ->first();
+
+            if (!$query) {
+                throw new Exception("Item no encontrado");
+            }
+
+            $isAvailable = !DB::table('tbl_mp_asignacion')
+                ->where('as_ca_id', $itemId)
+                ->where('as_estado', 'V')
+                ->exists();
+
+            $query->disponible = $isAvailable;
+
+            return $this->respond($query);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get available items
+     */
+    public function getAvailableItems()
+    {
+        try {
+            $query = DB::table('tbl_mp_cargo AS c')
+                ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
+                ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
+                ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                        ->from('tbl_mp_asignacion')
+                        ->whereRaw('tbl_mp_asignacion.as_ca_id = c.ca_id')
+                        ->where('tbl_mp_asignacion.as_estado', 'V');
+                })
+                ->where('c.ca_estado', 'V')
+                ->select([
+                    'c.ca_id',
+                    'c.ca_ti_item',
+                    'c.ca_num_item',
+                    'c.ca_tipo_jornada',
+                    'es.es_descripcion AS cargo',
+                    'ns.ns_haber_basico',
+                    'eo.eo_descripcion AS unidad_organizacional'
+                ])
+                ->get();
+
+            return $this->respond($query);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
 }
