@@ -107,6 +107,7 @@ import TblitemsView from 'pages/tblitems/View';
 import TblitemsList from 'pages/tblitems/List';
 import TblitemsEdit from 'pages/tblitems/Edit';
 import TblitemsAdd from 'pages/tblitems/Add';
+import TblasignacionList from 'pages/tblasignacion/List';
 
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
@@ -346,6 +347,11 @@ const App = () => {
 				<Route path="/tbltipoeventoacademico/view/:pageid" element={<TbltipoeventoacademicoView />} />
 				<Route path="/tbltipoeventoacademico/add" element={<TbltipoeventoacademicoAdd />} />
 				<Route path="/tbltipoeventoacademico/edit/:pageid" element={<TbltipoeventoacademicoEdit />} />
+				
+                {/* Asignacion de Items routes */}
+                <Route path="/asignacionItems" element={<TblasignacionList />} />
+                <Route path="/asignacionItems/asignar/:personaId" element={<TblasignacionList />} />
+                <Route path="/asignacionItems/historial/:personaId" element={<TblasignacionList />} />
 				
 			</Route>
 			<Route exact element={<IndexLayout />}>

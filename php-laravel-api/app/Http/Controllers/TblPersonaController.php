@@ -20,9 +20,32 @@ class TblPersonaController extends Controller
         try{
             $query = TblPersona::query();
             
+            if ($request->nombres) {
+                $query->where('per_nombres', 'ILIKE', "%{$request->nombres}%");
+            }
+            
+            if ($request->apellido_paterno) {
+                $query->where('per_ap_paterno', 'ILIKE', "%{$request->apellido_paterno}%");
+            }
+            
+            if ($request->apellido_materno) {
+                $query->where('per_ap_materno', 'ILIKE', "%{$request->apellido_materno}%");
+            }
+            
+            if ($request->num_doc) {
+                $query->where('per_num_doc', 'ILIKE', "%{$request->num_doc}%");
+            }
+            
+            // Búsqueda general
             if($request->search){
                 $search = trim($request->search);
-                TblPersona::search($query, $search);
+                $query->where(function($q) use ($search) {
+                    $q->where('per_nombres', 'ILIKE', "%{$search}%")
+                      ->orWhere('per_ap_paterno', 'ILIKE', "%{$search}%")
+                      ->orWhere('per_ap_materno', 'ILIKE', "%{$search}%")
+                      ->orWhere('per_num_doc', 'ILIKE', "%{$search}%")
+                      ->orWhere('per_ap_casada', 'ILIKE', "%{$search}%");
+                });
             }
             
             if ($fieldname) {
@@ -30,9 +53,22 @@ class TblPersonaController extends Controller
             }
             
             $records = $query->paginate($request->limit ?? 10);
-            return $this->respond($records);
+            
+            \Log::info('Query SQL:', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+                'results' => $records->count()
+            ]);
+            
+            return $this->respond([
+                'records' => $records->items(),
+                'total_records' => $records->total(),
+                'page' => $records->currentPage(),
+                'limit' => $records->perPage()
+            ]);
         }
         catch(Exception $e){
+            \Log::error('Error en TblPersonaController@index: ' . $e->getMessage());
             return $this->respondWithError($e);
         }
     }

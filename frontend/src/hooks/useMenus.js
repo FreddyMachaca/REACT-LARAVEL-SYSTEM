@@ -20,6 +20,13 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/asignacionItems",
+            "label": "Asignacion de Items",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblacreedores",
             "label": "Tbl Acreedores",
             "icon": "pi pi-th-large",
