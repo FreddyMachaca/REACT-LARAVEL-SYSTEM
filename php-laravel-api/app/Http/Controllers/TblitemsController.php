@@ -303,22 +303,10 @@ class TblitemsController extends Controller
             
             $baseTiItem = $modeldata['ca_ti_item'];
             
-            $existingItems = TblMpCargo::where('ca_eo_id', $modeldata['ca_eo_id'])
-                ->where('ca_ti_item', $baseTiItem)
-                ->orderBy('ca_num_item', 'desc')
-                ->get(['ca_num_item']);
-            
-            \Log::info("Found " . $existingItems->count() . " existing items with the same tipo_item and eo_id");
-            
-            $highestNumItem = 1;
-            if ($existingItems->count() > 0) {
-                foreach ($existingItems as $item) {
-                    if (!empty($item->ca_num_item) && intval($item->ca_num_item) > $highestNumItem) {
-                        $highestNumItem = intval($item->ca_num_item);
-                    }
-                }
-                \Log::info("Highest existing item number: " . $highestNumItem);
-            }
+            $highestNumItem = DB::table('tbl_mp_cargo')
+                ->max('ca_num_item') ?? 0;
+                
+            \Log::info("Highest existing item number globally: {$highestNumItem}");
             
             $startNumItem = $highestNumItem;
             $createdItems = [];
