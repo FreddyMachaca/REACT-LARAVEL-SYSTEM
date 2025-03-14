@@ -108,6 +108,7 @@ import TblitemsList from 'pages/tblitems/List';
 import TblitemsEdit from 'pages/tblitems/Edit';
 import TblitemsAdd from 'pages/tblitems/Add';
 import TblasignacionList from 'pages/tblasignacion/List';
+import TblasignacionView from 'pages/tblasignacion/View';
 
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
@@ -350,8 +351,7 @@ const App = () => {
 				
                 {/* Asignacion de Items routes */}
                 <Route path="/asignacionItems" element={<TblasignacionList />} />
-                <Route path="/asignacionItems/asignar/:personaId" element={<TblasignacionList />} />
-                <Route path="/asignacionItems/historial/:personaId" element={<TblasignacionList />} />
+                <Route path="/asignacionItems/asignar/:personaId" element={<TblasignacionView />} />
 				
 			</Route>
 			<Route exact element={<IndexLayout />}>

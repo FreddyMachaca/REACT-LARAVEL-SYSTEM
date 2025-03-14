@@ -20,6 +20,28 @@ class TblPersonaController extends Controller
         try{
             $query = TblPersona::query();
             
+            $query->leftJoin('tbl_mp_asignacion', function($join) {
+                $join->on('tbl_persona.per_id', '=', 'tbl_mp_asignacion.as_per_id')
+                     ->where('tbl_mp_asignacion.as_estado', '=', 'V');
+            })
+            ->leftJoin('tbl_mp_cargo', 'tbl_mp_asignacion.as_ca_id', '=', 'tbl_mp_cargo.ca_id')
+            ->leftJoin('tbl_mp_escala_salarial', 'tbl_mp_cargo.ca_es_id', '=', 'tbl_mp_escala_salarial.es_id')
+            ->leftJoin('tbl_mp_nivel_salarial', 'tbl_mp_escala_salarial.es_ns_id', '=', 'tbl_mp_nivel_salarial.ns_id')
+            ->select(
+                'tbl_persona.*',
+                'tbl_mp_asignacion.as_id',
+                'tbl_mp_asignacion.as_ca_id',
+                'tbl_mp_cargo.ca_ti_item',
+                'tbl_mp_cargo.ca_num_item',
+                'tbl_mp_cargo.ca_tipo_jornada',
+                'tbl_mp_escala_salarial.es_descripcion as cargo_descripcion',
+                'tbl_mp_escala_salarial.es_escalafon',
+                'tbl_mp_nivel_salarial.ns_clase',
+                'tbl_mp_nivel_salarial.ns_nivel',
+                'tbl_mp_nivel_salarial.ns_haber_basico',
+                DB::raw('CASE WHEN tbl_mp_asignacion.as_id IS NOT NULL THEN true ELSE false END as tiene_item')
+            );
+            
             if ($request->nombres) {
                 $query->where('per_nombres', 'ILIKE', "%{$request->nombres}%");
             }
@@ -36,7 +58,6 @@ class TblPersonaController extends Controller
                 $query->where('per_num_doc', 'ILIKE', "%{$request->num_doc}%");
             }
             
-            // Búsqueda general
             if($request->search){
                 $search = trim($request->search);
                 $query->where(function($q) use ($search) {
@@ -81,7 +102,24 @@ class TblPersonaController extends Controller
     function view($rec_id = null){
         try{
             $query = TblPersona::query();
+            
+            $query->leftJoin('tbl_mp_asignacion', function($join) {
+                $join->on('tbl_persona.per_id', '=', 'tbl_mp_asignacion.as_per_id')
+                     ->where('tbl_mp_asignacion.as_estado', '=', 'V'); // Solo asignaciones vigentes
+            })
+            ->leftJoin('tbl_mp_cargo', 'tbl_mp_asignacion.as_ca_id', '=', 'tbl_mp_cargo.ca_id')
+            ->select(
+                'tbl_persona.*',
+                'tbl_mp_asignacion.as_id',
+                'tbl_mp_asignacion.as_ca_id',
+                'tbl_mp_cargo.ca_ti_item',
+                'tbl_mp_cargo.ca_num_item'
+            );
+
             $record = $query->findOrFail($rec_id);
+            
+            $record->tiene_item = !is_null($record->as_id);
+            
             return $this->respond($record);
         }
         catch(Exception $e){

@@ -53,12 +53,44 @@ const TblasignacionList = () => {
     const actionTemplate = (rowData) => {
         return (
             <div className="flex gap-2">
-                <Button 
-                    icon="pi pi-user-edit" 
-                    className="p-button-rounded p-button-text"
-                    onClick={() => app.navigate(`/asignacionItems/asignar/${rowData.per_id}`)}
-                    tooltip="Asignar Item"
-                />
+                {rowData.tiene_item ? (
+                    <Button 
+                        icon="pi pi-eye" 
+                        className="p-button-rounded p-button-info p-button-text"
+                        onClick={() => app.navigate(`/tblitems/view/${rowData.as_ca_id}`)}
+                        tooltip="Ver Detalles del Item"
+                    />
+                ) : (
+                    <Button 
+                        icon="pi pi-user-edit" 
+                        className="p-button-rounded p-button-text"
+                        onClick={() => app.navigate(`/asignacionItems/asignar/${rowData.per_id}`)}
+                        tooltip="Asignar Item"
+                    />
+                )}
+            </div>
+        );
+    };
+
+    const itemStatusTemplate = (rowData) => {
+        return (
+            <div className="flex align-items-center">
+                {rowData.tiene_item ? (
+                    <div className="cursor-pointer" 
+                         onClick={() => app.navigate(`/tblitems/view/${rowData.as_ca_id}`)}
+                         title="Click para ver detalles">
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-lg flex align-items-center">
+                            <i className="pi pi-check-circle mr-2"></i>
+                            Tiene Item ({rowData.ca_ti_item}-{rowData.ca_num_item})
+                            <i className="pi pi-external-link ml-2 text-xs"></i>
+                        </span>
+                    </div>
+                ) : (
+                    <span className="bg-red-100 text-red-700 px-2 py-1 rounded-lg flex align-items-center">
+                        <i className="pi pi-times-circle mr-2"></i>
+                        Sin Item
+                    </span>
+                )}
             </div>
         );
     };
@@ -156,6 +188,7 @@ const TblasignacionList = () => {
                 <Column field="per_ap_materno" header="Apellido Materno" sortable />
                 <Column field="per_ap_casada" header="Apellido Casada" sortable />
                 <Column field="per_num_doc" header="CI" sortable />
+                <Column header="Estado Item" body={itemStatusTemplate} />
                 <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
             </DataTable>
         </div>
