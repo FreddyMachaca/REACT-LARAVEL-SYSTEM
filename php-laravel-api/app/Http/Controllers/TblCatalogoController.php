@@ -6,6 +6,8 @@ use App\Http\Requests\TblCatalogoEditRequest;
 use App\Models\TblCatalogo;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Support\Facades\DB;
+
 class TblCatalogoController extends Controller
 {
 	
@@ -27,7 +29,7 @@ class TblCatalogoController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
-			$query->where($fieldname , $fieldvalue); //filter by a single field name
+			$query->where($fieldname , $fieldvalue);
 		}
 		$records = $this->paginate($query, TblCatalogo::listFields());
 		return $this->respond($records);
@@ -90,4 +92,20 @@ class TblCatalogoController extends Controller
 		$query->delete();
 		return $this->respond($arr_id);
 	}
+
+    public function getByTipo($tabla)
+    {
+        try {
+            $records = DB::table('tbl_catalogo')
+                ->where('cat_tabla', $tabla)
+                ->where('cat_estado', 'V')
+                ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion'])
+                ->orderBy('cat_secuencial')
+                ->get();
+                
+            return $this->respond($records);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
 }

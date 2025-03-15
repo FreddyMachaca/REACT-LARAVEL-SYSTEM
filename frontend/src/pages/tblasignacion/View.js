@@ -11,6 +11,7 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
+import { Toast } from 'primereact/toast';
 
 const TblasignacionView = () => {
     const { personaId } = useParams();
@@ -29,9 +30,14 @@ const TblasignacionView = () => {
     
     const [fechaInicio, setFechaInicio] = useState(null);
     const [fechaFin, setFechaFin] = useState(null);
+    const [tiposActa, setTiposActa] = useState([]);
+    const [selectedTipoActa, setSelectedTipoActa] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const toast = useRef(null);
 
     useEffect(() => {
         loadInitialData();
+        loadTiposActa();
     }, [personaId]);
 
     const loadInitialData = async () => {
@@ -51,6 +57,21 @@ const TblasignacionView = () => {
         }
     };
 
+    const loadTiposActa = async () => {
+        try {
+            const response = await axios.get('/tblcatalogo/byTipo/tipo_mov_alta_ingreso');
+            if (response.data) {
+                setTiposActa(response.data.map(tipo => ({
+                    value: tipo.cat_abreviacion,
+                    label: tipo.cat_descripcion
+                })));
+            }
+        } catch (error) {
+            console.error('Error cargando tipos de acta:', error);
+            app.flashMsg('Error', 'Error al cargar tipos de acta', 'error');
+        }
+    };
+
     const handleNumItemSearch = async () => {
         if (!numItemBusqueda) return;
         
@@ -59,7 +80,6 @@ const TblasignacionView = () => {
             if (response.data.records?.length > 0) {
                 const item = response.data.records[0];
                 setItemSeleccionado(item);
-                // Encontrar y expandir nodo en el árbol
                 findAndExpandNode(item.ca_id);
             } else {
                 app.flashMsg('Info', 'No se encontró el item', 'info');
@@ -144,6 +164,13 @@ const TblasignacionView = () => {
                 console.log('API Response:', response.data);
                 
                 if (response.data) {
+                    if (response.data.asignado) {
+                        app.flashMsg('Error', 
+                            'Este item no está disponible porque ya se encuentra asignado a otro funcionario', 
+                            'error'
+                        );
+                    }
+                    
                     setItemSeleccionado(response.data);
                     if (response.data.as_fecha_inicio) {
                         setFechaInicio(new Date(response.data.as_fecha_inicio));
@@ -156,10 +183,44 @@ const TblasignacionView = () => {
             } catch (error) {
                 console.error('Error fetching item details:', error);
                 app.flashMsg('Error', 
-                    `Error al obtener detalles del item: ${error.response?.data?.message || error.message}`, 
+                    `No se pudo obtener la información del item: ${error.response?.data?.message || error.message}`, 
                     'error'
                 );
             }
+        }
+    };
+
+    const handleSave = async () => {
+        if (!itemSeleccionado || !fechaInicio || !selectedTipoActa) {
+            app.flashMsg('Error', 'Complete todos los campos requeridos', 'error');
+            return;
+        }
+
+        try {
+            setSaving(true);
+            
+            const data = {
+                as_per_id: personaId,
+                as_ca_id: itemSeleccionado.ca_id,
+                as_fecha_inicio: fechaInicio,
+                as_fecha_fin: fechaFin,
+                as_estado: 'V',
+                as_tipo_reg: 'ALT',
+                as_tipo_mov: selectedTipoActa,
+                as_fecha_creacion: new Date(),
+                as_usuario_creacion: 1
+            };
+
+            await axios.post('/tblmpasignacion/add', data);
+            
+            app.flashMsg('Éxito', 'Asignación guardada correctamente');
+            app.navigate('/asignacionItems');
+            
+        } catch (error) {
+            console.error('Error saving:', error);
+            app.flashMsg('Error', 'Error al guardar la asignación', 'error');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -172,7 +233,7 @@ const TblasignacionView = () => {
                 <h2 className="text-xl font-bold mb-2">{`${persona?.per_nombres} ${persona?.per_ap_paterno} ${persona?.per_ap_materno}`}</h2>
                 <div className="flex align-items-center gap-2 text-500">
                     <i className="pi pi-id-card"></i>
-                    <span className="font-semibold">{persona?.per_num_doc}</span>
+                    <span className="font-semibold">CI: {persona?.per_num_doc}</span>
                 </div>
             </div>
 
@@ -257,6 +318,12 @@ const TblasignacionView = () => {
             <Card title="Información del Item" className="mb-3">
                 <div className="grid">
                     <div className="col-3">
+                        <label className="block font-bold mb-2">Código Item</label>
+                        <div className="p-3 border-round surface-100">
+                            {itemSeleccionado ? `${itemSeleccionado.ca_ti_item}-${itemSeleccionado.ca_num_item}` : 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-3">
                         <label className="block font-bold mb-2">Escalafón</label>
                         <div className="p-3 border-round surface-100">
                             {itemSeleccionado?.es_escalafon || 'No seleccionado'}
@@ -282,66 +349,125 @@ const TblasignacionView = () => {
                     <div className="col-3">
                         <label className="block font-bold mb-2">Estado</label>
                         <div className="p-3 border-round surface-100">
-                            <span className={`badge ${itemSeleccionado?.asignado ? 'bg-red-100 text-red-900' : 'bg-green-100 text-green-900'}`}>
-                                {itemSeleccionado?.asignado ? 'Asignado' : 'Disponible'}
-                            </span>
+                            {itemSeleccionado ? (
+                                itemSeleccionado.asignado ? (
+                                    <div className="flex flex-column align-items-start gap-2">
+                                        <span className="badge bg-red-100 text-red-900 p-2">
+                                            <i className="pi pi-lock mr-2"></i>
+                                            Item Asignado
+                                        </span>
+                                        <small className="text-red-500 block">
+                                            Este item ya está asignado y no puede ser seleccionado
+                                        </small>
+                                    </div>
+                                ) : (
+                                    <span className="badge bg-green-100 text-green-900 p-2">
+                                        <i className="pi pi-check-circle mr-2"></i>
+                                        Item Disponible
+                                    </span>
+                                )
+                            ) : (
+                                <span className="text-500">
+                                    <i className="pi pi-info-circle mr-2"></i>
+                                    Seleccione item
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>
             </Card>
+            
+            {!itemSeleccionado?.asignado && (
+                <>
+                    <Card title="Información de Asignación" className="mb-3">
+                        <div className="grid">
+                            {/* Fecha Alta siempre visible */}
+                            <div className={itemSeleccionado?.ca_ti_item === 'P' ? 'col-6' : 'col-4'}>
+                                <label className="block font-bold mb-2">Fecha Alta *</label>
+                                <Calendar 
+                                    value={fechaInicio}
+                                    onChange={e => setFechaInicio(e.value)}
+                                    showIcon
+                                    className="w-full"
+                                />
+                            </div>
+                            
+                            {/* Fecha Baja solo visible cuando NO es tipo P */}
+                            {itemSeleccionado?.ca_ti_item && itemSeleccionado.ca_ti_item !== 'P' && (
+                                <div className="col-4">
+                                    <label className="block font-bold mb-2">Fecha Baja</label>
+                                    <Calendar 
+                                        value={fechaFin}
+                                        onChange={e => setFechaFin(e.value)}
+                                        showIcon
+                                        className="w-full"
+                                    />
+                                </div>
+                            )}
 
-            <Card title="Información de Asignación" className="mb-3">
-                <div className="grid">
-                    <div className="col-4">
-                        <label className="block font-bold mb-2">Fecha Inicio</label>
-                        <Calendar 
-                            value={fechaInicio}
-                            onChange={e => setFechaInicio(e.value)}
-                            showIcon
-                            className="w-full"
-                        />
-                    </div>
-                    <div className="col-4">
-                        <label className="block font-bold mb-2">Fecha Fin</label>
-                        <Calendar 
-                            value={fechaFin}
-                            onChange={e => setFechaFin(e.value)}
-                            showIcon
-                            className="w-full"
-                        />
-                    </div>
-                    <div className="col-4">
-                        <label className="block font-bold mb-2">Tipo Jornada</label>
-                        <div className="p-3 border-round surface-100">
-                            {itemSeleccionado?.ca_tipo_jornada === 'TT' ? 'Tiempo Completo' : 
-                             itemSeleccionado?.ca_tipo_jornada === 'MT' ? 'Medio Tiempo' : 
-                             'No seleccionado'}
+                            <div className="col-4">
+                                <label className="block font-bold mb-2">Tipo Jornada</label>
+                                <div className="p-3 border-round surface-100">
+                                    {itemSeleccionado?.ca_tipo_jornada === 'TT' ? 'Tiempo Completo' : 
+                                     itemSeleccionado?.ca_tipo_jornada === 'MT' ? 'Medio Tiempo' : 
+                                     'No seleccionado'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </Card>
+                    </Card>
 
-            <Card title="Categorías" className="mb-3">
-                <div className="grid">
-                    <div className="col-6">
-                        <label className="block font-bold mb-2">Categoría Administrativa</label>
-                        <div className="p-3 border-round surface-100">
-                            {itemSeleccionado?.categoria_administrativa || 'No seleccionado'}
+                    <Card title="Categorías" className="mb-3">
+                        <div className="grid">
+                            <div className="col-6">
+                                <label className="block font-bold mb-2">Categoría Administrativa</label>
+                                <div className="p-3 border-round surface-100">
+                                    {itemSeleccionado?.categoria_administrativa || 'No seleccionado'}
+                                </div>
+                            </div>
+                            <div className="col-6">
+                                <label className="block font-bold mb-2">Categoría Programática</label>
+                                <div className="p-3 border-round surface-100">
+                                    {itemSeleccionado?.categoria_programatica || 'No seleccionado'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div className="col-6">
-                        <label className="block font-bold mb-2">Categoría Programática</label>
-                        <div className="p-3 border-round surface-100">
-                            {itemSeleccionado?.categoria_programatica || 'No seleccionado'}
+                    </Card>
+
+                    <Card title="Tipo de Movimiento" className="mb-3">
+                        <div className="grid">
+                            <div className="col-12">
+                                <label className="block font-bold mb-2">Tipo de Acta *</label>
+                                <Dropdown
+                                    value={selectedTipoActa}
+                                    options={tiposActa}
+                                    onChange={(e) => setSelectedTipoActa(e.value)}
+                                    placeholder="Seleccione el tipo de acta"
+                                    className="w-full"
+                                />
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </Card>
+                    </Card>
+
+                    {itemSeleccionado && (
+                        <div className="flex justify-content-end mt-3">
+                            <Button
+                                label="Guardar Asignación"
+                                icon="pi pi-save"
+                                className="p-button-success"
+                                onClick={handleSave}
+                                loading={saving}
+                                disabled={!selectedTipoActa || !fechaInicio}
+                            />
+                        </div>
+                    )}
+                </>
+            )}
         </>
     );
 
     return (
         <div className="card">
+            <Toast ref={toast} />
             <Title title="Administración de Asignación" />
             
             <div className="grid">

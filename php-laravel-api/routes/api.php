@@ -73,6 +73,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblcatalogo/add', 'TblCatalogoController@add');	
 	Route::any('tblcatalogo/edit/{rec_id}', 'TblCatalogoController@edit');	
 	Route::any('tblcatalogo/delete/{rec_id}', 'TblCatalogoController@delete');
+	Route::get('tblcatalogo/byTipo/{tabla}', 'App\Http\Controllers\TblCatalogoController@getByTipo');
 
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');

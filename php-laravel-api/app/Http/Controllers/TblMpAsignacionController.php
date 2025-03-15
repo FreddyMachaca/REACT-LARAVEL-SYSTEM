@@ -66,11 +66,23 @@ class TblMpAsignacionController extends Controller
         try{
             $modeldata = $this->normalizeFormData($request->all());
             
-            // Set default values if not provided
-            $modeldata['as_fecha_creacion'] = $modeldata['as_fecha_creacion'] ?? now();
-            $modeldata['as_estado'] = $modeldata['as_estado'] ?? 'V';
+            $existingAssignment = TblMpAsignacion::where('as_ca_id', $modeldata['as_ca_id'])
+                ->where('as_estado', 'V')
+                ->first();
+                
+            if ($existingAssignment) {
+                throw new Exception("Este item ya se encuentra asignado");
+            }
+            
+            if (empty($modeldata['as_per_id']) || empty($modeldata['as_ca_id']) || 
+                empty($modeldata['as_fecha_inicio']) || empty($modeldata['as_tipo_mov'])) {
+                throw new Exception("Faltan campos requeridos");
+            }
             
             DB::beginTransaction();
+            
+            $modeldata['as_fecha_creacion'] = $modeldata['as_fecha_creacion'] ?? now();
+            $modeldata['as_estado'] = 'V';
             
             $record = TblMpAsignacion::create($modeldata);
             
@@ -141,6 +153,8 @@ class TblMpAsignacionController extends Controller
                 ->select([
                     'c.ca_id',
                     'c.ca_tipo_jornada',
+                    'c.ca_ti_item', 
+                    'c.ca_num_item',
                     'es.es_escalafon',
                     'es.es_descripcion AS cargo_descripcion',
                     'ns.ns_haber_basico',
@@ -151,16 +165,17 @@ class TblMpAsignacionController extends Controller
                 ->first();
 
             if (!$query) {
-                \Log::warning("Item not found with ID: " . $itemId);
-                return response()->json(['message' => "Item no encontrado"], 404);
+                return response()->json([
+                    'message' => "No se encontró el item solicitado",
+                    'error' => true
+                ], 404);
             }
 
-            \Log::info("Found item:", (array)$query);
-
-            $asignacion = DB::table('tbl_mp_asignacion')
-                ->where('as_ca_id', $itemId)
-                ->where('as_estado', 'V')
-                ->select('as_fecha_inicio', 'as_fecha_fin')
+            $asignacion = DB::table('tbl_mp_asignacion AS a')
+                ->leftJoin('tbl_persona AS p', 'a.as_per_id', '=', 'p.per_id')
+                ->where('a.as_ca_id', $itemId)
+                ->where('a.as_estado', 'V')
+                ->select('a.as_fecha_inicio', 'a.as_fecha_fin', 'p.per_nombres', 'p.per_ap_paterno', 'p.per_ap_materno')
                 ->first();
 
             $result = (array)$query;
@@ -169,16 +184,17 @@ class TblMpAsignacionController extends Controller
                 $result['as_fecha_inicio'] = $asignacion->as_fecha_inicio;
                 $result['as_fecha_fin'] = $asignacion->as_fecha_fin;
                 $result['asignado'] = true;
+                $result['asignado_a'] = trim($asignacion->per_nombres . ' ' . 
+                                           $asignacion->per_ap_paterno . ' ' . 
+                                           $asignacion->per_ap_materno);
             } else {
                 $result['asignado'] = false;
             }
 
-            \Log::info("Returning item details:", $result);
             return $this->respond($result);
 
         } catch (Exception $e) {
             \Log::error("Error in getItemDetails: " . $e->getMessage());
-            \Log::error($e->getTraceAsString());
             return $this->respondWithError($e);
         }
     }
