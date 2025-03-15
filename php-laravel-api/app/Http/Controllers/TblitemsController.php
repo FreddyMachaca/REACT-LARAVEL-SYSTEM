@@ -204,22 +204,31 @@ class TblitemsController extends Controller
                 return $this->respondWithError(new \Exception("No se pudo procesar los IDs para eliminación"));
             }
             
-            $query = TblMpCargo::query();
-            $query->whereIn("ca_id", $arr_id);
-            
-            $count = $query->count();
-            if ($count === 0) {
-                return $this->respondWithError(new \Exception("No se encontraron registros para eliminar"));
+            DB::beginTransaction();
+            try {
+                $deletedAsignaciones = DB::table('tbl_mp_asignacion')
+                    ->whereIn('as_ca_id', $arr_id)
+                    ->delete();
+                
+                
+                $deletedItems = DB::table('tbl_mp_cargo')
+                    ->whereIn('ca_id', $arr_id)
+                    ->delete();
+                
+                
+                DB::commit();
+                
+                return $this->respond([
+                    'status' => 'success',
+                    'message' => 'Registro(s) eliminado(s) con éxito',
+                    'deleted_ids' => $arr_id,
+                    'deleted_items' => $deletedItems,
+                    'deleted_assignments' => $deletedAsignaciones
+                ]);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
             }
-            
-            $query->delete();
-            
-            return $this->respond([
-                'status' => 'success',
-                'message' => 'Registro(s) eliminado(s) con éxito',
-                'deleted_ids' => $arr_id,
-                'count' => $count
-            ]);
         } catch (\Exception $e) {
             \Log::error("Error al eliminar registros: " . $e->getMessage());
             \Log::error($e->getTraceAsString());

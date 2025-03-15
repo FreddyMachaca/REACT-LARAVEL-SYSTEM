@@ -73,19 +73,22 @@ class TblPersonaController extends Controller
                 $query->where($fieldname, $fieldvalue);
             }
             
-            $records = $query->paginate($request->limit ?? 10);
+            // Paginación
+            $page = $request->input('page', 1);
+            $limit = $request->input('limit', 10);
             
-            \Log::info('Query SQL:', [
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings(),
-                'results' => $records->count()
-            ]);
+            $total = $query->count();
             
+            $records = $query->skip(($page - 1) * $limit)
+                            ->take($limit)
+                            ->get();
+
             return $this->respond([
-                'records' => $records->items(),
-                'total_records' => $records->total(),
-                'page' => $records->currentPage(),
-                'limit' => $records->perPage()
+                'records' => $records,
+                'total_records' => $total,
+                'current_page' => $page,
+                'per_page' => $limit,
+                'total_pages' => ceil($total / $limit)
             ]);
         }
         catch(Exception $e){

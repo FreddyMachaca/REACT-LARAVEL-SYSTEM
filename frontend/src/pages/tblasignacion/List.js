@@ -20,21 +20,28 @@ const TblasignacionList = () => {
         num_doc: '',
         codigo_funcionario: ''
     });
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
 
-    const handleSearch = async () => {
+    const handleSearch = async (page = currentPage) => {
         try {
             setLoading(true);
             
             const response = await axios.get('/tblpersona', { 
-                params: filters
+                params: {
+                    ...filters,
+                    page: page + 1,
+                    limit: pageSize
+                }
             });
             
-            
-            if (response.data && response.data.records) {
+            if (response.data) {
                 setPersonas(response.data.records);
+                setTotalRecords(response.data.total_records);
             } else {
-                console.warn('No records found in response');
                 setPersonas([]);
+                setTotalRecords(0);
             }
             
             setLoading(false);
@@ -43,7 +50,13 @@ const TblasignacionList = () => {
             app.flashMsg('Error', 'Error al buscar personas: ' + error.message, 'error');
             setLoading(false);
             setPersonas([]);
+            setTotalRecords(0);
         }
+    };
+
+    const onPageChange = (event) => {
+        setCurrentPage(event.page);
+        handleSearch(event.page);
     };
 
     useEffect(() => {
@@ -182,6 +195,20 @@ const TblasignacionList = () => {
                 className="p-datatable-sm"
                 responsiveLayout="scroll"
                 stripedRows
+                lazy
+                paginator
+                rows={pageSize}
+                totalRecords={totalRecords}
+                first={currentPage * pageSize}
+                onPage={onPageChange}
+                paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+                rowsPerPageOptions={[10, 20, 30, 50]}
+                onRowsPerPageChange={(e) => {
+                    setPageSize(e.rows);
+                    setCurrentPage(0);
+                    handleSearch(0);
+                }}
             >
                 <Column field="per_nombres" header="Nombres" sortable />
                 <Column field="per_ap_paterno" header="Apellido Paterno" sortable />

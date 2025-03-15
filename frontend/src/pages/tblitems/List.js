@@ -105,7 +105,6 @@ const TblitemsListPage = (props) => {
                 
             const idsString = plainIds.join(',');
             
-            console.log("Deleting IDs:", idsString);
             
             await axios.delete(`/tblitems/delete/${idsString}`);
             
@@ -116,7 +115,6 @@ const TblitemsListPage = (props) => {
             setSelectedItems([]);
             setItemsToDelete(null);
         } catch (err) {
-            console.error("Error deleting records:", err);
             app.flashMsg("Error", "No se pudieron eliminar los registros", "error");
         }
     };
