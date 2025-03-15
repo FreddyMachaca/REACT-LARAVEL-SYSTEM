@@ -130,12 +130,15 @@ class TblitemsController extends Controller
                     'ns.ns_nivel',
                     'ns.ns_haber_basico',
                     'eo.eo_descripcion AS unidad_organizacional',
-                    'cp.cp_descripcion AS categoria_programatica'  // Aseguramos que se seleccione este campo
+                    'cp.cp_descripcion AS categoria_programatica',
+                    'ti.ti_descripcion',
+                    'ti.ti_tipo'
                 ])
                 ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
                 ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
                 ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
-                ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')  // Simplificamos el join
+                ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')
+                ->leftJoin('tbl_mp_tipo_item AS ti', 'c.ca_ti_item', '=', 'ti.ti_item')
                 ->where('c.ca_id', $rec_id)
                 ->first();
 
@@ -143,14 +146,25 @@ class TblitemsController extends Controller
                 throw new Exception("Item no encontrado");
             }
 
+            // Descripción del tipo item
+            $tipoItemDesc = $query->ca_ti_item;
+            if ($query->ti_descripcion) {
+                $tipoItemDesc .= ' - ' . $query->ti_descripcion;
+                if ($query->ca_ti_item == 'P' && $query->ti_tipo) {
+                    $tipoItemDesc .= ' - ' . $query->ti_tipo;
+                }
+            }
+
             $data = [
                 'id' => $query->id,
                 'codigo' => $query->ca_ti_item . '-' . $query->ca_num_item,
+                'tipo_item' => $tipoItemDesc, 
+                'tipo_item_descripcion' => $tipoItemDesc, 
                 'cargo' => $query->cargo,
                 'tipo_jornada' => $query->ca_tipo_jornada,
                 'haber_basico' => $query->ns_haber_basico,
                 'unidad_organizacional' => $query->unidad_organizacional,
-                'categoria_programatica' => $query->categoria_programatica,  // Aseguramos que se incluya en la respuesta
+                'categoria_programatica' => $query->categoria_programatica,
                 'fecha_creacion' => $query->ca_fecha_creacion,
                 'estado' => $query->ca_estado,
                 'escala_original' => [

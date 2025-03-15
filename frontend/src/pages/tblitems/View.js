@@ -173,7 +173,7 @@ const TblitemsViewPage = (props) => {
                             <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
                                 <div>
                                     <div className="text-500 font-medium mb-1">Tipo Item</div>
-                                    <div className="font-bold">{item.tipo_item_descripcion || item.cargo_original?.ca_ti_item || 'No disponible'}</div>
+                                    <div className="font-bold">{item.tipo_item || item.tipo_item_descripcion || 'No disponible'}</div>
                                 </div>
                             </div>
                         </div>
