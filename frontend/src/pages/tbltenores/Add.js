@@ -7,7 +7,6 @@ import { InputText } from 'primereact/inputtext';
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import { SpeedDial } from 'primereact/speeddial';
 import { useParams } from 'react-router-dom';
-import { Dialog } from "primereact/dialog";
 import axios from 'axios';
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -26,30 +25,6 @@ const placeholders = ["[ITEM_DESTINO]",
 "[CODIGO_DE_FUNCIONARIO]",
 "[fin]"];
 
-const printContent = (text) => {
-  const printWindow = window.open("");
-  printWindow.document.write(`
-      <html>
-      <head>
-          <title>Vista previa</title>
-          <style>
-              @page { margin: 0; }
-              body { font-family: Arial, sans-serif; padding: 20px; }
-          </style>
-      </head>
-      <body>
-          ${text}
-          <script>
-              window.onload = function() {
-                  window.print();
-              }
-          </script>
-      </body>
-      </html>
-  `);
-  printWindow.document.close();
-};
-
 function TbltenoresAdd() {
     const [text, setText] = useState('');
     const [selectedMovimiento, setSelectedMovimiento] = useState(null);
@@ -57,7 +32,6 @@ function TbltenoresAdd() {
     const [selectedPlaceholder, setSelectedPlaceholder] = useState([]);
     const editorRef = useRef(null);
     const [inputValue, setInputValue] = useState("");
-    const [visible, setVisible] = useState(false);
     const { te_id } = useParams(); 
     //const [placeholders , setPlaceholders] = useState();
 
@@ -170,16 +144,70 @@ function TbltenoresAdd() {
         );
     }
 
+    const handlePrint = () => {
+      if (!editorRef.current) return;
+
+      const content = editorRef.current.getElement().querySelector(".p-editor-content").innerHTML; 
+
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "absolute";
+      iframe.style.width = "0px";
+      iframe.style.height = "0px";
+      iframe.style.border = "none";
+
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+          <html>
+          <head>
+              <title>Impresión</title>
+              <style>
+                  @media print {
+                      @page {
+                          margin: 0mm;
+                          padding: 20mm;
+                      }
+                      body {
+                          text-align: justify;
+                          white-space: pre-wrap;
+                      }
+                      .content {
+                          width: 100%;
+                          max-width: 180mm; 
+                          margin: auto; 
+                      }
+                      .ql-align-center { text-align: center; }
+                      .ql-align-right { text-align: right; }
+                      .ql-align-justify { text-align: justify; }
+                      input, textarea, button, select {
+                          display: none !important; 
+                      }
+                  }
+              </style>
+          </head>
+          <body>
+              ${content}
+              <script>
+                  window.onload = function() {
+                      window.print();
+                      window.onafterprint = function() { window.close(); }
+                  }
+              </script>
+          </body>
+          </html>
+      `);
+      doc.close();
+
+      iframe.contentWindow.focus();
+  };
+
     const items = [
-      {
-          label: "Vista previa",
-          icon: "pi pi-eye",
-          command: () => setVisible(true),
-      },
       {
           label: "Imprimir / Guardar PDF",
           icon: "pi pi-print",
-          command: () => printContent(text),
+          command: handlePrint,
       },
   ];
 
@@ -223,11 +251,7 @@ function TbltenoresAdd() {
                     </div>
                 </section>
             </Card>
-            <SpeedDial model={items} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} />
-
-            <Dialog header="Vista previa del documento" visible={visible} style={{ width: "50vw" }} onHide={() => setVisible(false)}>
-                <div dangerouslySetInnerHTML={{ __html: text }} />
-            </Dialog>
+            <SpeedDial model={items} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-cog" />
         </div>
     </>
   )
