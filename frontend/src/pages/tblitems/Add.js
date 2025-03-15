@@ -13,6 +13,8 @@ import { Divider } from 'primereact/divider';
 import { RadioButton } from 'primereact/radiobutton';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Calendar } from 'primereact/calendar';
+import { InputTextarea } from 'primereact/inputtextarea';
 
 const TblitemsAddPage = (props) => {
     const app = useApp();
@@ -20,7 +22,6 @@ const TblitemsAddPage = (props) => {
     const [treeData, setTreeData] = useState([]);
     const [error, setError] = useState(null);
     const [selectedNode, setSelectedNode] = useState(null);
-    const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         ca_ti_item: '',
         ca_es_id: '',
@@ -49,6 +50,17 @@ const TblitemsAddPage = (props) => {
         nivelSalarial: '',
         haberBasico: ''
     });
+
+    const [showGlosaDialog, setShowGlosaDialog] = useState(false);
+    const [glosaFormData, setGlosaFormData] = useState({
+        gl_tipo_doc: '',
+        gl_numero_doc: '',
+        gl_fecha_doc: null,
+        gl_glosa: ''
+    });
+    const [tiposDocumento, setTiposDocumento] = useState([]);
+    const [savingGlosa, setSavingGlosa] = useState(false);
+    const [createdItemId, setCreatedItemId] = useState(null);
     
     useEffect(() => {
         const fetchData = async () => {
@@ -115,6 +127,16 @@ const TblitemsAddPage = (props) => {
                 } catch (typeError) {
                     console.error("Error fetching tipo items:", typeError);
                     setTipoItemOptions([]);
+                }
+
+                try {
+                    const tiposDocResponse = await axios.get('/tblcatalogo/byTipo/tipo_documento_impreso');
+                    setTiposDocumento(tiposDocResponse.data.map(tipo => ({
+                        value: tipo.cat_id,
+                        label: tipo.cat_descripcion
+                    })));
+                } catch (error) {
+                    console.error("Error loading document types:", error);
                 }
                 
                 setLoading(false);
@@ -290,13 +312,6 @@ const TblitemsAddPage = (props) => {
         
         return null;
     };
-    const handleOpenForm = () => {
-        if (!selectedNode) {
-            app.flashMsg("Aviso", "Seleccione una unidad organizacional primero", "warn");
-            return;
-        }
-        setShowForm(true);
-    };
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -355,59 +370,86 @@ const TblitemsAddPage = (props) => {
             const response = await axios.post('/tblitems/add', formData);
             console.log("Server response:", response.data);
             
-            setShowForm(false);
-            
-            app.flashMsg("Éxito", `${formData.cantidad} item(s) creado(s) correctamente`);
-            
-            try {
-                const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
-                if (treeResponse.data && treeResponse.data.tree) {
-                    setTreeData(treeResponse.data.tree);
-                    
-                    if (selectedNode && selectedNode.key) {
-                        const path = findNodePath(treeResponse.data.tree, selectedNode.key);
-                        if (path) {
-                            let newExpandedKeys = { ...expandedKeys };
-                            path.forEach(key => {
-                                newExpandedKeys[key] = true;
-                            });
-                            setExpandedKeys(newExpandedKeys);
-                        }
-                    }
-                }
-            } catch (treeError) {
-                console.error("Error refreshing tree:", treeError);
-            }
-            
-            if (selectedNode && selectedNode.key) {
-                try {
-                    setLoadingNodeItems(true);
-                    const itemsResponse = await axios.get(`/tblitems/index?filter=ca_eo_id&filtervalue=${selectedNode.key}`);
-                    
-                    if (itemsResponse.data && itemsResponse.data.records && Array.isArray(itemsResponse.data.records)) {
-                        setNodeItems(itemsResponse.data.records);
-                    }
-                } catch (fetchErr) {
-                    console.error("Error refreshing items list:", fetchErr);
-                } finally {
-                    setLoadingNodeItems(false);
-                    setSaving(false);
-                }
+            if (response.data && response.data.records && response.data.records.length > 0) {
+                setCreatedItemId(response.data.records[0].id);
+                
+                setShowGlosaDialog(true);
+                
+                setSaving(false);
+                
+                refreshTreeData(selectedNode?.key);
             } else {
+                app.flashMsg("Error", "No se pudo crear el item", "error");
                 setSaving(false);
             }
         } catch (err) {
             console.error("Error saving data:", err);
             if (err.response) {
-                console.error("Response data:", err.response.data);
-                console.error("Response status:", err.response.status);
-                
                 const errorMessage = err.response.data?.message || err.message || "Error al guardar los datos";
                 app.flashMsg("Error", errorMessage, "error");
             } else {
                 app.flashMsg("Error", err.message || "Error al guardar los datos", "error");
             }
             setSaving(false);
+        }
+    };
+
+    const handleGlosaSubmit = async () => {
+        if (!glosaFormData.gl_tipo_doc || !glosaFormData.gl_numero_doc || 
+            !glosaFormData.gl_fecha_doc || !glosaFormData.gl_glosa) {
+            app.flashMsg('Error', 'Todos los campos de la glosa son requeridos', 'error');
+            return;
+        }
+
+        try {
+            setSavingGlosa(true);
+            
+            const glosaData = {
+                gl_valor_pk: createdItemId,
+                gl_nombre_pk: 'ca_id',
+                gl_tabla: 'tbl_mp_cargo',
+                gl_tipo_mov: formData.ca_ti_item,
+                gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
+                gl_numero_doc: glosaFormData.gl_numero_doc,
+                gl_fecha_doc: glosaFormData.gl_fecha_doc,
+                gl_glosa: glosaFormData.gl_glosa,
+                gl_estado: 'V'
+            };
+
+            await axios.post('/tblglosa/add', glosaData);
+            
+            app.flashMsg('Éxito', `${formData.cantidad} item(s) y glosa guardados correctamente`);
+            app.navigate('/tblitems');
+            
+        } catch (error) {
+            console.error('Error saving glosa:', error);
+            const errorMessage = error.response?.data?.message || 'Error al guardar la glosa';
+            app.flashMsg('Error', errorMessage, 'error');
+        } finally {
+            setSavingGlosa(false);
+            setShowGlosaDialog(false);
+        }
+    };
+
+    const refreshTreeData = async (nodeKey) => {
+        try {
+            const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
+            if (treeResponse.data && treeResponse.data.tree) {
+                setTreeData(treeResponse.data.tree);
+                
+                if (nodeKey) {
+                    const path = findNodePath(treeResponse.data.tree, nodeKey);
+                    if (path) {
+                        let newExpandedKeys = { ...expandedKeys };
+                        path.forEach(key => {
+                            newExpandedKeys[key] = true;
+                        });
+                        setExpandedKeys(newExpandedKeys);
+                    }
+                }
+            }
+        } catch (treeError) {
+            console.error("Error refreshing tree:", treeError);
         }
     };
 
@@ -705,7 +747,9 @@ const TblitemsAddPage = (props) => {
                                 label="Crear Item" 
                                 icon="pi pi-plus-circle"
                                 className="p-button-primary"
-                                onClick={handleOpenForm}
+                                onClick={handleSubmit} 
+                                loading={saving} 
+                                disabled={!formData.ca_ti_item || !formData.ca_es_id || !formData.ca_eo_id} // Deshabilitar si faltan campos
                             />
                         </div>
                     </div>
@@ -819,155 +863,77 @@ const TblitemsAddPage = (props) => {
                     </div>
                 </section>
                 
-                <Dialog 
-                    header="Crear Nuevo Item" 
-                    visible={showForm} 
-                    style={{width: '600px'}} 
-                    onHide={() => setShowForm(false)} 
+                <Dialog
+                    visible={showGlosaDialog}
+                    onHide={() => setShowGlosaDialog(false)}
+                    header="Registrar Glosa"
+                    style={{ width: '500px' }}
+                    modal
                     footer={
                         <div>
-                            <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={() => setShowForm(false)} />
-                            <Button label="Guardar" icon="pi pi-save" className="p-button-primary" onClick={handleSubmit} loading={saving} />
+                            <Button
+                                label="Cancelar"
+                                icon="pi pi-times"
+                                className="p-button-text"
+                                onClick={() => {
+                                    setShowGlosaDialog(false);
+                                    app.navigate('/tblitems'); // Navigate away if user cancels glosa
+                                }}
+                            />
+                            <Button
+                                label="Guardar"
+                                icon="pi pi-check"
+                                loading={savingGlosa}
+                                onClick={handleGlosaSubmit}
+                            />
                         </div>
                     }
                 >
-                    <div className="grid formgrid p-fluid">
+                    <div className="grid p-fluid">
                         <div className="col-12 mb-3">
-                            <label htmlFor="ca_ti_item" className="font-medium text-900 mb-2 block">Tipo de Item</label>
-                            <Dropdown 
-                                id="ca_ti_item"
-                                value={formData.ca_ti_item}
-                                options={tipoItemOptions}
-                                onChange={(e) => handleDropdownChange(e, 'ca_ti_item')}
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Seleccione un tipo de item"
-                                className="w-full"
-                                required
-                            />
-                        </div>
-                        
-                        <div className="col-12 mb-3">
-                            <label htmlFor="ca_es_id" className="font-medium text-900 mb-2 block">Cargo</label>
+                            <label className="font-bold block mb-2">Tipo de Documento *</label>
                             <Dropdown
-                                id="ca_es_id" 
-                                value={formData.ca_es_id}
-                                options={escalaOptions}
-                                onChange={(e) => {
-                                    handleDropdownChange(e, 'ca_es_id');
-                                    handleCargoChange(e);
-                                }}
-                                optionValue="value"
-                                optionLabel="label"
-                                placeholder="Seleccione un cargo"
+                                value={glosaFormData.gl_tipo_doc}
+                                options={tiposDocumento}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
+                                placeholder="Seleccione tipo de documento"
                                 className="w-full"
                                 required
-                                filtered
                             />
-                            
-                            {formData.ca_es_id && (
-                                <div className="mt-2 p-2 border-round surface-50 text-sm">
-                                    <div className="grid">
-                                        <div className="col-6">
-                                            <span className="font-medium">Código Escalafón:</span>
-                                            <span className="ml-1">{cargoDetails.codigoEscalafon}</span>
-                                        </div>
-                                        <div className="col-6">
-                                            <span className="font-medium">Clase:</span>
-                                            <span className="ml-1">{cargoDetails.clase}</span>
-                                        </div>
-                                        <div className="col-6">
-                                            <span className="font-medium">Nivel Salarial:</span>
-                                            <span className="ml-1">{cargoDetails.nivelSalarial}</span>
-                                        </div>
-                                        <div className="col-6">
-                                            <span className="font-medium">Haber Básico:</span>
-                                            <span className="ml-1 font-bold text-primary">{cargoDetails.haberBasico}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                         
                         <div className="col-12 mb-3">
-                            <label className="font-medium text-900 mb-2 block">Tipo Jornada</label>
-                            <div className="flex gap-4">
-                                <div className="flex align-items-center">
-                                    <RadioButton 
-                                        inputId="jornada1" 
-                                        name="ca_tipo_jornada" 
-                                        value="TT" 
-                                        onChange={handleInputChange} 
-                                        checked={formData.ca_tipo_jornada === 'TT'} 
-                                    />
-                                    <label htmlFor="jornada1" className="ml-2">Tiempo Completo (TT)</label>
-                                </div>
-                                <div className="flex align-items-center">
-                                    <RadioButton 
-                                        inputId="jornada2" 
-                                        name="ca_tipo_jornada" 
-                                        value="MT" 
-                                        onChange={handleInputChange} 
-                                        checked={formData.ca_tipo_jornada === 'MT'} 
-                                    />
-                                    <label htmlFor="jornada2" className="ml-2">Medio Tiempo (MT)</label>
-                                </div>
-                            </div>
+                            <label className="font-bold block mb-2">Número Documento *</label>
+                            <InputText
+                                value={glosaFormData.gl_numero_doc}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
+                                placeholder="Ingrese número de documento"
+                                required
+                            />
                         </div>
                         
                         <div className="col-12 mb-3">
-                            <label htmlFor="cantidad" className="font-medium text-900 mb-2 block">Cantidad de Items</label>
-                            <div className="p-inputgroup">
-                                <span className="p-inputgroup-addon">
-                                    <i className="pi pi-hashtag"></i>
-                                </span>
-                                <InputText
-                                    id="cantidad"
-                                    type="number"
-                                    min="1"
-                                    max="100"
-                                    value={formData.cantidad}
-                                    onChange={(e) => setFormData(prev => ({ 
-                                        ...prev, 
-                                        cantidad: parseInt(e.target.value) || 1 
-                                    }))}
-                                    className="w-full"
-                                    placeholder="Cantidad"
-                                />
-                            </div>
-                            <small className="text-600">Define cuántos items se crearán con estos datos</small>
+                            <label className="font-bold block mb-2">Fecha Documento *</label>
+                            <Calendar
+                                value={glosaFormData.gl_fecha_doc}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
+                                showIcon
+                                dateFormat="dd/mm/yy"
+                                className="w-full"
+                                required
+                            />
                         </div>
-                        
-                        <Divider />
                         
                         <div className="col-12">
-                            <div className="p-3 border-round surface-100">
-                                <div className="font-medium text-900 mb-2">Unidad Organizacional</div>
-                                <div className="flex align-items-center">
-                                    <i className="pi pi-sitemap mr-2 text-primary"></i>
-                                    <span className="font-medium text-primary">{selectedNode?.label || "No seleccionada"}</span>
-                                </div>
-                            </div>
+                            <label className="font-bold block mb-2">Descripción *</label>
+                            <InputTextarea
+                                value={glosaFormData.gl_glosa}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
+                                rows={3}
+                                placeholder="Ingrese la descripción"
+                                required
+                            />
                         </div>
-                        
-                        <div className="col-12 mt-3"></div>
-                            <div className="p-3 border-round surface-100">
-                                <div className="font-medium text-900 mb-2">Categoría Programática</div>
-                                <div className="flex align-items-center">
-                                    <i className="pi pi-list mr-2 text-primary"></i>
-                                    <span className="font-medium text-primary">{categoriaPragmatica || "No disponible"}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="col-12 mt-3">
-                            <div className="p-3 border-round surface-100">
-                                <div className="font-medium text-900 mb-2">Categoría Administrativa</div>
-                                <div className="flex align-items-center">
-                                    <i className="pi pi-building mr-2 text-primary"></i>
-                                    <span className="font-medium text-primary">{categoriaAdministrativa || "No disponible"}</span>
-                                </div>
-                            </div>
                     </div>
                 </Dialog>
             </main>
