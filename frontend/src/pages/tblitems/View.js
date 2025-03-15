@@ -1,6 +1,7 @@
 import { Button } from 'primereact/button';
 import { Menubar } from 'primereact/menubar';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { Card } from 'primereact/card';
 import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 import { useEffect, useState } from 'react';
@@ -114,74 +115,134 @@ const TblitemsViewPage = (props) => {
     return (
         <div>
             <main id="TblitemsViewPage" className="main-page">
-                { (props.showHeader) && 
-                <section className="page-section mb-3" >
+                <section className="page-section mb-3">
                     <div className="container">
                         <div className="grid justify-content-between align-items-center">
-                            { !props.isSubPage && 
-                            <div className="col-fixed " >
-                                <Button onClick={() => app.navigate(-1)} label=""  className="p-button p-button-text " icon="pi pi-arrow-left"  />
+                            <div className="col-fixed">
+                                <Button onClick={() => app.navigate('/tblitems')} label="" className="p-button p-button-text" icon="pi pi-arrow-left" />
                             </div>
-                            }
-                            <div className="col " >
-                                <Title title="Ver Item"   titleClass="text-2xl text-primary font-bold" subTitleClass="text-500"      separator={false} />
+                            <div className="col">
+                                <Title title="Ver Item" titleClass="text-2xl text-primary font-bold" separator={false} />
                             </div>
                         </div>
                     </div>
                 </section>
-                }
-                <section className="page-section " >
-                    <div className="container">
-                        <div className="grid ">
-                            <div className="col comp-grid" >
-                                <div >
-                                    <div className="mb-3 grid ">
-                                        <div className="col-12 md:col-4">
-                                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100 ">
-                                                <div className="">
-                                                    <div className="text-400 font-medium mb-1">Código</div>
-                                                    <div className="font-bold">{ item.codigo }</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-12 md:col-4">
-                                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100 ">
-                                                <div className="">
-                                                    <div className="text-400 font-medium mb-1">Cargo</div>
-                                                    <div className="font-bold">{ item.cargo }</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-12 md:col-4">
-                                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100 ">
-                                                <div className="">
-                                                    <div className="text-400 font-medium mb-1">Haber Básico</div>
-                                                    <div className="font-bold">{ item.haber_basico }</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-12 md:col-4">
-                                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100 ">
-                                                <div className="">
-                                                    <div className="text-400 font-medium mb-1">Unidad Organizacional</div>
-                                                    <div className="font-bold">{ item.unidad_organizacional }</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="col-12 md:col-4">
-                                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100 ">
-                                                <div className="">
-                                                    <div className="text-400 font-medium mb-1">Fecha Creación</div>
-                                                    <div className="font-bold">{ formatDate(item.fecha_creacion) }</div>
-                                                </div>
-                                            </div>
-                                        </div>
+
+                {/* Información General */}
+                <Card title="Información General" className="mb-3">
+                    <div className="grid">
+                        <div className="col-12 md:col-3">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Código Item</div>
+                                    <div className="font-bold">{item.codigo || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-3">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Código Escalafón</div>
+                                    <div className="font-bold">{item.escala_original?.es_escalafon || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-3">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Clase</div>
+                                    <div className="font-bold">{item.nivel_original?.ns_clase || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-3">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Nivel</div>
+                                    <div className="font-bold">{item.nivel_original?.ns_nivel || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Información del Cargo */}
+                <Card title="Información del Cargo" className="mb-3">
+                    <div className="grid">
+                        <div className="col-12 md:col-4">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Tipo Item</div>
+                                    <div className="font-bold">{item.tipo_item_descripcion || item.cargo_original?.ca_ti_item || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-4">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Tipo Jornada</div>
+                                    <div className="font-bold">
+                                        {item.tipo_jornada === 'TT' ? 'Tiempo Completo' : 
+                                         item.tipo_jornada === 'MT' ? 'Medio Tiempo' : 'No disponible'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-4">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Haber Básico</div>
+                                    <div className="font-bold text-primary">
+                                        {item.haber_basico ? 
+                                            new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' })
+                                                .format(item.haber_basico) : 'No disponible'}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </section>
+                </Card>
+
+                {/* Información Organizacional */}
+                <Card title="Información Organizacional" className="mb-3">
+                    <div className="grid">
+                        <div className="col-12 md:col-6">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Unidad Organizacional</div>
+                                    <div className="font-bold">{item.unidad_organizacional || 'No disponible'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-12 md:col-6">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Categoría Programática</div>
+                                    <div className="font-bold">{item.categoria_programatica}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Información Adicional */}
+                <Card title="Información Adicional" className="mb-3">
+                    <div className="grid">
+                        <div className="col-12">
+                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
+                                <div>
+                                    <div className="text-500 font-medium mb-1">Fecha Creación</div>
+                                    <div className="font-bold">
+                                        {item.fecha_creacion ? 
+                                            new Date(item.fecha_creacion).toLocaleDateString('es-BO', {
+                                                year: 'numeric', month: 'long', day: 'numeric'
+                                            }) : 'No disponible'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
             </main>
             <PageFooter />
         </div>

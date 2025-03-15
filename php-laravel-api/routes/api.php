@@ -336,6 +336,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblitems/add', 'TblitemsController@add');
 	Route::any('tblitems/edit/{rec_id}', 'TblitemsController@edit');
 	Route::any('tblitems/delete/{rec_id}', 'TblitemsController@delete');
+	Route::get('tblitems/getItemForEdit/{rec_id}', 'TblitemsController@getItemForEdit');
 
 /* routes for TblMpAsignacion Controller */	
 	Route::get('tblmpasignacion/', 'TblMpAsignacionController@index');
