@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TblMpTenorAddRequest;
 use App\Models\TblMpTenor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -29,6 +30,17 @@ class TblMpTenorController extends Controller
 		}
 		$records = $this->paginate($query, TblMpTenor::listFields());
 		return $this->respond($records);
+	}
+
+	function add(TblMpTenorAddRequest $request){
+		$modeldata = $request->validated();
+
+		if (empty($modeldata['te_id'])) {
+			$tenor = TblMpTenor::create($modeldata);
+		} else {
+			$tenor = TblMpTenor::findOrFail($modeldata['te_id']);
+			$tenor->update($modeldata);
+		}
 	}
 
 	/**

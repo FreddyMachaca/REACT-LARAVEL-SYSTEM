@@ -1,14 +1,17 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
 import { Dropdown } from 'primereact/dropdown';
+import { classNames } from 'primereact/utils'
 import { Editor } from 'primereact/editor';
 import { InputText } from 'primereact/inputtext';
 import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 import { SpeedDial } from 'primereact/speeddial';
 import { useParams } from 'react-router-dom';
+import { useFormik } from 'formik';
 import axios from 'axios';
-import React, { useState, useEffect, useRef } from 'react';
+import useApp from 'hooks/useApp';
 
 const placeholders = ["[ITEM_DESTINO]",
 "[SOLICITANTE]",
@@ -26,14 +29,18 @@ const placeholders = ["[ITEM_DESTINO]",
 "[fin]"];
 
 function TbltenoresAdd() {
+    const app = useApp();
+    const [formData, setFormData] = useState({});
     const [text, setText] = useState('');
     const [selectedMovimiento, setSelectedMovimiento] = useState(null);
     const [movimientoData, setMovimientoData] = useState();
     const [selectedPlaceholder, setSelectedPlaceholder] = useState([]);
+    //const [loading, setLoading] = useState(true);
     const editorRef = useRef(null);
     const [inputValue, setInputValue] = useState("");
     const { te_id } = useParams(); 
     //const [placeholders , setPlaceholders] = useState();
+    
 
     useEffect(() => {
       axios.get("tblcatalogo/get/movimiento/general")
@@ -62,7 +69,11 @@ function TbltenoresAdd() {
             }
     
             if (contenido && contenido.ops) {
-              const converter = new QuillDeltaToHtmlConverter(contenido.ops, {});
+              //const converter = new QuillDeltaToHtmlConverter(contenido.ops, {});
+              const converter = new QuillDeltaToHtmlConverter(contenido.ops, {
+                paragraphTag: "div", 
+                lineBreakTag: "<br>",
+              });
               const htmlContent = converter.convert();
 
               //const placeholders = htmlContent.match(/\[(.*?)\]/g) || [];
@@ -73,9 +84,64 @@ function TbltenoresAdd() {
             } else {
               console.error("Formato de datos incorrecto");
             }
+
+            saveDataToFormik(data);
           })
           .catch(error => console.error("Error al obtener los datos:", error));
       }, []);    
+
+    useEffect(() => {
+      if(Object.keys(formData).length > 0){
+        handleSubmit();
+      }
+    
+    }, [formData]);
+    
+    
+    const formik = useFormik({
+      initialValues: {
+        te_id: '',
+        te_tipo_reg: null,
+        te_descripcion: '',
+        te_contenido: '',
+      },
+      validate: (data) => {
+        let errors = {};
+        if(data.te_id === ''){
+          errors.te_id = 'Este campo es requerido';
+        }
+        if(!data.te_tipo_reg){
+          errors.te_tipo_reg = 'Este campo es requerido';
+        }
+        if(data.te_descripcion === ''){
+          errors.te_descripcion = 'Este campo es requerido';
+        }
+        if(!data.te_contenido){
+          errors.te_contenido = 'Este campo es requerido';
+        }
+
+        return errors;
+      },
+      onSubmit: (data) => {
+        setFormData(data);
+      }
+    })
+
+    const saveDataToFormik = (data) => {
+      const newValues = {
+        te_id: data.te_id,
+        te_tipo_reg: data.te_tipo_reg,
+        te_descripcion: data.te_descripcion,
+        te_contenido: data.te_contenido,
+      };
+      formik.setValues(newValues);
+    }
+
+    const isFormFieldValid = (name) => !!(formik.touched[name] && formik.errors[name]);
+
+    const getFormErrorMessage = (name) => {
+        return isFormFieldValid(formik, name) && <small className="p-error">{formik.errors[name]}</small>;
+    };
 
     const onMovimientoChange = (e) => {
         setSelectedMovimiento(e.value);
@@ -203,6 +269,33 @@ function TbltenoresAdd() {
       iframe.contentWindow.focus();
   };
 
+
+  const handleSubmit = async () => {
+    try {
+        if (editorRef.current) {
+            const editor = editorRef.current.getQuill(); 
+            
+            const delta = editor.clipboard.convert(formik.values.te_contenido);
+
+            const contenidoDeltaString = JSON.stringify(delta);
+
+            const formData = {
+                ...formik.values, 
+                te_contenido: contenidoDeltaString 
+            };
+
+            console.log(formData)
+
+            const response = await axios.post('tblmtenor/add', formData);
+            console.log('Respuesta del servidor:', response.data);
+            app.flashMsg('Crear registro', 'Grabado exitosamente');
+        }
+    } catch (error) {
+        console.error('Error al enviar datos:', error);
+        app.flashMsg('Error', 'No se pudo enviar la información');
+    }
+};
+
     const items = [
       {
           label: "Imprimir / Guardar PDF",
@@ -227,29 +320,41 @@ function TbltenoresAdd() {
                 </section>
                 
                 <Divider/>
+                <form onSubmit={formik.handleSubmit}>
+                  <input type='hidden' id='te_id' name='te_id' value={formik.values.te_id}/>
+                  <section>
+                      <div className='grid p-fluid'>
+                          <div className='field col-8'>
+                              <label htmlFor="te_descripcion" className={classNames({ 'p-error': isFormFieldValid('te_descripcion') })}>DESDE EL ÍTEM</label>
+                              <span className="p-input-icon-left">
+                                  <i className="pi pi-file-edit" />
+                                  <InputText id="te_descripcion" name='te_descripcion' value={formik.values.te_descripcion} onChange={formik.handleChange}
+                                  placeholder='Exenta en el marcado reloj biométrico'  className={classNames({ 'p-invalid': isFormFieldValid('te_descripcion') })}/>
+                              </span>
+                              {getFormErrorMessage('item_number')}
+                    
+                          </div>
+                          <div className='field col-4'>
+                              <label htmlFor="tipo_movimiento" className={classNames({ 'p-error': isFormFieldValid('tipo_movimiento') })}>TIPO MOVIMIENTO</label>
 
-                <section>
-                    <div className='grid p-fluid'>
-                        <div className='field col-8'>
-                            <label htmlFor="inp" className="block">DESDE EL ÍTEM</label>
-                            <span className="p-input-icon-left">
-                                <i className="pi pi-file-edit" />
-                                <InputText id="inp" placeholder='Exenta en el marcado reloj biométrico' className="block"/>
-                            </span>
-                  
-                        </div>
-                        <div className='field col-4'>
-                            <label htmlFor="tipo_movimiento" className="block">TIPO MOVIMIENTO</label>
-                            <Dropdown id='tipo_movimiento' filter value={selectedMovimiento} options={movimientoData} onChange={onMovimientoChange} optionLabel="cat_descripcion" placeholder="Seleccione..." />
-                        </div>
-                    </div>                    
-                    <div>
-                        <Editor ref={editorRef} headerTemplate={header} value={text} onTextChange={(e) => setText(e.htmlValue)} />
-                    </div>
-                    <div className='flex justify-content-end my-5'>
-                      <Button className="p-button-success mr-2" icon="pi pi-file-edit" label='Modificar'/> 
-                    </div>
-                </section>
+                              <Dropdown id='tipo_movimiento' name='tipo_movimiento' filter value={selectedMovimiento} options={movimientoData} onChange={onMovimientoChange} placeholder="Seleccione..." className={classNames({ 'p-invalid': isFormFieldValid('tipo_movimiento') })}
+                              optionLabel="cat_descripcion"/>
+
+                              {getFormErrorMessage('tipo_movimiento')}
+                          </div>
+                      </div>                    
+                      <div>
+                          <Editor ref={editorRef} headerTemplate={header} value={text} 
+                          onTextChange={(e) => {
+                            setText(e.htmlValue);
+                            formik.setFieldValue("te_contenido", e.htmlValue);
+                          }} />
+                      </div>
+                      <div className='flex justify-content-end my-5'>
+                        <Button type='submit' className="p-button-success mr-2" icon="pi pi-file-edit" label='Modificar'/> 
+                      </div>
+                  </section>
+                </form>
             </Card>
             <SpeedDial model={items} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-cog" />
         </div>

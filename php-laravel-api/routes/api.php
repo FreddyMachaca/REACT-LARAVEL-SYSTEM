@@ -286,6 +286,7 @@ Route::get('home', 'HomeController@index');
 	
 /* routes for TblMpTenor */
 	
+	Route::post('tblmtenor/add', 'TblMpTenorController@add');	
 	Route::get('tblmtenor/index', 'TblMpTenorController@index');
 	Route::get('tblmtenor/delete/{rec_id}', 'TblMpTenorController@delete');
 	Route::get('tblmtenor/get/{rec_id}', 'TblMpTenorController@getById');
