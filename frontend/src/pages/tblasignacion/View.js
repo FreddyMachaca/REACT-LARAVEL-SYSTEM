@@ -5,6 +5,7 @@ import { Title } from 'components/Title';
 import { Button } from 'primereact/button';
 import { Checkbox } from 'primereact/checkbox';
 import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { Dialog } from 'primereact/dialog';
 import { Tree } from 'primereact/tree';
 import { Calendar } from 'primereact/calendar';
@@ -35,9 +36,33 @@ const TblasignacionView = () => {
     const [saving, setSaving] = useState(false);
     const toast = useRef(null);
 
+    const [showGlosaDialog, setShowGlosaDialog] = useState(false);
+    const [glosaFormData, setGlosaFormData] = useState({
+        gl_tipo_doc: '',
+        gl_numero_doc: '',
+        gl_fecha_doc: null,
+        gl_glosa: ''
+    });
+    const [tiposDocumento, setTiposDocumento] = useState([]);
+    const [savingGlosa, setSavingGlosa] = useState(false);
+
     useEffect(() => {
         loadInitialData();
         loadTiposActa();
+        
+        const loadTiposDocumento = async () => {
+            try {
+                const response = await axios.get('/tblcatalogo/byTipo/tipo_documento_impreso');
+                setTiposDocumento(response.data.map(tipo => ({
+                    value: tipo.cat_id,
+                    label: tipo.cat_descripcion
+                })));
+            } catch (error) {
+                console.error('Error loading tipos documento:', error);
+            }
+        };
+        
+        loadTiposDocumento();
     }, [personaId]);
 
     const loadInitialData = async () => {
@@ -196,10 +221,14 @@ const TblasignacionView = () => {
             return;
         }
 
+        setShowGlosaDialog(true);
+    };
+
+    const handleGlosaSubmit = async () => {
         try {
-            setSaving(true);
+            setSavingGlosa(true);
             
-            const data = {
+            const asignacionData = {
                 as_per_id: personaId,
                 as_ca_id: itemSeleccionado.ca_id,
                 as_fecha_inicio: fechaInicio,
@@ -211,16 +240,36 @@ const TblasignacionView = () => {
                 as_usuario_creacion: 1
             };
 
-            await axios.post('/tblmpasignacion/add', data);
+            const asignacionResponse = await axios.post('/tblmpasignacion/add', asignacionData);
             
-            app.flashMsg('Éxito', 'Asignación guardada correctamente');
+            if (!asignacionResponse.data || !asignacionResponse.data.as_id) {
+                throw new Error('No se pudo obtener el ID de la asignación');
+            }
+
+            const glosaData = {
+                gl_valor_pk: asignacionResponse.data.as_id,
+                gl_nombre_pk: 'as_id',
+                gl_tabla: 'tbl_mp_asignacion',
+                gl_tipo_mov: parseInt(selectedTipoActa), 
+                gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
+                gl_numero_doc: glosaFormData.gl_numero_doc,
+                gl_fecha_doc: glosaFormData.gl_fecha_doc,
+                gl_glosa: glosaFormData.gl_glosa,
+                gl_estado: 'V'
+            };
+
+            await axios.post('/tblglosa/add', glosaData);
+            
+            app.flashMsg('Éxito', 'Asignación y glosa guardadas correctamente');
             app.navigate('/asignacionItems');
             
         } catch (error) {
             console.error('Error saving:', error);
-            app.flashMsg('Error', 'Error al guardar la asignación', 'error');
+            const errorMessage = error.response?.data?.message || 'Error al guardar los datos';
+            app.flashMsg('Error', errorMessage, 'error');
         } finally {
-            setSaving(false);
+            setSavingGlosa(false);
+            setShowGlosaDialog(false);
         }
     };
 
@@ -234,33 +283,6 @@ const TblasignacionView = () => {
                 <div className="flex align-items-center gap-2 text-500">
                     <i className="pi pi-id-card"></i>
                     <span className="font-semibold">CI: {persona?.per_num_doc}</span>
-                </div>
-            </div>
-
-            <div className="grid">
-                <div className="col-12 md:col-6">
-                    <div className="p-3 border-round surface-100">
-                        <div className="text-500 mb-2">Nombres</div>
-                        <div className="text-900 font-medium">{persona?.per_nombres}</div>
-                    </div>
-                </div>
-                <div className="col-12 md:col-6">
-                    <div className="p-3 border-round surface-100">
-                        <div className="text-500 mb-2">Apellido Paterno</div>
-                        <div className="text-900 font-medium">{persona?.per_ap_paterno}</div>
-                    </div>
-                </div>
-                <div className="col-12 md:col-6">
-                    <div className="p-3 border-round surface-100">
-                        <div className="text-500 mb-2">Apellido Materno</div>
-                        <div className="text-900 font-medium">{persona?.per_ap_materno}</div>
-                    </div>
-                </div>
-                <div className="col-12 md:col-6">
-                    <div className="p-3 border-round surface-100">
-                        <div className="text-500 mb-2">Apellido Casada</div>
-                        <div className="text-900 font-medium">{persona?.per_ap_casada || 'No registrado'}</div>
-                    </div>
                 </div>
             </div>
         </Card>
@@ -381,7 +403,6 @@ const TblasignacionView = () => {
                 <>
                     <Card title="Información de Asignación" className="mb-3">
                         <div className="grid">
-                            {/* Fecha Alta siempre visible */}
                             <div className={itemSeleccionado?.ca_ti_item === 'P' ? 'col-6' : 'col-4'}>
                                 <label className="block font-bold mb-2">Fecha Alta *</label>
                                 <Calendar 
@@ -546,6 +567,77 @@ const TblasignacionView = () => {
                     filterPlaceholder="Buscar unidad organizacional"
                     nodeTemplate={nodeTemplate}
                 />
+            </Dialog>
+
+            <Dialog
+                visible={showGlosaDialog}
+                onHide={() => setShowGlosaDialog(false)}
+                header="Registrar Glosa"
+                style={{ width: '500px' }}
+                modal
+                footer={
+                    <div>
+                        <Button
+                            label="Cancelar"
+                            icon="pi pi-times"
+                            className="p-button-text"
+                            onClick={() => setShowGlosaDialog(false)}
+                        />
+                        <Button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            loading={savingGlosa}
+                            onClick={handleGlosaSubmit}
+                        />
+                    </div>
+                }
+            >
+                <div className="grid p-fluid">
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Tipo de Documento *</label>
+                        <Dropdown
+                            value={glosaFormData.gl_tipo_doc}
+                            options={tiposDocumento}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
+                            placeholder="Seleccione tipo de documento"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Número Documento *</label>
+                        <InputText
+                            value={glosaFormData.gl_numero_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
+                            placeholder="Ingrese número de documento"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Fecha Documento *</label>
+                        <Calendar
+                            value={glosaFormData.gl_fecha_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
+                            showIcon
+                            dateFormat="dd/mm/yy"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12">
+                        <label className="font-bold block mb-2">Descripción *</label>
+                        <InputTextarea
+                            value={glosaFormData.gl_glosa}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
+                            rows={3}
+                            placeholder="Ingrese la descripción"
+                            required
+                        />
+                    </div>
+                </div>
             </Dialog>
         </div>
     );

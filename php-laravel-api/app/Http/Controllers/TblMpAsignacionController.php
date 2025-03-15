@@ -63,34 +63,52 @@ class TblMpAsignacionController extends Controller
      * @return \Illuminate\Http\Response
      */
     function add(Request $request){
-        try{
+        try {
             $modeldata = $this->normalizeFormData($request->all());
             
-            $existingAssignment = TblMpAsignacion::where('as_ca_id', $modeldata['as_ca_id'])
+            if (!isset($modeldata['as_per_id']) || 
+                !isset($modeldata['as_ca_id']) || 
+                !isset($modeldata['as_fecha_inicio']) || 
+                !isset($modeldata['as_tipo_mov'])) {
+                throw new Exception("Faltan campos requeridos");
+            }
+
+            $modeldata['as_fecha_inicio'] = \Carbon\Carbon::parse($modeldata['as_fecha_inicio']);
+            if (!empty($modeldata['as_fecha_fin'])) {
+                $modeldata['as_fecha_fin'] = \Carbon\Carbon::parse($modeldata['as_fecha_fin']);
+            }
+            
+            // Asignación de valores por defecto
+            $modeldata['as_estado'] = 'V';
+            $modeldata['as_fecha_creacion'] = now();
+            
+            \Log::info('Datos a guardar:', $modeldata);
+            
+            // Verificar si el item ya está asignado
+            $existingAssignment = DB::table('tbl_mp_asignacion')
+                ->where('as_ca_id', $modeldata['as_ca_id'])
                 ->where('as_estado', 'V')
                 ->first();
                 
             if ($existingAssignment) {
                 throw new Exception("Este item ya se encuentra asignado");
             }
-            
-            if (empty($modeldata['as_per_id']) || empty($modeldata['as_ca_id']) || 
-                empty($modeldata['as_fecha_inicio']) || empty($modeldata['as_tipo_mov'])) {
-                throw new Exception("Faltan campos requeridos");
-            }
-            
+
             DB::beginTransaction();
-            
-            $modeldata['as_fecha_creacion'] = $modeldata['as_fecha_creacion'] ?? now();
-            $modeldata['as_estado'] = 'V';
-            
-            $record = TblMpAsignacion::create($modeldata);
-            
-            DB::commit();
-            return $this->respond($record);
-        }
-        catch(Exception $e){
-            DB::rollback();
+            try {
+                // Crear la asignación
+                $record = TblMpAsignacion::create($modeldata);
+                DB::commit();
+                
+                \Log::info('Asignación creada con éxito:', ['id' => $record->as_id]);
+                
+                return $this->respond($record);
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+        } catch (Exception $e) {
+            \Log::error('Error en asignación:', ['error' => $e->getMessage()]);
             return $this->respondWithError($e);
         }
     }
