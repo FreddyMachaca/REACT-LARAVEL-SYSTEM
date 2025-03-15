@@ -131,17 +131,18 @@ class TblMpAsignacionController extends Controller
     public function getItemDetails($itemId)
     {
         try {
+            \Log::info("Getting item details for ID: " . $itemId);
+            
             $query = DB::table('tbl_mp_cargo AS c')
                 ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
                 ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
                 ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
                 ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')
                 ->select([
-                    'c.*',
-                    'es.es_descripcion AS cargo_descripcion',
+                    'c.ca_id',
+                    'c.ca_tipo_jornada',
                     'es.es_escalafon',
-                    'ns.ns_clase',
-                    'ns.ns_nivel',
+                    'es.es_descripcion AS cargo_descripcion',
                     'ns.ns_haber_basico',
                     'eo.eo_descripcion AS categoria_administrativa',
                     'cp.cp_descripcion AS categoria_programatica'
@@ -150,18 +151,34 @@ class TblMpAsignacionController extends Controller
                 ->first();
 
             if (!$query) {
-                throw new Exception("Item no encontrado");
+                \Log::warning("Item not found with ID: " . $itemId);
+                return response()->json(['message' => "Item no encontrado"], 404);
             }
 
-            $isAvailable = !DB::table('tbl_mp_asignacion')
+            \Log::info("Found item:", (array)$query);
+
+            $asignacion = DB::table('tbl_mp_asignacion')
                 ->where('as_ca_id', $itemId)
                 ->where('as_estado', 'V')
-                ->exists();
+                ->select('as_fecha_inicio', 'as_fecha_fin')
+                ->first();
 
-            $query->disponible = $isAvailable;
+            $result = (array)$query;
+            
+            if ($asignacion) {
+                $result['as_fecha_inicio'] = $asignacion->as_fecha_inicio;
+                $result['as_fecha_fin'] = $asignacion->as_fecha_fin;
+                $result['asignado'] = true;
+            } else {
+                $result['asignado'] = false;
+            }
 
-            return $this->respond($query);
+            \Log::info("Returning item details:", $result);
+            return $this->respond($result);
+
         } catch (Exception $e) {
+            \Log::error("Error in getItemDetails: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             return $this->respondWithError($e);
         }
     }

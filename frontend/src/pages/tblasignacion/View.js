@@ -133,14 +133,32 @@ const TblasignacionView = () => {
         
         if (e.node.type === 'item') {
             try {
-                const response = await axios.get(`/tblmpasignacion/getItemDetails/${e.node.itemId}`);
+                const itemId = e.node.key.replace('item_', '');
+                console.log('Fetching details for item:', itemId);
+                
+                if (!itemId) {
+                    throw new Error('ID de item no válido');
+                }
+                
+                const response = await axios.get(`/tblmpasignacion/getItemDetails/${itemId}`);
+                console.log('API Response:', response.data);
+                
                 if (response.data) {
                     setItemSeleccionado(response.data);
+                    if (response.data.as_fecha_inicio) {
+                        setFechaInicio(new Date(response.data.as_fecha_inicio));
+                    }
+                    if (response.data.as_fecha_fin) {
+                        setFechaFin(new Date(response.data.as_fecha_fin));
+                    }
                     setShowTreeDialog(false);
                 }
             } catch (error) {
                 console.error('Error fetching item details:', error);
-                app.flashMsg('Error', 'Error al obtener detalles del item', 'error');
+                app.flashMsg('Error', 
+                    `Error al obtener detalles del item: ${error.response?.data?.message || error.message}`, 
+                    'error'
+                );
             }
         }
     };
@@ -251,12 +269,6 @@ const TblasignacionView = () => {
                         </div>
                     </div>
                     <div className="col-3">
-                        <label className="block font-bold mb-2">Nivel Salarial</label>
-                        <div className="p-3 border-round surface-100">
-                            {itemSeleccionado?.ns_nivel || 'No seleccionado'}
-                        </div>
-                    </div>
-                    <div className="col-3">
                         <label className="block font-bold mb-2">Haber Básico</label>
                         <div className="p-3 border-round surface-100 text-primary font-bold">
                             {itemSeleccionado?.ns_haber_basico 
@@ -265,6 +277,14 @@ const TblasignacionView = () => {
                                     currency: 'BOB' 
                                   }).format(itemSeleccionado.ns_haber_basico)
                                 : 'No seleccionado'}
+                        </div>
+                    </div>
+                    <div className="col-3">
+                        <label className="block font-bold mb-2">Estado</label>
+                        <div className="p-3 border-round surface-100">
+                            <span className={`badge ${itemSeleccionado?.asignado ? 'bg-red-100 text-red-900' : 'bg-green-100 text-green-900'}`}>
+                                {itemSeleccionado?.asignado ? 'Asignado' : 'Disponible'}
+                            </span>
                         </div>
                     </div>
                 </div>
