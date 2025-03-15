@@ -250,7 +250,6 @@ const TblasignacionView = () => {
                 gl_valor_pk: asignacionResponse.data.as_id,
                 gl_nombre_pk: 'as_id',
                 gl_tabla: 'tbl_mp_asignacion',
-                gl_tipo_mov: parseInt(selectedTipoActa), 
                 gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
                 gl_numero_doc: glosaFormData.gl_numero_doc,
                 gl_fecha_doc: glosaFormData.gl_fecha_doc,

@@ -408,7 +408,6 @@ const TblitemsAddPage = (props) => {
                 gl_valor_pk: createdItemId,
                 gl_nombre_pk: 'ca_id',
                 gl_tabla: 'tbl_mp_cargo',
-                gl_tipo_mov: formData.ca_ti_item,
                 gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
                 gl_numero_doc: glosaFormData.gl_numero_doc,
                 gl_fecha_doc: glosaFormData.gl_fecha_doc,
