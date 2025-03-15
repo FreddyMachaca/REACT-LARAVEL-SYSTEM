@@ -205,7 +205,7 @@ const TblasignacionView = () => {
                 as_fecha_inicio: fechaInicio,
                 as_fecha_fin: fechaFin,
                 as_estado: 'V',
-                as_tipo_reg: 'ALT',
+                as_tipo_reg: 'T',
                 as_tipo_mov: selectedTipoActa,
                 as_fecha_creacion: new Date(),
                 as_usuario_creacion: 1
