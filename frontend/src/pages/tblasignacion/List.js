@@ -24,9 +24,12 @@ const TblasignacionList = () => {
     const [currentPage, setCurrentPage] = useState(0);
     const [pageSize, setPageSize] = useState(10);
 
-    const handleSearch = async (page = currentPage) => {
+    const handleSearch = async (page = 0) => {
         try {
             setLoading(true);
+            setCurrentPage(page);
+            
+            console.log("Buscando con filtros:", filters);
             
             const response = await axios.get('/tblpersona', { 
                 params: {
@@ -35,6 +38,8 @@ const TblasignacionList = () => {
                     limit: pageSize
                 }
             });
+            
+            console.log("Respuesta de búsqueda:", response.data);
             
             if (response.data) {
                 setPersonas(response.data.records);
@@ -55,13 +60,22 @@ const TblasignacionList = () => {
     };
 
     const onPageChange = (event) => {
-        setCurrentPage(event.page);
         handleSearch(event.page);
     };
 
     useEffect(() => {
-        handleSearch();
+        handleSearch(0);
     }, []);
+
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({...prev, [field]: value}));
+    };
+    
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSearch(0);
+        }
+    };
 
     const actionTemplate = (rowData) => {
         return (
@@ -119,7 +133,8 @@ const TblasignacionList = () => {
                             <InputText
                                 id="nombres"
                                 value={filters.nombres}
-                                onChange={(e) => setFilters({...filters, nombres: e.target.value})}
+                                onChange={(e) => handleFilterChange('nombres', e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full"
                             />
                             <label htmlFor="nombres">Nombres</label>
@@ -130,7 +145,8 @@ const TblasignacionList = () => {
                             <InputText
                                 id="ap_paterno"
                                 value={filters.apellido_paterno}
-                                onChange={(e) => setFilters({...filters, apellido_paterno: e.target.value})}
+                                onChange={(e) => handleFilterChange('apellido_paterno', e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full"
                             />
                             <label htmlFor="ap_paterno">Apellido Paterno</label>
@@ -141,7 +157,8 @@ const TblasignacionList = () => {
                             <InputText
                                 id="ap_materno"
                                 value={filters.apellido_materno}
-                                onChange={(e) => setFilters({...filters, apellido_materno: e.target.value})}
+                                onChange={(e) => handleFilterChange('apellido_materno', e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full"
                             />
                             <label htmlFor="ap_materno">Apellido Materno</label>
@@ -152,7 +169,8 @@ const TblasignacionList = () => {
                             <InputText
                                 id="ci"
                                 value={filters.num_doc}
-                                onChange={(e) => setFilters({...filters, num_doc: e.target.value})}
+                                onChange={(e) => handleFilterChange('num_doc', e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full"
                             />
                             <label htmlFor="ci">Carnet de Identidad</label>
@@ -163,7 +181,8 @@ const TblasignacionList = () => {
                             <InputText
                                 id="codigo"
                                 value={filters.codigo_funcionario}
-                                onChange={(e) => setFilters({...filters, codigo_funcionario: e.target.value})}
+                                onChange={(e) => handleFilterChange('codigo_funcionario', e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="w-full"
                             />
                             <label htmlFor="codigo">Código de Funcionario</label>
@@ -173,7 +192,7 @@ const TblasignacionList = () => {
                         <Button 
                             label="Buscar" 
                             icon="pi pi-search" 
-                            onClick={handleSearch}
+                            onClick={() => handleSearch(0)}
                             className="w-full"
                         />
                     </div>
