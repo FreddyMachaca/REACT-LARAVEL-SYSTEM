@@ -35,6 +35,12 @@ class TblMpTenorController extends Controller
 	function add(TblMpTenorAddRequest $request){
 		$modeldata = $request->validated();
 
+		if (isset($modeldata['te_id']) && $modeldata['te_id'] === null) {
+			unset($modeldata['te_id']);
+		}
+
+		logger()->info('Datos a insertar/actualizar:', $modeldata);
+
 		if (empty($modeldata['te_id'])) {
 			$tenor = TblMpTenor::create($modeldata);
 		} else {

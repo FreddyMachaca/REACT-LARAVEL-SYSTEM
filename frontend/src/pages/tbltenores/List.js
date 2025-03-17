@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Divider } from 'primereact/divider';
 import { confirmDialog } from 'primereact/confirmdialog';
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
+import { SpeedDial } from 'primereact/speeddial';
 import PageLoading from '../../components/PageLoading'
 import { Toast } from 'primereact/toast';
 import { useNavigate } from 'react-router-dom';
@@ -116,6 +117,10 @@ function TbltenoresList() {
         });
     }
 
+    const handleDirect = () => {
+        navigate(`/MovimientoPersonal/Tenor/`);
+    }
+
     const header = renderHeader();
   return (
     <>
@@ -151,6 +156,7 @@ function TbltenoresList() {
                 </section>
             </Card>
         </div>
+        <SpeedDial onClick={handleDirect} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-cog" />
     </>
   )
 }

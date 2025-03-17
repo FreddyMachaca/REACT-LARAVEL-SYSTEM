@@ -343,6 +343,7 @@ const App = () => {
 
 				{/* TODO creacion de tenores */}
 				<Route path="/MovimientoPersonal/Tenor/:te_id" element={<TbltenoresAdd/>}/>
+				<Route path="/MovimientoPersonal/Tenor/" element={<TbltenoresAdd/>}/>
 				<Route path="/MovimientoPersonal/ListaTenor" element={<TbltenoresList/>}/>
 
 			</Route>

@@ -52,6 +52,7 @@ function TbltenoresAdd() {
     }, [])
 
     useEffect(() => {
+      if(te_id != null && te_id.trim() !== ''){
         axios.get(`tblmtenor/get/${te_id}`) 
           .then(({ data }) => {
             let contenido = data.te_contenido;
@@ -81,6 +82,7 @@ function TbltenoresAdd() {
             saveDataToFormik(data);
           })
           .catch(error => console.error("Error al obtener los datos:", error));
+      }
       }, [movimientoData]);    
 
     useEffect(() => {
@@ -100,9 +102,6 @@ function TbltenoresAdd() {
       },
       validate: (data) => {
         let errors = {};
-        if(data.te_id === ''){
-          errors.te_id = 'Este campo es requerido';
-        }
         if(!data.te_tipo_reg){
           errors.te_tipo_reg = 'Este campo es requerido';
         }
@@ -112,15 +111,27 @@ function TbltenoresAdd() {
         if(!data.te_contenido){
           errors.te_contenido = 'Este campo es requerido';
         }
-
         return errors;
       },
       onSubmit: (data) => {
-        const payload = {
-          ...data,
-          te_tipo_reg: data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null,
+        let payload = { ...data };
+
+        // Excluye 'te_id' solo si no es null ni una cadena vacía
+        if (data.te_id === null || data.te_id === '') {
+            const { te_id, ...restData } = payload; // Excluye 'te_id'
+            payload = restData; // Actualiza el payload sin 'te_id'
         }
+
+        // Transforma 'te_tipo_reg' si es necesario
+        payload.te_tipo_reg = data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null;
+
+        // Guarda el payload en el estado
         setFormData(payload);
+        // const payload = {
+        //   ...data,
+        //   te_tipo_reg: data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null,
+        // }
+        // setFormData(payload);
       }
     })
 
