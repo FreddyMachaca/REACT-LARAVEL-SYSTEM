@@ -32,21 +32,17 @@ function TbltenoresAdd() {
     const app = useApp();
     const [formData, setFormData] = useState({});
     const [text, setText] = useState('');
-    const [selectedMovimiento, setSelectedMovimiento] = useState(null);
-    const [movimientoData, setMovimientoData] = useState();
+    const [movimientoData, setMovimientoData] = useState([]);
     const [selectedPlaceholder, setSelectedPlaceholder] = useState([]);
-    //const [loading, setLoading] = useState(true);
     const editorRef = useRef(null);
-    const [inputValue, setInputValue] = useState("");
     const { te_id } = useParams(); 
-    //const [placeholders , setPlaceholders] = useState();
     
 
     useEffect(() => {
       axios.get("tblcatalogo/get/movimiento/general")
       .then(({data}) => {
-        const filteredData = data.map(({ cat_id, cat_descripcion }) => ({
-            cat_id,
+        const filteredData = data.map(({ cat_abreviacion, cat_descripcion }) => ({
+            cat_abreviacion,
             cat_descripcion,
           }));
           setMovimientoData(filteredData);
@@ -59,36 +55,33 @@ function TbltenoresAdd() {
         axios.get(`tblmtenor/get/${te_id}`) 
           .then(({ data }) => {
             let contenido = data.te_contenido;
-            if (typeof contenido === "string") {
+            
+            let htmlContent = '';
+            if (typeof contenido === "string" && contenido.trim() !=='') {
               try {
-                contenido = JSON.parse(contenido); 
+                const parsedData = JSON.parse(contenido);
+
+                if (parsedData && parsedData.ops) {
+                  const converter = new QuillDeltaToHtmlConverter(parsedData.ops, {
+                    paragraphTag: "div",
+                    lineBreakTag: "<br>",
+                  });
+                  htmlContent = converter.convert();
+                } else {
+                  console.error("This doesn't have delta elements use like a HTML directly.");
+                  htmlContent = contenido;
+                }
               } catch (error) {
-                console.error("Error al parsear JSON:", error);
-                return;
+                console.warning("It's not a valid JSON, it'll be use like a HTML.");
+                htmlContent = contenido;
               }
             }
-    
-            if (contenido && contenido.ops) {
-              //const converter = new QuillDeltaToHtmlConverter(contenido.ops, {});
-              const converter = new QuillDeltaToHtmlConverter(contenido.ops, {
-                paragraphTag: "div", 
-                lineBreakTag: "<br>",
-              });
-              const htmlContent = converter.convert();
 
-              //const placeholders = htmlContent.match(/\[(.*?)\]/g) || [];
-              //const uniquePlaceholders = [...new Set(placeholders)]; 
-
-              setText(htmlContent);
-              //setPlaceholders(uniquePlaceholders);
-            } else {
-              console.error("Formato de datos incorrecto");
-            }
-
+            setText(htmlContent);
             saveDataToFormik(data);
           })
           .catch(error => console.error("Error al obtener los datos:", error));
-      }, []);    
+      }, [movimientoData]);    
 
     useEffect(() => {
       if(Object.keys(formData).length > 0){
@@ -123,14 +116,20 @@ function TbltenoresAdd() {
         return errors;
       },
       onSubmit: (data) => {
-        setFormData(data);
+        const payload = {
+          ...data,
+          te_tipo_reg: data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null,
+        }
+        setFormData(payload);
       }
     })
 
     const saveDataToFormik = (data) => {
+      const tipoRegObject = movimientoData.filter( m => m.cat_abreviacion == data.te_tipo_reg )[0];
+
       const newValues = {
         te_id: data.te_id,
-        te_tipo_reg: data.te_tipo_reg,
+        te_tipo_reg: tipoRegObject,
         te_descripcion: data.te_descripcion,
         te_contenido: data.te_contenido,
       };
@@ -142,28 +141,14 @@ function TbltenoresAdd() {
     const getFormErrorMessage = (name) => {
         return isFormFieldValid(formik, name) && <small className="p-error">{formik.errors[name]}</small>;
     };
-
-    const onMovimientoChange = (e) => {
-        setSelectedMovimiento(e.value);
-    }
     
     const handleSelectChange = (e) => {
-      //setSelectedPlaceholder(e.target.value);
       const selectedValue = e.value;
       setSelectedPlaceholder(selectedValue);
       if (editorRef.current) {
         const editor = editorRef.current.getQuill();
         const range = editor.getSelection(true); 
         editor.insertText(range.index, selectedValue); 
-      }
-    };
-    
-    const handleReplace = () => {
-      if (selectedPlaceholder && inputValue) {
-        const newText = text.replace(selectedPlaceholder, inputValue);
-        setText(newText);
-        setInputValue("");
-        setSelectedPlaceholder("");
       }
     };
 
@@ -274,19 +259,17 @@ function TbltenoresAdd() {
     try {
         if (editorRef.current) {
             const editor = editorRef.current.getQuill(); 
-            
-            const delta = editor.clipboard.convert(formik.values.te_contenido);
-
+            //console.log(formData.te_contenido)
+            const delta = editor.clipboard.convert(formData.te_contenido);
             const contenidoDeltaString = JSON.stringify(delta);
 
-            const formData = {
-                ...formik.values, 
-                te_contenido: contenidoDeltaString 
+            const payload = {
+              ...formData,  
+              //te_contenido: contenidoDeltaString,
+              te_contenido: formData.te_contenido,
             };
 
-            console.log(formData)
-
-            const response = await axios.post('tblmtenor/add', formData);
+            const response = await axios.post('tblmtenor/add', payload);
             console.log('Respuesta del servidor:', response.data);
             app.flashMsg('Crear registro', 'Grabado exitosamente');
         }
@@ -335,12 +318,12 @@ function TbltenoresAdd() {
                     
                           </div>
                           <div className='field col-4'>
-                              <label htmlFor="tipo_movimiento" className={classNames({ 'p-error': isFormFieldValid('tipo_movimiento') })}>TIPO MOVIMIENTO</label>
+                              <label htmlFor="te_tipo_reg" className={classNames({ 'p-error': isFormFieldValid('te_tipo_reg') })}>TIPO MOVIMIENTO</label>
 
-                              <Dropdown id='tipo_movimiento' name='tipo_movimiento' filter value={selectedMovimiento} options={movimientoData} onChange={onMovimientoChange} placeholder="Seleccione..." className={classNames({ 'p-invalid': isFormFieldValid('tipo_movimiento') })}
+                              <Dropdown id='te_tipo_reg' name='te_tipo_reg' filter  value={formik.values.te_tipo_reg} options={movimientoData} onChange={({ value }) => formik.setFieldValue("te_tipo_reg", value)} placeholder="Seleccione..." className={classNames({ 'p-invalid': isFormFieldValid('te_tipo_reg') })}
                               optionLabel="cat_descripcion"/>
 
-                              {getFormErrorMessage('tipo_movimiento')}
+                              {getFormErrorMessage('te_tipo_reg')}
                           </div>
                       </div>                    
                       <div>
