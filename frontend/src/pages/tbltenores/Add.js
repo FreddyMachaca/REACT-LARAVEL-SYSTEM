@@ -56,8 +56,8 @@ function TbltenoresAdd() {
         axios.get(`tblmtenor/get/${te_id}`) 
           .then(({ data }) => {
             let contenido = data.te_contenido;
-            
             let htmlContent = '';
+
             if (typeof contenido === "string" && contenido.trim() !=='') {
               try {
                 const parsedData = JSON.parse(contenido);
@@ -69,11 +69,11 @@ function TbltenoresAdd() {
                   });
                   htmlContent = converter.convert();
                 } else {
-                  console.error("This doesn't have delta elements use like a HTML directly.");
+                  console.error("This doesn't have delta elements, using as HTML directly.");
                   htmlContent = contenido;
                 }
               } catch (error) {
-                console.warning("It's not a valid JSON, it'll be use like a HTML.");
+                console.warn("It's not a valid JSON, it'll be use like a HTML.");
                 htmlContent = contenido;
               }
             }
@@ -92,7 +92,7 @@ function TbltenoresAdd() {
     
     }, [formData]);
     
-    
+
     const formik = useFormik({
       initialValues: {
         te_id: '',
@@ -116,22 +116,14 @@ function TbltenoresAdd() {
       onSubmit: (data) => {
         let payload = { ...data };
 
-        // Excluye 'te_id' solo si no es null ni una cadena vacía
         if (data.te_id === null || data.te_id === '') {
-            const { te_id, ...restData } = payload; // Excluye 'te_id'
-            payload = restData; // Actualiza el payload sin 'te_id'
+            const { te_id, ...restData } = payload; 
+            payload = restData; 
         }
 
-        // Transforma 'te_tipo_reg' si es necesario
         payload.te_tipo_reg = data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null;
 
-        // Guarda el payload en el estado
         setFormData(payload);
-        // const payload = {
-        //   ...data,
-        //   te_tipo_reg: data.te_tipo_reg ? data.te_tipo_reg.cat_abreviacion : null,
-        // }
-        // setFormData(payload);
       }
     })
 
@@ -186,7 +178,6 @@ function TbltenoresAdd() {
             </span>
             <span className="ql-formats">
               <button className="ql-list" value="ordered" aria-label="Ordered List"></button>
-              <button className="ql-list" value="bullet" aria-label="Bullet List"></button>
             </span>
             <span className="ql-formats">
               <button className="ql-align" value="" aria-label="Align Left"></button>
@@ -270,13 +261,9 @@ function TbltenoresAdd() {
     try {
         if (editorRef.current) {
             const editor = editorRef.current.getQuill(); 
-            //console.log(formData.te_contenido)
-            const delta = editor.clipboard.convert(formData.te_contenido);
-            const contenidoDeltaString = JSON.stringify(delta);
 
             const payload = {
               ...formData,  
-              //te_contenido: contenidoDeltaString,
               te_contenido: formData.te_contenido,
             };
 

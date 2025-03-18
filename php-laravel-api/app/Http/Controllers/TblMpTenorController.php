@@ -39,8 +39,6 @@ class TblMpTenorController extends Controller
 			unset($modeldata['te_id']);
 		}
 
-		logger()->info('Datos a insertar/actualizar:', $modeldata);
-
 		if (empty($modeldata['te_id'])) {
 			$tenor = TblMpTenor::create($modeldata);
 		} else {
