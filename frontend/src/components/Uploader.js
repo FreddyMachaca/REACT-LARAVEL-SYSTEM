@@ -28,7 +28,7 @@ const Uploader = (props) => {
 		}
 	}, [props.value]);
 
-	const maxFileSize = props.maxFileSize || 10;// in mb
+	const maxFileSize = props.maxFileSize || 10; //10MB
 	const fileLimit = props.fileLimit || 10;
 	const multiple = props.multiple;
 	const accept = props.accept;
@@ -45,9 +45,9 @@ const Uploader = (props) => {
 			if (imgExt.indexOf(ext) > -1) {
 				isImage = true;
 			}
-			let size = "small"; //use resize image for the display
+			let size = "small"; 
 			if (path.indexOf("temp/") > -1) {
-				size = "";  //if image is still in temp folder use the original image
+				size = "";  
 			}
 			let fileShortName = utils.strEllipsis(fileName, 15);
 			files.push({
@@ -114,7 +114,6 @@ const Uploader = (props) => {
 			setDisabled(false)
 		}
 
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [uploadedFilePaths, uploadedFilePaths.length, fileLimit]);
 
 	function UploadedItemsTemplate() {

@@ -33,7 +33,6 @@ class TblSegMenu extends Model
      * @param string $text
      */
     public static function search($query, $text){
-        //search table record 
         $search_condition = '(
                 CAST(me_id AS TEXT) LIKE ?  OR 
                 me_descripcion LIKE ?  OR 
@@ -44,7 +43,6 @@ class TblSegMenu extends Model
         $search_params = [
             "%$text%","%$text%","%$text%","%$text%","%$text%"
         ];
-        //setting search conditions
         $query->whereRaw($search_condition, $search_params);
     }
 

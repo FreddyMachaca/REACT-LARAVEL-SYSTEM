@@ -9,8 +9,8 @@ const useViewPage = (props) => {
 	const api = useApi();
 	const queryClient = useQueryClient();
 	const { pageid } = useParams();
-	let id = props.id || pageid; // get id when passed via props or from url param
-	id = id || ''; // set to null if undefined
+	let id = props.id || pageid; 
+	id = id || '';
 	const [recID, setRecID] = useState(id);
 	const [pageReady, setPageReady] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -42,11 +42,11 @@ const useViewPage = (props) => {
 						await api.get(url);
 						queryClient.invalidateQueries(props.pageName);
 						setIsDeleting(false);
-						if (app.isDialogOpen()) {// view page is open as a dialog
+						if (app.isDialogOpen()) {
 							app.closeDialogs()
 						}
 						else {
-							app.navigate(`/${props.pageName}`); // navigate back
+							app.navigate(`/${props.pageName}`);
 						}
 						app.flashMsg(title, props.msgAfterDelete);
 					}
@@ -77,7 +77,6 @@ const useViewPage = (props) => {
 		moveToPreviousRecord
 	}
 	return useMemo(() => pageData,
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[currentRecord, pageReady, isLoading, isDeleting, error]
 	);
 }

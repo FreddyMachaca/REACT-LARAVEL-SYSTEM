@@ -103,6 +103,13 @@ import TbltipoeventoacademicoList from 'pages/tbltipoeventoacademico/List';
 import TbltipoeventoacademicoView from 'pages/tbltipoeventoacademico/View';
 import TbltipoeventoacademicoAdd from 'pages/tbltipoeventoacademico/Add';
 import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
+import TblitemsView from 'pages/tblitems/View';
+import TblitemsList from 'pages/tblitems/List';
+import TblitemsEdit from 'pages/tblitems/Edit';
+import TblitemsAdd from 'pages/tblitems/Add';
+import TblasignacionList from 'pages/tblasignacion/List';
+import TblasignacionView from 'pages/tblasignacion/View';
+
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -117,6 +124,13 @@ const App = () => {
 				<Route path="/" element={<HomePage />} />
 				<Route path="/home" element={<HomePage />} />
 				
+                {/* tblitems pages routes */}
+				<Route path="/tblitems" element={<TblitemsList />} />
+				<Route path="/tblitems/:fieldName/:fieldValue" element={<TblitemsList />} />
+				<Route path="/tblitems/index/:fieldName/:fieldValue" element={<TblitemsList />} />
+				<Route path="/tblitems/view/:pageid" element={<TblitemsView />} />
+				<Route path="/tblitems/add" element={<TblitemsAdd />} />
+				<Route path="/tblitems/edit/:pageid" element={<TblitemsEdit />} />
 
 				{/* tblacreedores pages routes */}
 				<Route path="/tblacreedores" element={<TblacreedoresList />} />
@@ -334,6 +348,11 @@ const App = () => {
 				<Route path="/tbltipoeventoacademico/view/:pageid" element={<TbltipoeventoacademicoView />} />
 				<Route path="/tbltipoeventoacademico/add" element={<TbltipoeventoacademicoAdd />} />
 				<Route path="/tbltipoeventoacademico/edit/:pageid" element={<TbltipoeventoacademicoEdit />} />
+				
+                {/* Asignacion de Items routes */}
+                <Route path="/asignacionItems" element={<TblasignacionList />} />
+                <Route path="/asignacionItems/asignar/:personaId" element={<TblasignacionView />} />
+				
 			</Route>
 			<Route exact element={<IndexLayout />}>
 				<Route path="/*" element={<IndexPages />} />

@@ -7,13 +7,13 @@ import { confirmDialog } from 'primereact/confirmdialog';
 const useEditPage = ({ props, formDefaultValues, afterSubmit }) => {
 	const app = useApp();
 	const api = useApi();
-	const { pageid } = useParams(); // record id from url param e.g products/edit/23
+	const { pageid } = useParams();
 	const [currentRecord, setCurrentRecord] = useState(null);
 	const [formData, setFormData] = useState(formDefaultValues);
 	const [pageReady, setPageReady] = useState(false);
 	let recID = props.id || pageid;
 	recID = recID || '';
-	const url = `${props.apiPath}/${recID}`; // set api url e.g products/edit/23
+	const url = `${props.apiPath}/${recID}`;
 	const { isLoading, isError, data, error } = useQuery([props.pageName, url], () => fetchFormData(), { retry: false, });
 	useEffect(() => {
 		if (data) {
@@ -22,7 +22,6 @@ const useEditPage = ({ props, formDefaultValues, afterSubmit }) => {
 			setCurrentRecord(data);
 			setPageReady(true);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [data, isError]);
 	function fetchFormData() {
 		return api.get(url).then((res) => res?.data);
@@ -109,7 +108,6 @@ const useEditPage = ({ props, formDefaultValues, afterSubmit }) => {
 					mutation.mutate(validatedFormData);
 				},
 				reject: () => {
-					//callback to execute when user rejects the action
 				}
 			});
 		}
@@ -137,7 +135,6 @@ const useEditPage = ({ props, formDefaultValues, afterSubmit }) => {
 		apiRequestError: error
 	}
 	return useMemo(() => pageData,
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[formData, currentRecord, pageReady, mutation.isLoading, isLoading, error]
 	);
 }

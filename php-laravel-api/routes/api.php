@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TblSegMenuController;
 use Illuminate\Support\Facades\Storage;
 
 /*
@@ -74,6 +73,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblcatalogo/add', 'TblCatalogoController@add');	
 	Route::any('tblcatalogo/edit/{rec_id}', 'TblCatalogoController@edit');	
 	Route::any('tblcatalogo/delete/{rec_id}', 'TblCatalogoController@delete');
+	Route::get('tblcatalogo/byTipo/{tabla}', 'App\Http\Controllers\TblCatalogoController@getByTipo');
 
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
@@ -211,8 +211,9 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblsegmenu/add', 'TblSegMenuController@add');	
 	Route::any('tblsegmenu/edit/{rec_id}', 'TblSegMenuController@edit');	
 	Route::any('tblsegmenu/delete/{rec_id}', 'TblSegMenuController@delete');
-	Route::get('/tblsegmenu/getMenuTree', [TblSegMenuController::class, 'getMenuTree']);
-	Route::get('/tblsegmenu/manageMenuTree', [TblSegMenuController::class, 'manageMenuTree']);
+	Route::get('tblsegmenu/getMenuTree', 'TblSegMenuController@getMenuTree');
+	Route::get('tblsegmenu/manageMenuTree', 'TblSegMenuController@manageMenuTree');
+
 
 /* routes for TblSegMenuUsuario Controller  */	
 	Route::get('tblsegmenuusuario/', 'TblSegMenuUsuarioController@index');
@@ -268,19 +269,109 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoeventoacademico/edit/{rec_id}', 'TblTipoeventoAcademicoController@edit');	
 	Route::any('tbltipoeventoacademico/delete/{rec_id}', 'TblTipoeventoAcademicoController@delete');
 
+/* routes for TblMpCargo Controller  */	
+	Route::get('tblmpcargo/', 'TblMpCargoController@index');
+	Route::get('tblmpcargo/index', 'TblMpCargoController@index');
+	Route::get('tblmpcargo/index/{filter?}/{filtervalue?}', 'TblMpCargoController@index');	
+	Route::get('tblmpcargo/view/{rec_id}', 'TblMpCargoController@view');	
+	Route::post('tblmpcargo/add', 'TblMpCargoController@add');	
+	Route::any('tblmpcargo/edit/{rec_id}', 'TblMpCargoController@edit');	
+	Route::any('tblmpcargo/delete/{rec_id}', 'TblMpCargoController@delete');
 
+/* routes for TblMpEscalaSalarial Controller  */	
+	Route::get('tblmpescalasalarial/', 'TblMpEscalaSalarialController@index');
+	Route::get('tblmpescalasalarial/index', 'TblMpEscalaSalarialController@index');
+	Route::get('tblmpescalasalarial/index/{filter?}/{filtervalue?}', 'TblMpEscalaSalarialController@index');	
+	Route::get('tblmpescalasalarial/view/{rec_id}', 'TblMpEscalaSalarialController@view');	
+	Route::post('tblmpescalasalarial/add', 'TblMpEscalaSalarialController@add');	
+	Route::any('tblmpescalasalarial/edit/{rec_id}', 'TblMpEscalaSalarialController@edit');	
+	Route::any('tblmpescalasalarial/delete/{rec_id}', 'TblMpEscalaSalarialController@delete');
+
+/* routes for TblMpNivelSalarial Controller  */	
+	Route::get('tblmpnivelsalarial/', 'TblMpNivelSalarialController@index');
+	Route::get('tblmpnivelsalarial/index', 'TblMpNivelSalarialController@index');
+	Route::get('tblmpnivelsalarial/index/{filter?}/{filtervalue?}', 'TblMpNivelSalarialController@index');	
+	Route::get('tblmpnivelsalarial/view/{rec_id}', 'TblMpNivelSalarialController@view');	
+	Route::post('tblmpnivelsalarial/add', 'TblMpNivelSalarialController@add');	
+	Route::any('tblmpnivelsalarial/edit/{rec_id}', 'TblMpNivelSalarialController@edit');	
+	Route::any('tblmpnivelsalarial/delete/{rec_id}', 'TblMpNivelSalarialController@delete');
+
+/* routes for TblMpEstructuraOrganizacional Controller  */	
+	Route::get('tblmpestructuraorganizacional/', 'TblMpEstructuraOrganizacionalController@index');
+	Route::get('tblmpestructuraorganizacional/index', 'TblMpEstructuraOrganizacionalController@index');
+	Route::get('tblmpestructuraorganizacional/index/{filter?}/{filtervalue?}', 'TblMpEstructuraOrganizacionalController@index');	
+	Route::get('tblmpestructuraorganizacional/view/{rec_id}', 'TblMpEstructuraOrganizacionalController@view');	
+	Route::post('tblmpestructuraorganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
+	Route::any('tblmpestructuraorganizacional/edit/{rec_id}', 'TblMpEstructuraOrganizacionalController@edit');	
+	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
+	Route::get('tblmpestructuraorganizacional/tree', 'TblMpEstructuraOrganizacionalController@getTree');
+
+/* routes for TblMpCategoriaProgramatica Controller */
+	Route::get('tblmpcategoriaprogramatica/', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/index', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/index/{filter?}/{filtervalue?}', 'TblMpCategoriaProgramaticaController@index');
+	Route::get('tblmpcategoriaprogramatica/view/{rec_id}', 'TblMpCategoriaProgramaticaController@view');
+	Route::post('tblmpcategoriaprogramatica/add', 'TblMpCategoriaProgramaticaController@add');
+	Route::any('tblmpcategoriaprogramatica/edit/{rec_id}', 'TblMpCategoriaProgramaticaController@edit');
+	Route::any('tblmpcategoriaprogramatica/delete/{rec_id}', 'TblMpCategoriaProgramaticaController@delete');
+	Route::get('tblmpcategoriaprogramatica/counts', 'TblMpCategoriaProgramaticaController@getCounts');
+	Route::get('tblmpcategoriaprogramatica/bypr/{pr_id}', 'TblMpCategoriaProgramaticaController@getByPrId');
+
+/* routes for TblMpTipoItem Controller  */	
+	Route::get('tblmptipoitem/', 'TblMpTipoItemController@index');
+	Route::get('tblmptipoitem/index', 'TblMpTipoItemController@index');
+	Route::get('tblmptipoitem/index/{filter?}/{filtervalue?}', 'TblMpTipoItemController@index');	
+	Route::get('tblmptipoitem/view/{ti_item}/{ti_tipo}', 'TblMpTipoItemController@view');	
+	Route::post('tblmptipoitem/add', 'TblMpTipoItemController@add');	
+	Route::any('tblmptipoitem/edit/{ti_item}/{ti_tipo}', 'TblMpTipoItemController@edit');	
+	Route::post('tblmptipoitem/delete', 'TblMpTipoItemController@delete');
+	Route::get('tblmptipoitem/bytipo/{tipo}', 'TblMpTipoItemController@getByTipo');
+	Route::get('tblmptipoitem/getTiposItem', 'TblMpTipoItemController@getTiposItem');
+
+/* routes for Tblitems Controller */	
+	Route::get('tblitems/', 'TblitemsController@index');
+	Route::get('tblitems/index', 'TblitemsController@index');
+	Route::get('tblitems/view/{rec_id}', 'TblitemsController@view');
+	Route::get('tblitems/options', 'TblitemsController@getOptions');
+	Route::post('tblitems/add', 'TblitemsController@add');
+	Route::any('tblitems/edit/{rec_id}', 'TblitemsController@edit');
+	Route::any('tblitems/delete/{rec_id}', 'TblitemsController@delete');
+	Route::get('tblitems/getItemForEdit/{rec_id}', 'TblitemsController@getItemForEdit');
+
+/* routes for TblMpAsignacion Controller */	
+	Route::get('tblmpasignacion/', 'TblMpAsignacionController@index');
+	Route::get('tblmpasignacion/index', 'TblMpAsignacionController@index');
+	Route::get('tblmpasignacion/index/{filter?}/{filtervalue?}', 'TblMpAsignacionController@index');
+	Route::get('tblmpasignacion/view/{rec_id}', 'TblMpAsignacionController@view');
+	Route::post('tblmpasignacion/add', 'TblMpAsignacionController@add');
+	Route::any('tblmpasignacion/edit/{rec_id}', 'TblMpAsignacionController@edit');
+	Route::any('tblmpasignacion/delete/{rec_id}', 'TblMpAsignacionController@delete');
+	Route::get('tblmpasignacion/available', 'TblMpAsignacionController@getAvailableItems');
+	Route::get('tblmpasignacion/item/{itemId}', 'TblMpAsignacionController@getItemDetails');
+	Route::get('tblmpasignacion/getItemDetails/{itemId}', 'App\Http\Controllers\TblMpAsignacionController@getItemDetails');
+	Route::get('tblmpasignacion/getAvailableItems', 'App\Http\Controllers\TblMpAsignacionController@getAvailableItems');
+	Route::resource('tblmpasignacion', 'App\Http\Controllers\TblMpAsignacionController');
+
+/* routes for TblPersona Controller */	
+	Route::get('tblpersona/', 'TblPersonaController@index');
+	Route::get('tblpersona/index', 'TblPersonaController@index');
+	Route::get('tblpersona/index/{filter?}/{filtervalue?}', 'TblPersonaController@index');
+	Route::get('tblpersona/view/{rec_id}', 'TblPersonaController@view');
+	Route::post('tblpersona/add', 'TblPersonaController@add');
+	Route::any('tblpersona/edit/{rec_id}', 'TblPersonaController@edit');
+	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
 
 /* routes for FileUpload Controller  */	
-Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
-Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
-Route::post('fileuploader/remove_temp_file', 'FileUploaderController@remove_temp_file');
+	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
+	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
+	Route::post('fileuploader/remove_temp_file', 'FileUploaderController@remove_temp_file');
 
-Route::post('/upload-icon', function (Request $request) {
-    $request->validate([
-        'icon' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
+	Route::post('/upload-icon', function (Request $request) {
+		$request->validate([
+			'icon' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+		]);
 
-    $path = $request->file('icon')->store('icons', 'public');
+		$path = $request->file('icon')->store('icons', 'public');
 
-    return response()->json(['url' => asset("storage/$path")]);
-});
+		return response()->json(['url' => asset("storage/$path")]);
+	});

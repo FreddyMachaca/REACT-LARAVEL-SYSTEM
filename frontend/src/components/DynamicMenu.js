@@ -62,7 +62,7 @@ const MenuTree = ({ apiPath }) => {
         me_icono: '',
         me_id_padre: null,
         me_orden: 0,
-        me_estado: 'V' // Valor activo "V" por defecto; se cambiará a "F" si se desactiva
+        me_estado: 'V'
     });
     const [parentOptions, setParentOptions] = useState([]);
 
@@ -125,7 +125,7 @@ const MenuTree = ({ apiPath }) => {
 
     const transformMenuData = (menuData) => {
         const transformNode = (node) => {
-            if (node.me_estado !== 'V') { // solo incluir nodos activos
+            if (node.me_estado !== 'V') { 
                 return null;
             }
             const menuItem = {

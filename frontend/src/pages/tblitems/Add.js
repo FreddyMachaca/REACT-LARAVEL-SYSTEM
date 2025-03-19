@@ -1,0 +1,943 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from 'primereact/button';
+import { Tree } from 'primereact/tree';
+import { Card } from 'primereact/card';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { Title } from 'components/Title';
+import useApp from 'hooks/useApp';
+import axios from 'axios';
+import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { Dropdown } from 'primereact/dropdown';
+import { Divider } from 'primereact/divider';
+import { RadioButton } from 'primereact/radiobutton';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Calendar } from 'primereact/calendar';
+import { InputTextarea } from 'primereact/inputtextarea';
+
+const TblitemsAddPage = (props) => {
+    const app = useApp();
+    const [loading, setLoading] = useState(true);
+    const [treeData, setTreeData] = useState([]);
+    const [error, setError] = useState(null);
+    const [selectedNode, setSelectedNode] = useState(null);
+    const [formData, setFormData] = useState({
+        ca_ti_item: '',
+        ca_es_id: '',
+        ca_eo_id: '',
+        ca_tipo_jornada: 'TT',
+        cantidad: 1
+    });
+    
+    const [escalaOptions, setEscalaOptions] = useState([]);
+    const [tipoItemOptions, setTipoItemOptions] = useState([]);
+    const [saving, setSaving] = useState(false);
+    const [expandedKeys, setExpandedKeys] = useState({});
+    const treeRef = useRef(null);
+    const [debugStats, setDebugStats] = useState(null);
+    
+    const [categoriaPragmatica, setCategoriaPragmatica] = useState('');
+    const [categoriaAdministrativa, setCategoriaAdministrativa] = useState('');
+    const [loadingRelatedData, setLoadingRelatedData] = useState(false);
+    
+    const [nodeItems, setNodeItems] = useState([]);
+    const [loadingNodeItems, setLoadingNodeItems] = useState(false);
+
+    const [cargoDetails, setCargoDetails] = useState({
+        codigoEscalafon: '',
+        clase: '',
+        nivelSalarial: '',
+        haberBasico: ''
+    });
+
+    const [showGlosaDialog, setShowGlosaDialog] = useState(false);
+    const [glosaFormData, setGlosaFormData] = useState({
+        gl_tipo_doc: '',
+        gl_numero_doc: '',
+        gl_fecha_doc: null,
+        gl_glosa: ''
+    });
+    const [tiposDocumento, setTiposDocumento] = useState([]);
+    const [savingGlosa, setSavingGlosa] = useState(false);
+    const [createdItemId, setCreatedItemId] = useState(null);
+    
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                
+                const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
+                const hierarchyData = treeResponse.data.tree;
+                
+                setDebugStats(treeResponse.data.stats);
+                
+                console.log("API Response:", treeResponse.data);
+                console.log("Tree Structure:", hierarchyData);
+                
+                let totalNodes = 0;
+                let totalChildNodes = 0;
+                
+                const countNodes = (nodes) => {
+                    totalNodes += nodes.length;
+                    nodes.forEach(node => {
+                        if (node.children && node.children.length > 0) {
+                            totalChildNodes += node.children.length;
+                            countNodes(node.children);
+                        }
+                    });
+                };
+                
+                countNodes(hierarchyData);
+                console.log("Total Nodes in Tree:", totalNodes);
+                console.log("Total Child Nodes:", totalChildNodes);
+                
+                setTreeData(hierarchyData);
+                
+                const optionsResponse = await axios.get('/tblitems/options');
+                if (optionsResponse.data && optionsResponse.data.escalaOptions) {
+                    const enhancedOptions = optionsResponse.data.escalaOptions.map(opt => ({
+                        value: opt.es_id,
+                        label: opt.es_descripcion,
+                        es_escalafon: opt.es_escalafon || '',
+                        ns_clase: opt.ns_clase || '',
+                        ns_nivel: opt.ns_nivel || '',
+                        ns_haber_basico: opt.ns_haber_basico || ''
+                    }));
+                    setEscalaOptions(enhancedOptions);
+                } else {
+                    setEscalaOptions([]);
+                }
+                
+                try {
+                    const tipoItemResponse = await axios.get('/tblitems/options');
+                    console.log("Tipo Item Response:", tipoItemResponse.data);
+                    
+                    if (tipoItemResponse.data && tipoItemResponse.data.tipoItems) {
+                        setTipoItemOptions(tipoItemResponse.data.tipoItems.map(item => ({
+                            value: item.ti_item,
+                            label: item.ti_item === 'P' 
+                                ? `${item.ti_item} - ${item.ti_descripcion} - ${item.ti_tipo}`
+                                : `${item.ti_item} - ${item.ti_descripcion}`
+                        })));
+                    } else {
+                        console.error("Invalid response format from getTiposItem endpoint");
+                        setTipoItemOptions([]);
+                    }
+                } catch (typeError) {
+                    console.error("Error fetching tipo items:", typeError);
+                    setTipoItemOptions([]);
+                }
+
+                try {
+                    const tiposDocResponse = await axios.get('/tblcatalogo/byTipo/tipo_documento_impreso');
+                    setTiposDocumento(tiposDocResponse.data.map(tipo => ({
+                        value: tipo.cat_id,
+                        label: tipo.cat_descripcion
+                    })));
+                } catch (error) {
+                    console.error("Error loading document types:", error);
+                }
+                
+                setLoading(false);
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setError(err.message || "Error al cargar los datos");
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, []);
+    
+    const fetchRelatedData = async (nodeId) => {
+        try {
+            setLoadingRelatedData(true);
+            setLoadingNodeItems(true);
+            
+            console.log("Fetching data for node ID:", nodeId);
+            
+            const structureResponse = await axios.get(`/tblmpestructuraorganizacional/view/${nodeId}`);
+            const structureData = structureResponse.data;
+            console.log("Structure data:", structureData);
+            
+            setSelectedNode({
+                key: structureData.eo_id,
+                label: structureData.eo_descripcion ? structureData.eo_descripcion.trim() : 'No disponible',
+                eo_cod_superior: structureData.eo_cod_superior,
+                eo_prog: structureData.eo_prog,
+                eo_sprog: structureData.eo_sprog,
+                eo_proy: structureData.eo_proy,
+                eo_cp_id: structureData.eo_cp_id
+            });
+            
+            setCategoriaAdministrativa(structureData.eo_descripcion ? structureData.eo_descripcion.trim() : 'No disponible');
+            
+            if (structureData.eo_cp_id) {
+                try {
+                    const categoryResponse = await axios.get(`/tblmpcategoriaprogramatica/view/${structureData.eo_cp_id}`);
+                    console.log("Category data:", categoryResponse.data);
+                    
+                    if (categoryResponse.data && categoryResponse.data.cp_descripcion) {
+                        setCategoriaPragmatica(categoryResponse.data.cp_descripcion.trim());
+                    } else {
+                        setCategoriaPragmatica('No disponible');
+                    }
+                } catch (err) {
+                    console.error("Error fetching category:", err);
+                    setCategoriaPragmatica('No disponible');
+                }
+            } else {
+                setCategoriaPragmatica('No asignada');
+            }
+            
+            try {
+                const itemsResponse = await axios.get(`/tblitems/index?filter=ca_eo_id&filtervalue=${nodeId}`);
+                console.log("Items response:", itemsResponse.data);
+                
+                if (itemsResponse.data && itemsResponse.data.records && Array.isArray(itemsResponse.data.records)) {
+                    setNodeItems(itemsResponse.data.records);
+                    
+                    if (itemsResponse.data.estructura_info) {
+                        console.log("Additional estructura info:", itemsResponse.data.estructura_info);
+                    }
+                } else {
+                    setNodeItems([]);
+                }
+            } catch (itemErr) {
+                console.error("Error fetching items:", itemErr);
+                setNodeItems([]);
+            }
+            
+            setLoadingRelatedData(false);
+            setLoadingNodeItems(false);
+            
+        } catch (err) {
+            console.error("Error fetching structure data:", err);
+            console.error("Error details:", err.response?.data || err.message);
+            setCategoriaPragmatica('Error al cargar');
+            setCategoriaAdministrativa('Error al cargar');
+            setNodeItems([]);
+            setLoadingRelatedData(false);
+            setLoadingNodeItems(false);
+        }
+    };
+    
+    const fetchItemDetails = async (itemId) => {
+        try {
+            setLoadingRelatedData(true);
+            const response = await axios.get(`/tblitems/view/${itemId}`);
+            const itemData = response.data;
+            
+            const haberBasico = itemData.haber_basico || 'No disponible';
+            const clase = itemData.nivel_original?.ns_clase || 'No disponible';
+            const nivelSalarial = itemData.nivel_original?.ns_nivel || 'No disponible';
+            const codigoEscalafon = itemData.escala_original?.es_escalafon || 'No disponible';
+            
+            setSelectedNode({
+                key: `item_${itemData.id}`,
+                label: itemData.codigo,
+                type: 'item',
+                itemData: {
+                    id: itemData.id,
+                    codigo: itemData.codigo,
+                    cargo: itemData.cargo,
+                    tipo_jornada: itemData.tipo_jornada,
+                    estado: itemData.cargo_original?.ca_estado || 'L',
+                    haber_basico: haberBasico,
+                    clase: clase,
+                    nivel_salarial: nivelSalarial,
+                    codigo_escalafon: codigoEscalafon
+                }
+            });
+            setLoadingRelatedData(false);
+        } catch (err) {
+            console.error("Error fetching item details:", err);
+            setLoadingRelatedData(false);
+        }
+    };
+
+    const handleNodeSelect = (e) => {
+        const node = e.node;
+        setSelectedNode(node);
+        
+        if (node && node.key) {
+            if (node.type === 'item') {
+                const itemId = node.key.replace('item_', '');
+                fetchItemDetails(itemId);
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    ca_eo_id: node.key
+                }));
+                fetchRelatedData(node.key);
+            }
+        }
+    };
+    const expandNode = (path) => {
+        const newExpandedKeys = { ...expandedKeys };
+        path.forEach(key => {
+            newExpandedKeys[key] = true;
+        });
+        setExpandedKeys(newExpandedKeys);
+    };
+    const handleExpandAll = () => {
+        const allKeys = {};
+        const collectKeys = (nodes) => {
+            if (!nodes) return;
+            nodes.forEach(node => {
+                if (node.children && node.children.length) {
+                    allKeys[node.key] = true;
+                    collectKeys(node.children);
+                }
+            });
+        };
+        collectKeys(treeData);
+        setExpandedKeys(allKeys);
+    };
+    
+    const handleCollapseAll = () => {
+        setExpandedKeys({});
+    };
+    const findNodePath = (nodes, nodeKey, currentPath = []) => {
+        for (const node of nodes) {
+            if (node.key === nodeKey) {
+                return [...currentPath, node.key];
+            }
+            if (node.children && node.children.length > 0) {
+                const path = findNodePath(node.children, nodeKey, [...currentPath, node.key]);
+                if (path) return path;
+            }
+        }
+        
+        return null;
+    };
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+    
+    const handleDropdownChange = (e, fieldName) => {
+        setFormData(prev => ({
+            ...prev,
+            [fieldName]: e.value
+        }));
+    };
+
+    const handleCargoChange = (e) => {
+        const selectedEscala = escalaOptions.find(option => option.value === e.value);
+        
+        setFormData(prev => ({
+            ...prev,
+            ca_es_id: e.value
+        }));
+        
+        if (selectedEscala) {
+            setCargoDetails({
+                codigoEscalafon: selectedEscala.es_escalafon || 'No disponible',
+                clase: selectedEscala.ns_clase || 'No disponible',
+                nivelSalarial: selectedEscala.ns_nivel || 'No disponible',
+                haberBasico: selectedEscala.ns_haber_basico ? 
+                    new Intl.NumberFormat('es-BO', { 
+                        style: 'currency', 
+                        currency: 'BOB', 
+                        minimumFractionDigits: 2 
+                    }).format(selectedEscala.ns_haber_basico) : 'No disponible'
+            });
+        } else {
+            setCargoDetails({
+                codigoEscalafon: '',
+                clase: '',
+                nivelSalarial: '',
+                haberBasico: ''
+            });
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!formData.ca_ti_item || !formData.ca_es_id || !formData.ca_eo_id || !formData.ca_tipo_jornada) {
+            app.flashMsg("Error", "Todos los campos son requeridos", "error");
+            return;
+        }
+        
+        try {
+            setSaving(true);
+            console.log("Submitting form data:", formData);
+            
+            const response = await axios.post('/tblitems/add', formData);
+            console.log("Server response:", response.data);
+            
+            if (response.data && response.data.records && response.data.records.length > 0) {
+                setCreatedItemId(response.data.records[0].id);
+                
+                setShowGlosaDialog(true);
+                
+                setSaving(false);
+                
+                refreshTreeData(selectedNode?.key);
+            } else {
+                app.flashMsg("Error", "No se pudo crear el item", "error");
+                setSaving(false);
+            }
+        } catch (err) {
+            console.error("Error saving data:", err);
+            if (err.response) {
+                const errorMessage = err.response.data?.message || err.message || "Error al guardar los datos";
+                app.flashMsg("Error", errorMessage, "error");
+            } else {
+                app.flashMsg("Error", err.message || "Error al guardar los datos", "error");
+            }
+            setSaving(false);
+        }
+    };
+
+    const handleGlosaSubmit = async () => {
+        if (!glosaFormData.gl_tipo_doc || !glosaFormData.gl_numero_doc || 
+            !glosaFormData.gl_fecha_doc || !glosaFormData.gl_glosa) {
+            app.flashMsg('Error', 'Todos los campos de la glosa son requeridos', 'error');
+            return;
+        }
+
+        try {
+            setSavingGlosa(true);
+            
+            const glosaData = {
+                gl_valor_pk: createdItemId,
+                gl_nombre_pk: 'ca_id',
+                gl_tabla: 'tbl_mp_cargo',
+                gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
+                gl_numero_doc: glosaFormData.gl_numero_doc,
+                gl_fecha_doc: glosaFormData.gl_fecha_doc,
+                gl_glosa: glosaFormData.gl_glosa,
+                gl_estado: 'V'
+            };
+
+            await axios.post('/tblglosa/add', glosaData);
+            
+            app.flashMsg('Éxito', `${formData.cantidad} item(s) y glosa guardados correctamente`);
+            app.navigate('/tblitems');
+            
+        } catch (error) {
+            console.error('Error saving glosa:', error);
+            const errorMessage = error.response?.data?.message || 'Error al guardar la glosa';
+            app.flashMsg('Error', errorMessage, 'error');
+        } finally {
+            setSavingGlosa(false);
+            setShowGlosaDialog(false);
+        }
+    };
+
+    const refreshTreeData = async (nodeKey) => {
+        try {
+            const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
+            if (treeResponse.data && treeResponse.data.tree) {
+                setTreeData(treeResponse.data.tree);
+                
+                if (nodeKey) {
+                    const path = findNodePath(treeResponse.data.tree, nodeKey);
+                    if (path) {
+                        let newExpandedKeys = { ...expandedKeys };
+                        path.forEach(key => {
+                            newExpandedKeys[key] = true;
+                        });
+                        setExpandedKeys(newExpandedKeys);
+                    }
+                }
+            }
+        } catch (treeError) {
+            console.error("Error refreshing tree:", treeError);
+        }
+    };
+
+    const treeStyles = {
+        customTree: {
+            border: 'none',
+            padding: 0,
+        },
+        treeNodePadding: {
+            padding: '0.25rem 0',       
+        },
+        treeNodeContent: {
+            borderRadius: '4px',
+            transition: 'background-color 0.2s',
+        },
+        treeNodeHover: {
+            backgroundColor: 'var(--surface-200)',
+        },
+        treeNodeHighlight: {
+            backgroundColor: 'var(--primary-100)',
+            color: 'var(--primary-700)',
+        },
+        selectedNode: {
+            fontWeight: 'bold',
+            color: 'var(--primary-700)',
+        }
+    };
+    const nodeTemplate = (node, options) => {
+        const isLeaf = !node.children || node.children.length === 0;
+        let iconClassName = '';
+        
+        if (node.type === 'item') {
+            iconClassName = 'pi pi-user';
+        } else {
+            iconClassName = isLeaf ? 'pi pi-folder' : options.expanded ? 'pi pi-folder-open' : 'pi pi-folder';
+        }
+        
+        const selectedNodeStyle = (selectedNode && selectedNode.key === node.key) ? treeStyles.selectedNode : {};
+        const hasChildrenStyle = !isLeaf ? { cursor: 'pointer', fontWeight: options.expanded ? 'bold' : 'normal' } : {};
+        
+        const nodeTypeStyle = node.type === 'item' ? 
+            { backgroundColor: 'var(--surface-50)', borderRadius: '4px', padding: '2px 4px' } : {};
+        
+        return (
+            <div className="tree-node flex align-items-center" style={{...selectedNodeStyle, ...hasChildrenStyle, ...nodeTypeStyle}}>
+                <i className={iconClassName + " mr-2 " + (node.type === 'item' ? 'text-blue-600' : 'text-primary')} 
+                   style={{ fontSize: '1.2rem' }}></i>
+                <span className="node-content">
+                    {node.label}
+                </span>
+                {!isLeaf && !options.expanded && (
+                    <i className="pi pi-chevron-right ml-auto text-500" style={{ fontSize: '0.8rem' }}></i>
+                )}
+                {!isLeaf && options.expanded && (
+                    <i className="pi pi-chevron-down ml-auto text-500" style={{ fontSize: '0.8rem' }}></i>
+                )}
+            </div>
+        );
+    };
+    const renderHeader = () => {
+        return (
+            <div>
+                <div className="flex justify-content-between align-items-center">
+                    <span className="font-bold text-xl">Estructura Organizacional</span>
+                    <div className="flex">
+                        <Button 
+                            icon="pi pi-plus" 
+                            label="Expandir todo"
+                            className="p-button-outlined p-button-sm mr-2" 
+                            onClick={handleExpandAll}
+                            tooltip="Expandir todo"
+                            tooltipOptions={{ position: 'top' }}
+                        />
+                        <Button 
+                            icon="pi pi-minus" 
+                            label="Contraer todo"
+                            className="p-button-outlined p-button-sm" 
+                            onClick={handleCollapseAll}
+                            tooltip="Contraer todo"
+                            tooltipOptions={{ position: 'top' }}
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderNodeDetails = () => {
+        if (loadingRelatedData) {
+            return (
+                <Card title="Detalles" className="mt-0 shadow-3 border-round">
+                    <div className="flex align-items-center justify-content-center p-3">
+                        <ProgressSpinner style={{ width: '30px', height: '30px' }} />
+                        <span className="ml-2">Cargando datos...</span>
+                    </div>
+                </Card>
+            );
+        }
+        
+        if (!selectedNode) {
+            return (
+                <Card title="Detalles" className="mt-0 shadow-3 border-round">
+                    <div className="p-3 text-center">
+                        <i className="pi pi-arrow-left text-5xl text-300 mb-3"></i>
+                        <p className="text-600">Seleccione una unidad organizacional o un ítem en el árbol para ver detalles</p>
+                    </div>
+                </Card>
+            );
+        }
+        
+        if (selectedNode.type === 'item') {
+            const itemData = selectedNode.itemData || {};
+            
+            const haberBasicoFormatted = itemData.haber_basico ? 
+                new Intl.NumberFormat('es-BO', { 
+                    style: 'currency', 
+                    currency: 'BOB', 
+                    minimumFractionDigits: 2 
+                }).format(itemData.haber_basico) : 'No disponible';
+            
+            return (
+                <Card title="Detalles del Item" className="mt-0 shadow-3 border-round">
+                    <div className="p-3">
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Código</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.codigo}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cargo</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.cargo}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Código Escalafón</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.codigo_escalafon || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Clase</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.clase || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Nivel Salarial</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {itemData.nivel_salarial || 'No disponible'}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Haber Básico</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium text-primary">
+                                {haberBasicoFormatted}
+                            </div>
+                        </div>
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tipo de Jornada</label>
+                            <div className="p-2 border-round surface-50">
+                                <span className={`badge ${itemData.tipo_jornada === 'TT' ? 'bg-blue-100 text-blue-900' : 'bg-orange-100 text-orange-900'} p-1 border-round`}>
+                                    {itemData.tipo_jornada === 'TT' ? 'Tiempo Completo' : 'Medio Tiempo'}
+                                </span>
+                            </div>
+                        </div>
+                        <Divider />
+                        <div className="flex justify-content-center">
+                            <Button 
+                                label="Ver detalles completos" 
+                                icon="pi pi-eye"
+                                className="p-button-outlined"
+                                onClick={() => app.navigate(`/tblitems/view/${itemData.id}`)}
+                            />
+                        </div>
+                    </div>
+                </Card>
+            );
+        }
+        
+        return (
+            <Card title="Datos de la Unidad" className="mt-0 shadow-3 border-round">
+                <div className="p-3">
+                    <div className="p-fluid">                                
+                        {/* Categoria Programatica */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Categoría Programática</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {categoriaPragmatica || 'No disponible'}
+                            </div>
+                        </div>
+                        
+                        {/* Categoria Administrativa */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Categoría Administrativa</label>
+                            <div className="p-2 border-round surface-50 text-900 font-medium">
+                                {categoriaAdministrativa || 'No disponible'}
+                            </div>
+                        </div>
+                        
+                        {/* Cargo */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cargo</label>
+                            <Dropdown 
+                                value={formData.ca_es_id}
+                                options={escalaOptions}
+                                onChange={handleCargoChange}
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Seleccione un Cargo"
+                                className="w-full"
+                                showClear
+                                filter
+                            />
+                        </div>
+                        
+                        {/* Cargo detalles */}
+                        {formData.ca_es_id && (
+                            <div className="field mb-3 p-2 border-round surface-50">
+                                <div className="grid">
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Código Escalafón:</span>
+                                        <span className="ml-2">{cargoDetails.codigoEscalafon}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Clase:</span>
+                                        <span className="ml-2">{cargoDetails.clase}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6 mb-2">
+                                        <span className="font-medium text-600">Nivel Salarial:</span>
+                                        <span className="ml-2">{cargoDetails.nivelSalarial}</span>
+                                    </div>
+                                    <div className="col-12 col-md-6">
+                                        <span className="font-medium text-600">Haber Básico:</span>
+                                        <span className="ml-2 font-bold text-primary">{cargoDetails.haberBasico}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Tipo Item */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tipo Item</label>
+                            <Dropdown 
+                                value={formData.ca_ti_item}
+                                options={tipoItemOptions}
+                                onChange={(e) => setFormData(prev => ({ ...prev, ca_ti_item: e.value }))}
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Seleccione un Tipo Item"
+                                className="w-full"
+                                showClear
+                            />
+                        </div>
+
+                        {/* Tiempo Jornada */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Tiempo Jornada</label>
+                            <Dropdown
+                                value={formData.ca_tipo_jornada}
+                                options={[
+                                    {label: 'Tiempo Completo', value: 'TT'},
+                                    {label: 'Medio Tiempo', value: 'MT'}
+                                ]}
+                                onChange={(e) => setFormData(prev => ({ ...prev, ca_tipo_jornada: e.value }))}
+                                placeholder="Seleccione el tiempo de jornada"
+                                className="w-full"
+                            />
+                        </div>
+                        
+                        {/* Cantidad */}
+                        <div className="field mb-3">
+                            <label className="font-medium text-600">Cantidad de Items</label>
+                            <div className="p-inputgroup">
+                                <span className="p-inputgroup-addon">
+                                    <i className="pi pi-hashtag"></i>
+                                </span>
+                                <InputText
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    value={formData.cantidad}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, cantidad: parseInt(e.target.value) || 1 }))}
+                                    placeholder="Cantidad de items a crear"
+                                />
+                            </div>
+                            <small className="text-500">Número de items que se crearán con los mismos datos</small>
+                        </div>
+                        
+                        <Divider />
+                        
+                        <div className="flex justify-content-center">
+                            <Button 
+                                label="Crear Item" 
+                                icon="pi pi-plus-circle"
+                                className="p-button-primary"
+                                onClick={handleSubmit} 
+                                loading={saving} 
+                                disabled={!formData.ca_ti_item || !formData.ca_es_id || !formData.ca_eo_id} // Deshabilitar si faltan campos
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="p-3 text-center">
+                <ProgressSpinner style={{width:'50px', height:'50px'}} />
+                <div className="font-bold text-lg mt-2">Cargando estructura organizacional...</div>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return ( 
+            <div className="p-3 text-center">
+                <div className="text-xl text-red-500 mb-3">Error</div>
+                <div>{error}</div>
+                <Button 
+                    label="Volver" 
+                    icon="pi pi-arrow-left" 
+                    className="mt-3"
+                    onClick={() => app.navigate('/tblitems')} 
+                />
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+            <main id="TblitemsAddPage" className="main-page">
+                <section className="page-section mb-3">
+                    <div className="container">
+                        <div className="grid justify-content-between align-items-center">
+                            <div className="col-fixed">
+                                <Button onClick={() => app.navigate('/tblitems')} label="" className="p-button p-button-text" icon="pi pi-arrow-left" />
+                            </div> 
+                            <div className="col">
+                                <Title title="Agregar Nuevo Item" subtitle="Seleccione una unidad organizacional en el árbol jerárquico" titleClass="text-2xl text-primary font-bold" separator={false} />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section className="page-section">
+                    <div className="container">
+                        <div className="grid">
+                            <div className="col-12 md:col-8">
+                                <Card header={renderHeader}>
+                                    <div className="tree-container" style={{minHeight: '500px', maxHeight: '600px', overflow: 'auto'}}>
+                                        {treeData.length > 0 ? (
+                                            <Tree 
+                                                ref={treeRef}
+                                                value={treeData} 
+                                                selectionMode="single"
+                                                selectionKeys={selectedNode ? {[selectedNode.key]: true} : {}}
+                                                expandedKeys={expandedKeys}
+                                                onToggle={(e) => setExpandedKeys(e.value)}
+                                                onSelectionChange={(e) => {
+                                                    const key = Object.keys(e.value)[0];
+                                                    if (key) {
+                                                        let selectedNodeData = null;
+                                                        const findNode = (nodes) => {
+                                                            for (let node of nodes) {
+                                                                if (node.key == key) {
+                                                                    selectedNodeData = node;
+                                                                    return true;
+                                                                }
+                                                                if (node.children && node.children.length) {
+                                                                    if (findNode(node.children)) {
+                                                                        return true;
+                                                                    }
+                                                                }
+                                                            }
+                                                            return false;
+                                                        };
+                                                        findNode(treeData);
+                                                        setSelectedNode(selectedNodeData);
+                                                        if (selectedNodeData) {
+                                                            fetchRelatedData(selectedNodeData.key);
+                                                        } else {
+                                                            setSelectedNode(null);
+                                                        }
+                                                    } else {
+                                                        setSelectedNode(null);
+                                                    }
+                                                }}
+                                                onSelect={handleNodeSelect}
+                                                className="w-full"
+                                                filter
+                                                filterMode="lenient"
+                                                filterPlaceholder="Buscar unidad organizacional"
+                                                nodeTemplate={nodeTemplate}
+                                            />          
+                                        ) : (
+                                            <div className="p-3 text-center text-500">
+                                                No se encontraron unidades organizacionales
+                                            </div>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+                            <div className="col-12 md:col-4">
+                                {renderNodeDetails()}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <Dialog
+                    visible={showGlosaDialog}
+                    onHide={() => setShowGlosaDialog(false)}
+                    header="Registrar Glosa"
+                    style={{ width: '500px' }}
+                    modal
+                    footer={
+                        <div>
+                            <Button
+                                label="Cancelar"
+                                icon="pi pi-times"
+                                className="p-button-text"
+                                onClick={() => {
+                                    setShowGlosaDialog(false);
+                                    app.navigate('/tblitems'); // Navigate away if user cancels glosa
+                                }}
+                            />
+                            <Button
+                                label="Guardar"
+                                icon="pi pi-check"
+                                loading={savingGlosa}
+                                onClick={handleGlosaSubmit}
+                            />
+                        </div>
+                    }
+                >
+                    <div className="grid p-fluid">
+                        <div className="col-12 mb-3">
+                            <label className="font-bold block mb-2">Tipo de Documento *</label>
+                            <Dropdown
+                                value={glosaFormData.gl_tipo_doc}
+                                options={tiposDocumento}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
+                                placeholder="Seleccione tipo de documento"
+                                className="w-full"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="col-12 mb-3">
+                            <label className="font-bold block mb-2">Número Documento *</label>
+                            <InputText
+                                value={glosaFormData.gl_numero_doc}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
+                                placeholder="Ingrese número de documento"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="col-12 mb-3">
+                            <label className="font-bold block mb-2">Fecha Documento *</label>
+                            <Calendar
+                                value={glosaFormData.gl_fecha_doc}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
+                                showIcon
+                                dateFormat="dd/mm/yy"
+                                className="w-full"
+                                required
+                            />
+                        </div>
+                        
+                        <div className="col-12">
+                            <label className="font-bold block mb-2">Descripción *</label>
+                            <InputTextarea
+                                value={glosaFormData.gl_glosa}
+                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
+                                rows={3}
+                                placeholder="Ingrese la descripción"
+                                required
+                            />
+                        </div>
+                    </div>
+                </Dialog>
+            </main>
+        </div>
+    );
+};
+
+export default TblitemsAddPage;

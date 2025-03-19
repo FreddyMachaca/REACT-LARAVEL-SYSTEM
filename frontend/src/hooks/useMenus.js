@@ -4,11 +4,24 @@ import axios from 'axios';
 export default function useMenus() {
     const [dynamicMenus, setDynamicMenus] = useState([]);
 
-    // Menús estáticos que siempre deben estar presentes
     const staticMenus = [
         {
             "to": "/home",
             "label": "Home",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
+            "to": "/tblitems",
+            "label": "Tbl Items",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
+            "to": "/asignacionItems",
+            "label": "Asignacion de Items",
             "icon": "pi pi-th-large",
             "iconcolor": "",
             "target": "",
@@ -228,7 +241,6 @@ export default function useMenus() {
             const rawData = response.data?.data || response.data || [];
             console.log('Datos crudos en useMenus:', rawData);
             
-            // Si la respuesta ya tiene "children", asume que es un árbol
             const hierarchicalData = (rawData.length && rawData[0].children !== undefined)
                   ? rawData
                   : buildMenuTree(rawData);
@@ -240,7 +252,7 @@ export default function useMenus() {
             setDynamicMenus(menuItems);
         } catch (error) {
             console.error('Error loading dynamic menu:', error);
-            setDynamicMenus([]); // En caso de error, dejamos los dinámicos vacíos
+            setDynamicMenus([]);
         }
     };
 
@@ -248,12 +260,10 @@ export default function useMenus() {
         const itemMap = {};
         const roots = [];
 
-        // Mapear todos los items por ID
         items.forEach(item => {
             itemMap[item.me_id] = { ...item, children: [] };
         });
 
-        // Construir jerarquía
         items.forEach(item => {
             if (item.me_id_padre && itemMap[item.me_id_padre]) {
                 itemMap[item.me_id_padre].children.push(itemMap[item.me_id]);
@@ -267,7 +277,7 @@ export default function useMenus() {
 
     const transformMenuData = (menuData) => {
         const transformNode = (node) => {
-            if (node.me_estado !== 'V') { // filtrar registros inactivos
+            if (node.me_estado !== 'V') {
                 return null;
             }
             return {
@@ -281,7 +291,6 @@ export default function useMenus() {
         return menuData.map(transformNode).filter(Boolean);
     };
 
-    // Combinar menús estáticos y dinámicos en el return
     const combinedMenus = [...staticMenus, ...dynamicMenus];
 
     return {
