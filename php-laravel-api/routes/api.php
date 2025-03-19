@@ -370,6 +370,15 @@ Route::get('home', 'HomeController@index');
 	Route::any('tbltipoaportante/edit/{rec_id}', 'TblTipoAportanteController@edit');
 	Route::any('tbltipoaportante/delete/{rec_id}', 'TblTipoAportanteController@delete');
 
+/* routes for TblMpAsignacionTipoAportante Controller */	
+	Route::get('tblmpasignaciontipoaportante/', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/index', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/index/{filter?}/{filtervalue?}', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/view/{rec_id}', 'TblMpAsignacionTipoAportanteController@view');
+	Route::post('tblmpasignaciontipoaportante/add', 'TblMpAsignacionTipoAportanteController@add');
+	Route::any('tblmpasignaciontipoaportante/edit/{rec_id}', 'TblMpAsignacionTipoAportanteController@edit');
+	Route::any('tblmpasignaciontipoaportante/delete/{rec_id}', 'TblMpAsignacionTipoAportanteController@delete');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
