@@ -361,6 +361,15 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblpersona/edit/{rec_id}', 'TblPersonaController@edit');
 	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
 
+/* routes for TblTipoAportante Controller */	
+	Route::get('tbltipoaportante/', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/index', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/index/{filter?}/{filtervalue?}', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/view/{rec_id}', 'TblTipoAportanteController@view');
+	Route::post('tbltipoaportante/add', 'TblTipoAportanteController@add');
+	Route::any('tbltipoaportante/edit/{rec_id}', 'TblTipoAportanteController@edit');
+	Route::any('tbltipoaportante/delete/{rec_id}', 'TblTipoAportanteController@delete');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
