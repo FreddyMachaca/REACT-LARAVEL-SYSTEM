@@ -157,6 +157,11 @@ const TblTipoAportanteView = () => {
         );
     }
     
+    // Función auxiliar para convertir decimal a porcentaje
+    const toPercentage = (value) => {
+        return `${(parseFloat(value) * 100).toFixed(2)}%`;
+    };
+
     return (
         <div className="card">
             <Title title={`Asignación de Tipo Aportante - ${persona?.per_nombres} ${persona?.per_ap_paterno} ${persona?.per_ap_materno}`} />
@@ -212,25 +217,25 @@ const TblTipoAportanteView = () => {
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Cotización Mensual SSO:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_lab_cotizacion_mensual}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_cotizacion_mensual)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Comisión AFP:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_lab_comision_afp}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_comision_afp)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Prima Riesgo Común:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_lab_prima_riesgo_comun}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_prima_riesgo_comun)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100">
                                 <div className="flex justify-content-between">
                                     <span>Aporte Solidario:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_lab_solidario}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_solidario)}</span>
                                 </div>
                             </div>
                         </div>
@@ -240,25 +245,25 @@ const TblTipoAportanteView = () => {
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Prima de Riesgo Profesional:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_pat_prima_riesgo_prof}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_prima_riesgo_prof)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Cajas:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_pat_caja}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_caja)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100 mb-2">
                                 <div className="flex justify-content-between">
                                     <span>Provivienda:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_pat_provivienda}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_provivienda)}</span>
                                 </div>
                             </div>
                             <div className="p-2 border-round bg-gray-100">
                                 <div className="flex justify-content-between">
                                     <span>Aporte Solidario:</span>
-                                    <span className="font-bold">{selectedTipoAportante.tipo.ta_pat_solidario}%</span>
+                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_solidario)}</span>
                                 </div>
                             </div>
                         </div>
