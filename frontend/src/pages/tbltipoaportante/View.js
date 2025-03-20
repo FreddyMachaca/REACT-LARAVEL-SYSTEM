@@ -11,6 +11,9 @@ import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Calendar } from 'primereact/calendar';
 
 const TblTipoAportanteView = () => {
     const { personaId } = useParams();
@@ -47,6 +50,17 @@ const TblTipoAportanteView = () => {
     };
 
     const [personaInfo, setPersonaInfo] = useState(null);
+
+    // Agregar estados para la glosa
+    const [showGlosaDialog, setShowGlosaDialog] = useState(false);
+    const [glosaFormData, setGlosaFormData] = useState({
+        gl_tipo_doc: '',
+        gl_numero_doc: '',
+        gl_fecha_doc: null,
+        gl_glosa: ''
+    });
+    const [tiposDocumento, setTiposDocumento] = useState([]);
+    const [savingGlosa, setSavingGlosa] = useState(false);
 
     useEffect(() => {
         const fetchPersonaInfo = async () => {
@@ -127,31 +141,73 @@ const TblTipoAportanteView = () => {
         
         fetchTipoAportante();
     }, [aportaSIP, esJubilado, edad, app]);
+
+    useEffect(() => {
+        const loadTiposDocumento = async () => {
+            try {
+                const response = await axios.get('/tblcatalogo/byTipo/tipo_documento_impreso');
+                setTiposDocumento(response.data.map(tipo => ({
+                    value: tipo.cat_id,
+                    label: tipo.cat_descripcion
+                })));
+            } catch (error) {
+                console.error('Error loading tipos documento:', error);
+            }
+        };
+        
+        loadTiposDocumento();
+    }, []);
     
     const handleSave = async () => {
         if (!selectedTipoAportante) {
             app.flashMsg('Advertencia', 'Debe seleccionar un tipo de aportante', 'warn');
             return;
         }
-        
+
+        setShowGlosaDialog(true);
+    };
+
+    const handleGlosaSubmit = async () => {
         try {
-            setSaving(true);
+            setSavingGlosa(true);
             
-            const data = {
+            // Guardar la asignación
+            const asignacionData = {
                 at_per_id: parseInt(personaId),
                 at_ta_id: selectedTipoAportante.value,
-                at_estado: 'V'  // Vigente
+                at_estado: 'V'
             };
+
+            const asignacionResponse = await axios.post('/tblmpasignaciontipoaportante/add', asignacionData);
             
-            await axios.post('/tblmpasignaciontipoaportante/add', data);
+            if (!asignacionResponse.data || !asignacionResponse.data.at_id) {
+                throw new Error('No se pudo obtener el ID de la asignación');
+            }
+
+            // Guardar la glosa
+            const glosaData = {
+                gl_valor_pk: asignacionResponse.data.at_id,
+                gl_nombre_pk: 'at_id',
+                gl_tabla: 'tbl_mp_asignacion_tipo_aportante',
+                gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
+                gl_numero_doc: glosaFormData.gl_numero_doc,
+                gl_fecha_doc: glosaFormData.gl_fecha_doc,
+                gl_glosa: glosaFormData.gl_glosa,
+                gl_estado: 'V'
+            };
+
+            await axios.post('/tblglosa/add', glosaData);
             
-            app.flashMsg('Éxito', 'Tipo de aportante asignado exitosamente', 'success');
+            app.flashMsg('Éxito', 'Asignación y glosa guardadas correctamente');
             app.navigate('/tbltipoaportante');
             
-            setSaving(false);
         } catch (error) {
-            app.flashMsg('Error', `Error al guardar: ${error.message}`, 'error');
-            setSaving(false);
+            console.error('Error saving:', error);
+            const errorMessage = error.response?.data?.message || 'Error al guardar los datos';
+            app.flashMsg('Error', errorMessage, 'error');
+        } finally {
+            setSavingGlosa(false);
+            setShowGlosaDialog(false);
         }
     };
     
@@ -427,6 +483,78 @@ const TblTipoAportanteView = () => {
                     </Card>
                 </div>
             </div>
+
+            {/* Agregar el Dialog de la glosa */}
+            <Dialog
+                visible={showGlosaDialog}
+                onHide={() => setShowGlosaDialog(false)}
+                header="Registrar Glosa"
+                style={{ width: '500px' }}
+                modal
+                footer={
+                    <div>
+                        <Button
+                            label="Cancelar"
+                            icon="pi pi-times"
+                            className="p-button-text"
+                            onClick={() => setShowGlosaDialog(false)}
+                        />
+                        <Button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            loading={savingGlosa}
+                            onClick={handleGlosaSubmit}
+                        />
+                    </div>
+                }
+            >
+                <div className="grid p-fluid">
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Tipo de Documento *</label>
+                        <Dropdown
+                            value={glosaFormData.gl_tipo_doc}
+                            options={tiposDocumento}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
+                            placeholder="Seleccione tipo de documento"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Número Documento *</label>
+                        <InputText
+                            value={glosaFormData.gl_numero_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
+                            placeholder="Ingrese número de documento"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Fecha Documento *</label>
+                        <Calendar
+                            value={glosaFormData.gl_fecha_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
+                            showIcon
+                            dateFormat="dd/mm/yy"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12">
+                        <label className="font-bold block mb-2">Descripción *</label>
+                        <InputTextarea
+                            value={glosaFormData.gl_glosa}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
+                            rows={3}
+                            placeholder="Ingrese la descripción"
+                            required
+                        />
+                    </div>
+                </div>
+            </Dialog>
         </div>
     );
 };
