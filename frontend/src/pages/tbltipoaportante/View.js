@@ -315,19 +315,43 @@ const TblTipoAportanteView = () => {
                                     </div>
 
                                     <div className="flex align-items-center justify-content-between">
-                                        <div className="flex align-items-center">
-                                            <i className="pi pi-sitemap text-primary mr-2"></i>
-                                            <span className="text-600">Categoría Administrativa</span>
+                                        <div className="flex flex-column w-full">
+                                            <div className="flex align-items-center mb-2">
+                                                <i className="pi pi-sitemap text-primary mr-2"></i>
+                                                <span className="text-600">Categoría Administrativa</span>
+                                            </div>
+                                            <div className="flex flex-column">
+                                                <span className="font-medium mb-2">
+                                                    {personaInfo?.categoria_administrativa || 'No asignada'}
+                                                </span>
+                                                <div className="flex align-items-center gap-2">
+                                                    <span className="text-sm text-500">CATEGORÍA</span>
+                                                    <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
+                                                        {personaInfo?.codigo_administrativo?.split('.').join(' - ') || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className="font-medium">{personaInfo?.categoria_administrativa || 'No asignada'}</span>
                                     </div>
 
                                     <div className="flex align-items-center justify-content-between">
-                                        <div className="flex align-items-center">
-                                            <i className="pi pi-bookmark text-primary mr-2"></i>
-                                            <span className="text-600">Categoría Programática</span>
+                                        <div className="flex flex-column w-full">
+                                            <div className="flex align-items-center mb-2">
+                                                <i className="pi pi-bookmark text-primary mr-2"></i>
+                                                <span className="text-600">Categoría Programática</span>
+                                            </div>
+                                            <div className="flex flex-column">
+                                                <span className="font-medium mb-2">
+                                                    {personaInfo?.categoria_programatica || 'No asignada'}
+                                                </span>
+                                                <div className="flex align-items-center gap-2">
+                                                    <span className="text-sm text-500">CATEGORÍA</span>
+                                                    <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
+                                                        {personaInfo?.codigo_programatico?.split('.').join(' - ') || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span className="font-medium">{personaInfo?.categoria_programatica || 'No asignada'}</span>
                                     </div>
                                 </div>
 
