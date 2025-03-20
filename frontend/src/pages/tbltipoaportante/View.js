@@ -174,82 +174,134 @@ const TblTipoAportanteView = () => {
             
             <div className="grid">
                 <div className="col-12 md:col-4">
-                    <Card title="Información Funcionario" className="mb-4">
-                        <div className="grid">
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">CI:</span>
-                                    <span>{personaInfo?.per_num_doc || 'No asignado'}</span>
+                    <Card className="mb-4">
+                        <div className="flex flex-column align-items-center">
+                            {/* Header con Avatar */}
+                            <div className="relative mb-4">
+                                <div className="bg-primary w-8rem h-8rem border-circle flex align-items-center justify-content-center mb-3">
+                                    <i className="pi pi-user text-white" style={{ fontSize: '4rem' }}></i>
                                 </div>
                             </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Item:</span>
-                                    <span>
-                                        {personaInfo?.ca_ti_item && personaInfo?.ca_num_item 
-                                            ? `${personaInfo.ca_ti_item}-${personaInfo.ca_num_item}`
-                                            : 'No asignado'
-                                        }
-                                    </span>
+
+                            {/* Información Principal */}
+                            <div className="text-center mb-4">
+                                <h2 className="text-xl font-bold m-0 mb-2">
+                                    {persona?.per_nombres} {persona?.per_ap_paterno}
+                                </h2>
+                                <span className="text-500">{persona?.per_ap_materno}</span>
+                            </div>
+
+                            {/* Info Cards */}
+                            <div className="grid w-full">
+                                <div className="col-6 mb-3">
+                                    <div className="p-3 border-round-lg surface-50">
+                                        <div className="flex align-items-center mb-2">
+                                            <i className="pi pi-id-card text-primary mr-2"></i>
+                                            <span className="text-600 text-sm">CI</span>
+                                        </div>
+                                        <span className="font-medium">{personaInfo?.per_num_doc || 'No asignado'}</span>
+                                    </div>
+                                </div>
+                                <div className="col-6 mb-3">
+                                    <div className="p-3 border-round-lg surface-50">
+                                        <div className="flex align-items-center mb-2">
+                                            <i className="pi pi-hashtag text-primary mr-2"></i>
+                                            <span className="text-600 text-sm">Item</span>
+                                        </div>
+                                        <span className="font-medium">
+                                            {personaInfo?.ca_ti_item && personaInfo?.ca_num_item 
+                                                ? `${personaInfo.ca_ti_item}-${personaInfo.ca_num_item}`
+                                                : 'No asignado'
+                                            }
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Puesto:</span>
-                                    <span>{personaInfo?.cargo_descripcion || 'No asignado'}</span>
+
+                            {/* Detalles */}
+                            <div className="surface-100 border-round-xl p-4 w-full">
+                                <h3 className="text-lg font-semibold mb-3">Información Laboral</h3>
+                                
+                                <div className="flex flex-column gap-3">
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-briefcase text-primary mr-2"></i>
+                                            <span className="text-600">Puesto</span>
+                                        </div>
+                                        <span className="font-medium">{personaInfo?.cargo_descripcion || 'No asignado'}</span>
+                                    </div>
+                                    
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-money-bill text-primary mr-2"></i>
+                                            <span className="text-600">Haber Básico</span>
+                                        </div>
+                                        <span className="text-primary font-bold">
+                                            {personaInfo?.ns_haber_basico 
+                                                ? new Intl.NumberFormat('es-BO', { 
+                                                    style: 'currency', 
+                                                    currency: 'BOB' 
+                                                  }).format(personaInfo.ns_haber_basico)
+                                                : 'No asignado'
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-chart-line text-primary mr-2"></i>
+                                            <span className="text-600">Escalafón</span>
+                                        </div>
+                                        <span className="font-medium">{personaInfo?.es_escalafon || 'No asignado'}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Haber Básico:</span>
-                                    <span className="text-primary font-bold">
-                                        {personaInfo?.ns_haber_basico 
-                                            ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(personaInfo.ns_haber_basico)
-                                            : 'No asignado'
-                                        }
-                                    </span>
+
+                                <div className="border-top-1 surface-border my-3"></div>
+
+                                <h3 className="text-lg font-semibold mb-3">Información Personal</h3>
+                                <div className="flex flex-column gap-3">
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-calendar text-primary mr-2"></i>
+                                            <span className="text-600">Fecha Nacimiento</span>
+                                        </div>
+                                        <span className="font-medium">
+                                            {personaInfo?.per_fecha_nac ? new Date(personaInfo.per_fecha_nac).toLocaleDateString() : 'No registrada'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-user text-primary mr-2"></i>
+                                            <span className="text-600">Edad</span>
+                                        </div>
+                                        <span className="font-medium">{edad} años</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Escalafón:</span>
-                                    <span>{personaInfo?.es_escalafon || 'No asignado'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Fecha Alta:</span>
-                                    <span>{personaInfo?.as_fecha_inicio ? new Date(personaInfo.as_fecha_inicio).toLocaleDateString() : 'No asignada'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Fecha Baja:</span>
-                                    <span>{personaInfo?.as_fecha_fin ? new Date(personaInfo.as_fecha_fin).toLocaleDateString() : 'No asignada'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Categoría Administrativa:</span>
-                                    <span>{personaInfo?.categoria_administrativa || 'No asignada'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Categoría Programática:</span>
-                                    <span>{personaInfo?.categoria_programatica || 'No asignada'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Fecha Nacimiento:</span>
-                                    <span>{personaInfo?.per_fecha_nac ? new Date(personaInfo.per_fecha_nac).toLocaleDateString() : 'No registrada'}</span>
-                                </div>
-                            </div>
-                            <div className="col-12">
-                                <div className="flex justify-content-between">
-                                    <span className="font-bold">Edad:</span>
-                                    <span>{edad} años</span>
+
+                                <div className="border-top-1 surface-border my-3"></div>
+
+                                <h3 className="text-lg font-semibold mb-3">Fechas</h3>
+                                <div className="flex flex-column gap-3">
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-calendar-plus text-primary mr-2"></i>
+                                            <span className="text-600">Alta</span>
+                                        </div>
+                                        <span className="font-medium">
+                                            {personaInfo?.as_fecha_inicio ? new Date(personaInfo.as_fecha_inicio).toLocaleDateString() : 'No asignada'}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-calendar-minus text-primary mr-2"></i>
+                                            <span className="text-600">Baja</span>
+                                        </div>
+                                        <span className="font-medium">
+                                            {personaInfo?.as_fecha_fin ? new Date(personaInfo.as_fecha_fin).toLocaleDateString() : 'No asignada'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

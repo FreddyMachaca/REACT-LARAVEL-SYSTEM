@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TblMpAsignacionTipoAportante;
 use Illuminate\Http\Request;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class TblMpAsignacionTipoAportanteController extends Controller
 {
@@ -49,7 +50,16 @@ class TblMpAsignacionTipoAportanteController extends Controller
     function add(Request $request){
         try{
             $modeldata = $this->normalizeFormData($request->all());
+            
+            // Obtener el máximo ID actual y sumar 1
+            $maxId = DB::table('tbl_mp_asignacion_tipo_aportante')
+                       ->max('at_id');
+            $nextId = ($maxId ?? 0) + 1;
+            
+            // Asignar el nuevo ID
+            $modeldata['at_id'] = $nextId;
             $modeldata['at_estado'] = $modeldata['at_estado'] ?? 'V';
+            
             $record = TblMpAsignacionTipoAportante::create($modeldata);
             return $this->respond($record);
         }
