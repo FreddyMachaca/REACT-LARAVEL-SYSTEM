@@ -185,10 +185,13 @@ const TblTipoAportanteView = () => {
 
                             {/* Información Principal */}
                             <div className="text-center mb-4">
-                                <h2 className="text-xl font-bold m-0 mb-2">
-                                    {persona?.per_nombres} {persona?.per_ap_paterno}
+                                <h2 className="text-xl font-bold m-0">
+                                    {`${persona?.per_nombres} ${persona?.per_ap_paterno} ${persona?.per_ap_materno}`}
                                 </h2>
-                                <span className="text-500">{persona?.per_ap_materno}</span>
+                                <div className="mt-2 text-500">
+                                    <i className="pi pi-id-card mr-2"></i>
+                                    <span>{personaInfo?.per_num_doc || 'No asignado'}</span>
+                                </div>
                             </div>
 
                             {/* Info Cards */}
