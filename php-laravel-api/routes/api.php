@@ -378,6 +378,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblmpasignaciontipoaportante/add', 'TblMpAsignacionTipoAportanteController@add');
 	Route::any('tblmpasignaciontipoaportante/edit/{rec_id}', 'TblMpAsignacionTipoAportanteController@edit');
 	Route::any('tblmpasignaciontipoaportante/delete/{rec_id}', 'TblMpAsignacionTipoAportanteController@delete');
+	Route::get('tblmpasignaciontipoaportante/listAsignaciones', 'TblMpAsignacionTipoAportanteController@listAsignaciones');
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

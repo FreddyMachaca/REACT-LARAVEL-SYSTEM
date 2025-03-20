@@ -51,8 +51,8 @@ const TblTipoAportanteList = () => {
             });
             
             if (response.data) {
-                setPersonas(response.data.records);
-                setTotalRecords(response.data.total_records);
+                setPersonas(response.data.records || []);
+                setTotalRecords(response.data.total_records || 0);
             } else {
                 setPersonas([]);
                 setTotalRecords(0);
@@ -91,7 +91,6 @@ const TblTipoAportanteList = () => {
             <Title title="Asignación de Tipo Aportante" />
             
             <Card className="mb-4">
-                {/* ...existing filter inputs code... */}
                 <div className="grid">
                     <div className="col-12 md:col-6 lg:col-4 mb-2">
                         <span className="p-float-label">
@@ -172,7 +171,7 @@ const TblTipoAportanteList = () => {
                         {loading ? (
                             <ProgressSpinner style={{width:'50px', height:'50px'}} />
                         ) : (
-                            "No se encontraron registros"
+                            "No se encontraron registros válidos"
                         )}
                     </div>
                 }
@@ -187,17 +186,53 @@ const TblTipoAportanteList = () => {
                 onPage={onPageChange}
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-                rowsPerPageOptions={[10, 20, 30, 50]}
+                rowsPerPageOptions={[10, 20, 30, 50, 100]}
                 onRowsPerPageChange={(e) => {
                     setPageSize(e.rows);
                     setCurrentPage(0);
                     handleSearch(0);
                 }}
             >
-                <Column field="per_nombres" header="Nombres" sortable />
-                <Column field="per_ap_paterno" header="Apellido Paterno" sortable />
-                <Column field="per_ap_materno" header="Apellido Materno" sortable />
-                <Column field="per_num_doc" header="CI" sortable />
+                <Column 
+                    field="per_nombres" 
+                    header="Nombres" 
+                    sortable
+                    body={(rowData) => (
+                        <span className={!rowData.per_nombres ? 'text-500' : ''}>
+                            {rowData.per_nombres || 'Sin nombre'}
+                        </span>
+                    )}
+                />
+                <Column 
+                    field="per_ap_paterno" 
+                    header="Apellido Paterno" 
+                    sortable
+                    body={(rowData) => (
+                        <span className={!rowData.per_ap_paterno ? 'text-500' : ''}>
+                            {rowData.per_ap_paterno || 'Sin apellido'}
+                        </span>
+                    )}
+                />
+                <Column 
+                    field="per_ap_materno" 
+                    header="Apellido Materno" 
+                    sortable
+                    body={(rowData) => (
+                        <span className={!rowData.per_ap_materno ? 'text-500' : ''}>
+                            {rowData.per_ap_materno || 'Sin apellido'}
+                        </span>
+                    )}
+                />
+                <Column 
+                    field="per_num_doc" 
+                    header="CI" 
+                    sortable
+                    body={(rowData) => (
+                        <span className={!rowData.per_num_doc ? 'text-500' : ''}>
+                            {rowData.per_num_doc || 'Sin CI'}
+                        </span>
+                    )}
+                />
                 <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
             </DataTable>
         </div>

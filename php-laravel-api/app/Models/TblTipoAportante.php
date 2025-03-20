@@ -10,7 +10,7 @@ class TblTipoAportante extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'ta_id',
+        'ta_descripcion',
         'ta_lab_cotizacion_mensual',
         'ta_lab_prima_riesgo_comun',
         'ta_lab_comision_afp',
@@ -18,20 +18,18 @@ class TblTipoAportante extends Model
         'ta_pat_prima_riesgo_prof',
         'ta_pat_solidario',
         'ta_pat_caja',
-        'ta_pat_provivienda',
-        'ta_descripcion',
-        'ta_estado'
+        'ta_pat_provivienda'
     ];
 
-    public static function search($query, $text)
+    public static function search($query, $search)
     {
-        $search_condition = '(
-            CAST(ta_id AS TEXT) LIKE ? OR 
-            ta_descripcion LIKE ? OR
-            ta_estado LIKE ?
-        )';
-        
-        $search_params = array_fill(0, 3, "%$text%");
-        $query->whereRaw($search_condition, $search_params);
+        return $query->where(function($query) use ($search) {
+            $query->where('ta_descripcion', 'ILIKE', "%{$search}%");
+        });
+    }
+
+    public function asignaciones()
+    {
+        return $this->hasMany(TblMpAsignacionTipoAportante::class, 'at_ta_id', 'ta_id');
     }
 }

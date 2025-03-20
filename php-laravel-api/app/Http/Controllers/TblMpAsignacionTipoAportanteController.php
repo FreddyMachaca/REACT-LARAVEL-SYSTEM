@@ -12,18 +12,22 @@ class TblMpAsignacionTipoAportanteController extends Controller
         try{
             $query = TblMpAsignacionTipoAportante::query();
             
-            if($request->search){
-                $search = trim($request->search);
-                TblMpAsignacionTipoAportante::search($query, $search);
+            // Filtrar por estado vigente
+            $query->where('at_estado', 'V');
+            
+            // Si se proporciona el ID de la persona, filtrar por ella
+            if ($request->at_per_id) {
+                $query->where('at_per_id', $request->at_per_id);
             }
             
-            if ($fieldname) {
-                $query->where($fieldname, $fieldvalue);
-            }
+            $query->select('at_id', 'at_ta_id', 'at_estado');
             
-            $query->with(['persona', 'tipoAportante']);
-            $records = $query->paginate($request->limit ?? 10);
-            return $this->respond($records);
+            $query->with(['tipoAportante:ta_id,ta_descripcion']);
+            
+            $query->orderBy('at_id', 'desc');
+            
+            $records = $query->get();
+            return $this->respond(['data' => $records]);
         }
         catch(Exception $e){
             return $this->respondWithError($e);
@@ -79,6 +83,42 @@ class TblMpAsignacionTipoAportanteController extends Controller
             ]);
         }
         catch(Exception $e){
+            return $this->respondWithError($e);
+        }
+    }
+
+    public function listAsignaciones(Request $request)
+    {
+        try {
+            $query = TblMpAsignacionTipoAportante::query()
+                ->select(
+                    'tbl_mp_asignacion_tipo_aportante.at_id',
+                    'tbl_mp_asignacion_tipo_aportante.at_estado',
+                    'tbl_tipo_aportante.ta_descripcion'
+                )
+                ->join('tbl_tipo_aportante', 
+                       'tbl_mp_asignacion_tipo_aportante.at_ta_id', '=', 
+                       'tbl_tipo_aportante.ta_id')
+                ->join('tbl_persona',
+                       'tbl_mp_asignacion_tipo_aportante.at_per_id', '=',
+                       'tbl_persona.per_id')
+                ->where('tbl_mp_asignacion_tipo_aportante.at_estado', 'V')
+                ->whereNotNull('tbl_tipo_aportante.ta_descripcion')
+                ->whereNotNull('tbl_mp_asignacion_tipo_aportante.at_ta_id')
+                ->whereNotNull('tbl_mp_asignacion_tipo_aportante.at_per_id');
+
+            if ($request->at_per_id) {
+                $query->where('tbl_mp_asignacion_tipo_aportante.at_per_id', $request->at_per_id);
+            }
+
+            $records = $query->get();
+
+            $records = $records->filter(function($record) {
+                return !empty($record->ta_descripcion);
+            })->values();
+
+            return $this->respond(['data' => $records]);
+        } catch (Exception $e) {
             return $this->respondWithError($e);
         }
     }
