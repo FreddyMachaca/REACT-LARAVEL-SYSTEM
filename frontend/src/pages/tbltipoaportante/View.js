@@ -46,23 +46,29 @@ const TblTipoAportanteView = () => {
         return edad;
     };
 
-    // Fetch informacion de la persona
+    const [personaInfo, setPersonaInfo] = useState(null);
+
     useEffect(() => {
-        const fetchPersona = async () => {
+        const fetchPersonaInfo = async () => {
             try {
                 setLoadingPersona(true);
-                const response = await axios.get(`/tblpersona/view/${personaId}`);
-                setPersona(response.data);
-                const calculatedEdad = calcularEdad(response.data.per_fecha_nac);
+                const [personaResponse, infoResponse] = await Promise.all([
+                    axios.get(`/tblpersona/view/${personaId}`),
+                    axios.get(`/tbltipoaportante/personaInfo/${personaId}`)
+                ]);
+                
+                setPersona(personaResponse.data);
+                setPersonaInfo(infoResponse.data);
+                const calculatedEdad = calcularEdad(personaResponse.data.per_fecha_nac);
                 setEdad(calculatedEdad);
                 setLoadingPersona(false);
             } catch (error) {
-                app.flashMsg('Error', `Error al cargar datos de la persona: ${error.message}`, 'error');
+                app.flashMsg('Error', `Error al cargar datos: ${error.message}`, 'error');
                 setLoadingPersona(false);
             }
         };
         
-        fetchPersona();
+        fetchPersonaInfo();
     }, [personaId, app]);
     
     // Filtrar tipos de aportante según edad y si es jubilado o no
@@ -166,124 +172,206 @@ const TblTipoAportanteView = () => {
         <div className="card">
             <Title title={`Asignación de Tipo Aportante - ${persona?.per_nombres} ${persona?.per_ap_paterno} ${persona?.per_ap_materno}`} />
             
-            <Card className="mb-4" title="Selección Tipo Aportante">
-                <div className="grid">
-                    <div className="col-12 md:col-6 mb-3">
-                        <label className="block font-bold mb-2">Edad del funcionario</label>
-                        <div>{edad} años</div>
-                    </div>
-                    
-                    <div className="col-12 md:col-6 mb-3">
-                        <label className="block font-bold mb-2">¿Decide Aportar al S.I.P?</label>
-                        <SelectButton 
-                            value={aportaSIP} 
-                            options={siNoOptions} 
-                            onChange={(e) => setAportaSIP(e.value)}
-                            className="w-full"
-                        />
-                    </div>
-                    
-                    <div className="col-12 md:col-6 mb-3">
-                        <label className="block font-bold mb-2">¿Es Jubilado?</label>
-                        <SelectButton 
-                            value={esJubilado} 
-                            options={siNoOptions} 
-                            onChange={(e) => setEsJubilado(e.value)}
-                            className="w-full"
-                        />
-                    </div>
-                    
-                    <div className="col-12 md:col-6 mb-3">
-                        <label className="block font-bold mb-2">Tipo Aportante</label>
-                        <Dropdown
-                            options={tipoAportanteOptions}
-                            value={selectedTipoAportante?.value}
-                            onChange={(e) => {
-                                const selected = tipoAportanteOptions.find(item => item.value === e.value);
-                                setSelectedTipoAportante(selected);
-                            }}
-                            placeholder="Seleccione un tipo de aportante"
-                            className="w-full"
-                            disabled={tipoAportanteOptions.length === 0 || loadingTipos}
-                            loading={loadingTipos}
-                        />
-                    </div>
+            <div className="grid">
+                <div className="col-12 md:col-4">
+                    <Card title="Información Funcionario" className="mb-4">
+                        <div className="grid">
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">CI:</span>
+                                    <span>{personaInfo?.per_num_doc || 'No asignado'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Item:</span>
+                                    <span>
+                                        {personaInfo?.ca_ti_item && personaInfo?.ca_num_item 
+                                            ? `${personaInfo.ca_ti_item}-${personaInfo.ca_num_item}`
+                                            : 'No asignado'
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Puesto:</span>
+                                    <span>{personaInfo?.cargo_descripcion || 'No asignado'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Haber Básico:</span>
+                                    <span className="text-primary font-bold">
+                                        {personaInfo?.ns_haber_basico 
+                                            ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(personaInfo.ns_haber_basico)
+                                            : 'No asignado'
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Escalafón:</span>
+                                    <span>{personaInfo?.es_escalafon || 'No asignado'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Fecha Alta:</span>
+                                    <span>{personaInfo?.as_fecha_inicio ? new Date(personaInfo.as_fecha_inicio).toLocaleDateString() : 'No asignada'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Fecha Baja:</span>
+                                    <span>{personaInfo?.as_fecha_fin ? new Date(personaInfo.as_fecha_fin).toLocaleDateString() : 'No asignada'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Categoría Administrativa:</span>
+                                    <span>{personaInfo?.categoria_administrativa || 'No asignada'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Categoría Programática:</span>
+                                    <span>{personaInfo?.categoria_programatica || 'No asignada'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12 mb-2">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Fecha Nacimiento:</span>
+                                    <span>{personaInfo?.per_fecha_nac ? new Date(personaInfo.per_fecha_nac).toLocaleDateString() : 'No registrada'}</span>
+                                </div>
+                            </div>
+                            <div className="col-12">
+                                <div className="flex justify-content-between">
+                                    <span className="font-bold">Edad:</span>
+                                    <span>{edad} años</span>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
                 </div>
                 
-                {selectedTipoAportante && (
-                    <div className="grid mt-3">
-                        <div className="col-12 md:col-6">
-                            <h3>Aporte Laboral</h3>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Cotización Mensual SSO:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_cotizacion_mensual)}</span>
-                                </div>
+                <div className="col-12 md:col-8">
+                    <Card className="mb-4" title="Selección Tipo Aportante">
+                        <div className="grid">
+                            <div className="col-12 md:col-6 mb-3">
+                                <label className="block font-bold mb-2">¿Decide Aportar al S.I.P?</label>
+                                <SelectButton 
+                                    value={aportaSIP} 
+                                    options={siNoOptions} 
+                                    onChange={(e) => setAportaSIP(e.value)}
+                                    className="w-full"
+                                />
                             </div>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Comisión AFP:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_comision_afp)}</span>
-                                </div>
+                            
+                            <div className="col-12 md:col-6 mb-3">
+                                <label className="block font-bold mb-2">¿Es Jubilado?</label>
+                                <SelectButton 
+                                    value={esJubilado} 
+                                    options={siNoOptions} 
+                                    onChange={(e) => setEsJubilado(e.value)}
+                                    className="w-full"
+                                />
                             </div>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Prima Riesgo Común:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_prima_riesgo_comun)}</span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-round bg-gray-100">
-                                <div className="flex justify-content-between">
-                                    <span>Aporte Solidario:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_solidario)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="col-12 md:col-6">
-                            <h3>Aporte Patronal</h3>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Prima de Riesgo Profesional:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_prima_riesgo_prof)}</span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Cajas:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_caja)}</span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-round bg-gray-100 mb-2">
-                                <div className="flex justify-content-between">
-                                    <span>Provivienda:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_provivienda)}</span>
-                                </div>
-                            </div>
-                            <div className="p-2 border-round bg-gray-100">
-                                <div className="flex justify-content-between">
-                                    <span>Aporte Solidario:</span>
-                                    <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_solidario)}</span>
-                                </div>
+                            
+                            <div className="col-12 md:col-6 mb-3">
+                                <label className="block font-bold mb-2">Tipo Aportante</label>
+                                <Dropdown
+                                    options={tipoAportanteOptions}
+                                    value={selectedTipoAportante?.value}
+                                    onChange={(e) => {
+                                        const selected = tipoAportanteOptions.find(item => item.value === e.value);
+                                        setSelectedTipoAportante(selected);
+                                    }}
+                                    placeholder="Seleccione un tipo de aportante"
+                                    className="w-full"
+                                    disabled={tipoAportanteOptions.length === 0 || loadingTipos}
+                                    loading={loadingTipos}
+                                />
                             </div>
                         </div>
                         
-                        <div className="col-12 mt-4 flex justify-content-end">
-                            <Button 
-                                label="Guardar" 
-                                icon="pi pi-save" 
-                                onClick={handleSave}
-                                loading={saving}
-                                disabled={!selectedTipoAportante || saving}
-                            />
-                        </div>
-                    </div>
-                )}
-            </Card>
-            
-            <Card title="Lista Tipo Aportante Asignados">
-                <TipoAportanteList personaId={personaId} />
-            </Card>
+                        {selectedTipoAportante && (
+                            <div className="grid mt-3">
+                                <div className="col-12 md:col-6">
+                                    <h3>Aporte Laboral</h3>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Cotización Mensual SSO:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_cotizacion_mensual)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Comisión AFP:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_comision_afp)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Prima Riesgo Común:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_prima_riesgo_comun)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100">
+                                        <div className="flex justify-content-between">
+                                            <span>Aporte Solidario:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_lab_solidario)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="col-12 md:col-6">
+                                    <h3>Aporte Patronal</h3>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Prima de Riesgo Profesional:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_prima_riesgo_prof)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Cajas:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_caja)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100 mb-2">
+                                        <div className="flex justify-content-between">
+                                            <span>Provivienda:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_provivienda)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="p-2 border-round bg-gray-100">
+                                        <div className="flex justify-content-between">
+                                            <span>Aporte Solidario:</span>
+                                            <span className="font-bold">{toPercentage(selectedTipoAportante.tipo.ta_pat_solidario)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="col-12 mt-4 flex justify-content-end">
+                                    <Button 
+                                        label="Guardar" 
+                                        icon="pi pi-save" 
+                                        onClick={handleSave}
+                                        loading={saving}
+                                        disabled={!selectedTipoAportante || saving}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                    
+                    <Card title="Lista Tipo Aportante Asignados">
+                        <TipoAportanteList personaId={personaId} />
+                    </Card>
+                </div>
+            </div>
         </div>
     );
 };

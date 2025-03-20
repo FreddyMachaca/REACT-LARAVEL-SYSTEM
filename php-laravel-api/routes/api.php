@@ -369,6 +369,7 @@ Route::get('home', 'HomeController@index');
 	Route::post('tbltipoaportante/add', 'TblTipoAportanteController@add');
 	Route::any('tbltipoaportante/edit/{rec_id}', 'TblTipoAportanteController@edit');
 	Route::any('tbltipoaportante/delete/{rec_id}', 'TblTipoAportanteController@delete');
+	Route::get('tbltipoaportante/personaInfo/{personaId}', 'TblTipoAportanteController@getPersonaInfo');
 
 /* routes for TblMpAsignacionTipoAportante Controller */	
 	Route::get('tblmpasignaciontipoaportante/', 'TblMpAsignacionTipoAportanteController@index');
