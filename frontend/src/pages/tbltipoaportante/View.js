@@ -313,6 +313,22 @@ const TblTipoAportanteView = () => {
                                         </div>
                                         <span className="font-medium">{personaInfo?.es_escalafon || 'No asignado'}</span>
                                     </div>
+
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-sitemap text-primary mr-2"></i>
+                                            <span className="text-600">Categoría Administrativa</span>
+                                        </div>
+                                        <span className="font-medium">{personaInfo?.categoria_administrativa || 'No asignada'}</span>
+                                    </div>
+
+                                    <div className="flex align-items-center justify-content-between">
+                                        <div className="flex align-items-center">
+                                            <i className="pi pi-bookmark text-primary mr-2"></i>
+                                            <span className="text-600">Categoría Programática</span>
+                                        </div>
+                                        <span className="font-medium">{personaInfo?.categoria_programatica || 'No asignada'}</span>
+                                    </div>
                                 </div>
 
                                 <div className="border-top-1 surface-border my-3"></div>
