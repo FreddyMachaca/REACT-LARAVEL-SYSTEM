@@ -132,7 +132,9 @@ class TblitemsController extends Controller
                     'eo.eo_descripcion AS unidad_organizacional',
                     'cp.cp_descripcion AS categoria_programatica',
                     'ti.ti_descripcion',
-                    'ti.ti_tipo'
+                    'ti.ti_tipo',
+                    DB::raw("CONCAT(eo.eo_prog, ' - ', eo.eo_sprog, ' - ', eo.eo_proy, ' - ', eo.eo_obract, ' - ', eo.eo_unidad) as codigo_administrativo"),
+                    DB::raw("CONCAT(cp.cp_da, ' - ', cp.cp_ue, ' - ', cp.cp_programa, ' - ', cp.cp_proyecto, ' - ', cp.cp_actividad) as codigo_programatico")
                 ])
                 ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
                 ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
@@ -165,6 +167,8 @@ class TblitemsController extends Controller
                 'haber_basico' => $query->ns_haber_basico,
                 'unidad_organizacional' => $query->unidad_organizacional,
                 'categoria_programatica' => $query->categoria_programatica,
+                'codigo_administrativo' => $query->codigo_administrativo,
+                'codigo_programatico' => $query->codigo_programatico,
                 'fecha_creacion' => $query->ca_fecha_creacion,
                 'estado' => $query->ca_estado,
                 'escala_original' => [
