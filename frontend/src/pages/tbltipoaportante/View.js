@@ -327,7 +327,7 @@ const TblTipoAportanteView = () => {
                                                 <div className="flex align-items-center gap-2">
                                                     <span className="text-sm text-500">CATEGORÍA</span>
                                                     <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
-                                                        {personaInfo?.codigo_administrativo?.split('.').join(' - ') || 'N/A'}
+                                                        {personaInfo?.codigo_administrativo || 'N/A'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -347,7 +347,7 @@ const TblTipoAportanteView = () => {
                                                 <div className="flex align-items-center gap-2">
                                                     <span className="text-sm text-500">CATEGORÍA</span>
                                                     <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
-                                                        {personaInfo?.codigo_programatico?.split('.').join(' - ') || 'N/A'}
+                                                        {personaInfo?.codigo_programatico || 'N/A'}
                                                     </span>
                                                 </div>
                                             </div>

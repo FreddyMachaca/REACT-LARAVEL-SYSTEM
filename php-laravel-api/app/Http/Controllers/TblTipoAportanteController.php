@@ -96,18 +96,8 @@ class TblTipoAportanteController extends Controller
                     'ns.ns_haber_basico',
                     'eo.eo_descripcion AS categoria_administrativa',
                     'cp.cp_descripcion AS categoria_programatica',
-                    'eo.eo_prog',
-                    'eo.eo_sprog',
-                    'eo.eo_proy',
-                    'eo.eo_obract',
-                    'eo.eo_unidad',
-                    DB::raw("CONCAT(eo.eo_prog, '.', eo.eo_sprog, '.', eo.eo_proy, '.', eo.eo_obract, '.', eo.eo_unidad) as codigo_administrativo"),
-                    'cp.cp_da',
-                    'cp.cp_ue',
-                    'cp.cp_programa',
-                    'cp.cp_proyecto',
-                    'cp.cp_actividad',
-                    DB::raw("CONCAT(cp.cp_da, '.', cp.cp_ue, '.', cp.cp_programa, '.', cp.cp_proyecto, '.', cp.cp_actividad) as codigo_programatico")
+                    DB::raw("CONCAT(eo.eo_prog, ' - ', eo.eo_sprog, ' - ', eo.eo_proy, ' - ', eo.eo_obract, ' - ', eo.eo_unidad) as codigo_administrativo"),
+                    DB::raw("CONCAT(cp.cp_da, ' - ', cp.cp_ue, ' - ', cp.cp_programa, ' - ', cp.cp_proyecto, ' - ', cp.cp_actividad) as codigo_programatico")
                 )
                 ->leftJoin('tbl_mp_asignacion AS a', function($join) {
                     $join->on('p.per_id', '=', 'a.as_per_id')
