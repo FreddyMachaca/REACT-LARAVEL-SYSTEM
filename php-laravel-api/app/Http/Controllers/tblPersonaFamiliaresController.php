@@ -25,6 +25,7 @@ class tblPersonaFamiliaresController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
+			$query->where('pf_estado', 'V');
 			$query->where($fieldname , $fieldvalue); //filter by a single field name
 		}
 		$records = $query->get(TblPersonaFamiliares::listFields());
@@ -81,10 +82,11 @@ class tblPersonaFamiliaresController extends Controller
      * @return \Illuminate\Http\Response
      */
 	function delete(Request $request, $rec_id = null){
-		$arr_id = explode(",", $rec_id);
-		$query = TblPersonaFamiliares::query();
-		$query->whereIn("ac_id", $arr_id);
-		$query->delete();
-		return $this->respond($arr_id);
+		$record = TblPersonaFamiliares::find($rec_id);
+		$record->pf_estado = 'C';
+
+		$record->save();
+
+		return response()->json($record);
 	}
 }

@@ -305,6 +305,7 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblpersonafamiliares/index', 'tblPersonaFamiliaresController@index');
 	Route::get('tblpersonafamiliares/index/{filter?}/{filtervalue?}', 'tblPersonaFamiliaresController@index');
 	Route::post('tblpersonafamiliares/add', 'tblPersonaFamiliaresController@add');	
+	Route::get('tblpersonafamiliares/delete/{rec_id}', 'tblPersonaFamiliaresController@delete');
 
 /* routes for TblMpTenor */
 	
@@ -321,6 +322,7 @@ Route::get('home', 'HomeController@index');
 	
 	Route::post('tblkdeducacionformal/add', 'TblKdEducacionFormalController@add');	
 	Route::get('tblkdeducacionformal/index/{filter?}/{filtervalue?}', 'TblKdEducacionFormalController@index');
+	Route::get('tblkdeducacionformal/delete/{rec_id}', 'TblKdEducacionFormalController@delete');
 
 /* routes for FileUpload Controller  */	
 Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

@@ -25,6 +25,7 @@ class TblKdEducacionFormalController extends Controller
 		$ordertype = $request->ordertype ?? "desc";
 		$query->orderBy($orderby, $ordertype);
 		if($fieldname){
+			$query->where('ef_estado', 'V');
 			$query->where($fieldname , $fieldvalue); //filter by a single field name
 		}
 		$records = $query->get(TblKdEducacionFormal::listFields());
@@ -55,5 +56,14 @@ class TblKdEducacionFormalController extends Controller
 		$record = TblKdEducacionFormal::create($modeldata);
 		$rec_id = $record->ac_id;
 		return $this->respond($record);
+	}
+
+	function delete(Request $request, $rec_id = null){
+		$record = TblKdEducacionFormal::find($rec_id);
+		$record->ef_estado = 'C';
+
+		$record->save();
+
+		return response()->json($record);
 	}
 }
