@@ -214,6 +214,11 @@ body{
 	box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px !important;
 }
 
+.custom-image {
+    border: 2px solid #ccc; 
+    border-radius: 12px; 
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); 
+}
 
 .menu-container {
     background: white;
@@ -274,3 +279,19 @@ option {
 	color: black !important;
 	background-color: white !important;
   }
+
+.custom-dropdown-panel .p-dropdown-item {
+    white-space: normal !important; 
+    word-wrap: break-word; 
+    max-width: 250px; 
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}

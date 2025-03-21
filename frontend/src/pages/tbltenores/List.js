@@ -156,7 +156,7 @@ function TbltenoresList() {
                 </section>
             </Card>
         </div>
-        <SpeedDial onClick={handleDirect} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-cog" />
+        <SpeedDial onClick={handleDirect} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-plus" />
     </>
   )
 }

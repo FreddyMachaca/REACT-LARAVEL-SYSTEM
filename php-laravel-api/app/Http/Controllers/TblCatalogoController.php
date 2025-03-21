@@ -98,4 +98,77 @@ class TblCatalogoController extends Controller
 		
 		return response()->json($records);
 	}
+
+	/**
+	 * This function return data where cat_tabla is equals to 
+	 * 'zona', 'tipo_via', 'ciudad_localidad'
+	 */
+	function getDataDomicilio(){
+		$records = TblCatalogo::whereIn('cat_tabla', ['zona', 'tipo_via', 'ciudad_localidad'])
+			->where('cat_estado', 'V')
+			->get();
+
+		return response()->json($records);
+	}
+
+	function getDataEducation(){
+		$records = TblCatalogo::whereIn('cat_tabla', ['nivel_instruccion', 'centro_formacion_kd', 'carrera', 'titulos'])
+			->where('cat_estado', 'V')
+			->get();
+
+		return response()->json($records);
+	}
+
+	/**
+	 * This function return records that they are equal to rec_tipo
+	 * @param  \Illuminate\Http\Request
+	 * @param string $rec_tipo //can be separated by comma 
+     * @return \Illuminate\Http\Response
+	 */
+	function getCatalogosAddPerson(Request $request, $rec_tipo = null){
+		$query = TblCatalogo::where('cat_estado', 'V')
+		->whereIn('cat_tabla', 
+			['tipo_documento_impreso', 'estado_civil', 'zona', 'pais', 'ciudad_localidad', 'departamento', 'provincia', 'tipo_via']
+		)
+		->select("cat_id", "cat_tabla", "cat_descripcion")
+		->get()
+		->groupBy('cat_tabla');
+
+		return response()->json($query);
+	}
+
+	/**
+	 * Select tabla records by cat_id_superior
+	 * @param  \Illuminate\Http\Request
+	 * @param string $rec_tipo //can be separated by comma 
+     * @return \Illuminate\Http\Response
+	 */
+	function getCatalogoByCatIdSup(Request $request, $rec_id){
+		$query = TblCatalogo::where('cat_id_superior', $rec_id)
+			->where('cat_estado', 'V')
+			->get();
+
+		return response()->json($query);
+	}
+
+	function addZoneWithDepartament (Request $request) {
+		$datos = $request->validate([
+			"cat_id_superior" => "required|integer",
+			"cat_descripcion" => "required|string",
+			"cat_estado" => "required|string",
+			"cat_tabla" => "required|string",
+		]);
+		
+		$maxSecuencial = TblCatalogo::where('cat_tabla', 'zona')->max('cat_secuencial');
+
+		$catalogo = new TblCatalogo();
+		$catalogo->cat_tabla = $request->cat_tabla;
+		$catalogo->cat_secuencial = $maxSecuencial + 1;
+		$catalogo->cat_descripcion = $request->cat_descripcion;
+		$catalogo->cat_estado = $request->cat_estado;
+		$catalogo->cat_id_superior = $request->cat_id_superior;
+		$catalogo->save();
+
+		return response()->json($request);
+	}
 }

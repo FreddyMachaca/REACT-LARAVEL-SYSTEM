@@ -106,6 +106,8 @@ import TbltipoeventoacademicoEdit from 'pages/tbltipoeventoacademico/Edit';
 import TblestructuraorganizacionalView from 'pages/tblestructuraorganizacional/View'
 import TbltenoresAdd from 'pages/tbltenores/Add';
 import TbltenoresList from 'pages/tbltenores/List';
+import TblFuncionariosList from 'pages/filiacionfuncionario/List'
+import TblFuncionariosView from 'pages/filiacionfuncionario/View'
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -113,6 +115,8 @@ import 'primereact/resources/primereact.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import 'assets/styles/layout.scss';
+import TblPersonaList from 'pages/Tblpersona/List';
+import TblpersonaAdd from 'pages/Tblpersona/Add';
 const App = () => {
 	return (
 		<Routes>
@@ -341,10 +345,19 @@ const App = () => {
 				{/* section manual de supuestos */}
 				<Route path="/ManualPuestos/EstructuraOrganizacional" element={<TblestructuraorganizacionalView />} />
 
-				{/* TODO creacion de tenores */}
+				{/* creacion de tenores */}
 				<Route path="/MovimientoPersonal/Tenor/:te_id" element={<TbltenoresAdd/>}/>
 				<Route path="/MovimientoPersonal/Tenor/" element={<TbltenoresAdd/>}/>
 				<Route path="/MovimientoPersonal/ListaTenor" element={<TbltenoresList/>}/>
+
+				{/* Filiacion de funcionarios */}
+				<Route path="/Kardex/FiliacionFuncionario" element={<TblFuncionariosList/>}/> 
+				<Route path="/Kardex/FiliacionFuncionario/:per_id" element={<TblFuncionariosView/>}/> 
+
+				{/* tblpersona pages routes */}
+				<Route path="/MovimientoPersonal/Persona" element={<TblPersonaList/>}/> 
+				<Route path="/MovimientoPersonal/Persona/add" element={<TblpersonaAdd/>}/> 
+				
 
 			</Route>
 			<Route exact element={<IndexLayout />}>

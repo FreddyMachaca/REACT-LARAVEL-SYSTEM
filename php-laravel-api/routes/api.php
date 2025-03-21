@@ -75,7 +75,15 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblcatalogo/edit/{rec_id}', 'TblCatalogoController@edit');	
 	Route::any('tblcatalogo/delete/{rec_id}', 'TblCatalogoController@delete');
 
+	Route::get('tblcatalogo/add/persona', 'TblCatalogoController@getCatalogosAddPerson');
+	Route::get('tblcatalogo/catalogos/childs/{cat_id_superior}', 'TblCatalogoController@getCatalogoByCatIdSup');
+
+	Route::post('tblcatalogo/add/zone', 'TblCatalogoController@addZoneWithDepartament');
+
 	Route::get('tblcatalogo/get/movimiento/general', 'TblCatalogoController@getMovGeneral');
+	Route::get('tblcatalogo/get/domicilio/data', 'TblCatalogoController@getDataDomicilio');
+	Route::get('tblcatalogo/get/education/data', 'TblCatalogoController@getDataEducation');
+
 
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
@@ -280,10 +288,24 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblmpcategoriaprogramatica/index/{filter?}/{filtervalue?}', 'TblMpCategoriaProgramaticaController@index');
 	Route::get('tblmpcategoriaprogramatica/period-and-da/{cp_da}/{cp_pr_id}', 'TblMpCategoriaProgramaticaController@filterByDaAndPr');
 	
-/* routes for TblMpMemosHistorico*/
+/*  routes for TblPersona*/
 	
-	Route::get('tblmpmemoshistoricos/prueba', 'TblMpMemosHistoricosController@prueba');
+	Route::get('tblpersona/index', 'TblPersonaController@index');
+	Route::get('tblpersona/index/{filter?}/{filtervalue?}', 'TblPersonaController@index');
+	Route::post('tblpersona/add/personwithhome', 'TblPersonaController@addPersonAndHome');
+	Route::get('tblpersona/home/{filter?}/{filtervalue?}', 'TblPersonaController@getPersonWithHome');
+
+
+/*  routes for TblPersonaDomicilio */
+
+	Route::any('tblpersonadomicilio/edit/{rec_id}', 'tblPersonaDomicilioController@edit');	
 	
+/*  routes for TblPersonaFamiliares */
+	
+	Route::get('tblpersonafamiliares/index', 'tblPersonaFamiliaresController@index');
+	Route::get('tblpersonafamiliares/index/{filter?}/{filtervalue?}', 'tblPersonaFamiliaresController@index');
+	Route::post('tblpersonafamiliares/add', 'tblPersonaFamiliaresController@add');	
+
 /* routes for TblMpTenor */
 	
 	Route::post('tblmtenor/add', 'TblMpTenorController@add');	
@@ -291,6 +313,14 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblmtenor/delete/{rec_id}', 'TblMpTenorController@delete');
 	Route::get('tblmtenor/get/{rec_id}', 'TblMpTenorController@getById');
 
+/* routes for TblKdRespuestaCombo */
+	Route::get('tblkdrespuestacombo/index', 'TblKdRespuestaComboController@index');
+	Route::get('tblkdrespuestacombo/index/{filter?}/{filtervalue?}', 'TblKdRespuestaComboController@index');
+
+/* routes for TblKdEducacionFormal */
+	
+	Route::post('tblkdeducacionformal/add', 'TblKdEducacionFormalController@add');	
+	Route::get('tblkdeducacionformal/index/{filter?}/{filtervalue?}', 'TblKdEducacionFormalController@index');
 
 /* routes for FileUpload Controller  */	
 Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
