@@ -75,6 +75,16 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblcatalogo/delete/{rec_id}', 'TblCatalogoController@delete');
 	Route::get('tblcatalogo/byTipo/{tabla}', 'App\Http\Controllers\TblCatalogoController@getByTipo');
 
+	Route::get('tblcatalogo/add/persona', 'TblCatalogoController@getCatalogosAddPerson');
+	Route::get('tblcatalogo/catalogos/childs/{cat_id_superior}', 'TblCatalogoController@getCatalogoByCatIdSup');
+
+	Route::post('tblcatalogo/add/zone', 'TblCatalogoController@addZoneWithDepartament');
+
+	Route::get('tblcatalogo/get/movimiento/general', 'TblCatalogoController@getMovGeneral');
+	Route::get('tblcatalogo/get/domicilio/data', 'TblCatalogoController@getDataDomicilio');
+	Route::get('tblcatalogo/get/education/data', 'TblCatalogoController@getDataEducation');
+
+
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
 	Route::get('tblcategorialicencias/index', 'TblCategoriaLicenciasController@index');
@@ -305,6 +315,9 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpestructuraorganizacional/edit/{rec_id}', 'TblMpEstructuraOrganizacionalController@edit');	
 	Route::any('tblmpestructuraorganizacional/delete/{rec_id}', 'TblMpEstructuraOrganizacionalController@delete');
 	Route::get('tblmpestructuraorganizacional/tree', 'TblMpEstructuraOrganizacionalController@getTree');
+	Route::post('tblmpestructuraoraganizacional/add', 'TblMpEstructuraOrganizacionalController@add');	
+	Route::get('tblmpestructuraoraganizacional/{eo_pr_id}', 'TblMpEstructuraOrganizacionalController@getTreeOrganizationalEstructure');
+	Route::get('tblmpestructuraoraganizacional/structures-and-categories/{rec_id}', 'TblMpEstructuraOrganizacionalController@getOrgStructureAndCategory');
 
 /* routes for TblMpCategoriaProgramatica Controller */
 	Route::get('tblmpcategoriaprogramatica/', 'TblMpCategoriaProgramaticaController@index');
@@ -316,6 +329,7 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblmpcategoriaprogramatica/delete/{rec_id}', 'TblMpCategoriaProgramaticaController@delete');
 	Route::get('tblmpcategoriaprogramatica/counts', 'TblMpCategoriaProgramaticaController@getCounts');
 	Route::get('tblmpcategoriaprogramatica/bypr/{pr_id}', 'TblMpCategoriaProgramaticaController@getByPrId');
+	Route::get('tblmpcategoriaprogramatica/period-and-da/{cp_da}/{cp_pr_id}', 'TblMpCategoriaProgramaticaController@filterByDaAndPr');
 
 /* routes for TblMpTipoItem Controller  */	
 	Route::get('tblmptipoitem/', 'TblMpTipoItemController@index');
@@ -360,6 +374,32 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblpersona/add', 'TblPersonaController@add');
 	Route::any('tblpersona/edit/{rec_id}', 'TblPersonaController@edit');
 	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
+	Route::post('tblpersona/add/personwithhome', 'TblPersonaController@addPersonAndHome');
+	Route::get('tblpersona/home/{filter?}/{filtervalue?}', 'TblPersonaController@getPersonWithHome');
+
+/*  routes for TblPersonaDomicilio */
+	Route::any('tblpersonadomicilio/edit/{rec_id}', 'tblPersonaDomicilioController@edit');	
+
+/*  routes for TblPersonaFamiliares */
+	Route::get('tblpersonafamiliares/index', 'tblPersonaFamiliaresController@index');
+	Route::get('tblpersonafamiliares/index/{filter?}/{filtervalue?}', 'tblPersonaFamiliaresController@index');
+	Route::post('tblpersonafamiliares/add', 'tblPersonaFamiliaresController@add');	
+	Route::get('tblpersonafamiliares/delete/{rec_id}', 'tblPersonaFamiliaresController@delete');
+
+/* routes for TblMpTenor */
+	Route::post('tblmtenor/add', 'TblMpTenorController@add');	
+	Route::get('tblmtenor/index', 'TblMpTenorController@index');
+	Route::get('tblmtenor/delete/{rec_id}', 'TblMpTenorController@delete');
+	Route::get('tblmtenor/get/{rec_id}', 'TblMpTenorController@getById');
+
+/* routes for TblKdRespuestaCombo */
+	Route::get('tblkdrespuestacombo/index', 'TblKdRespuestaComboController@index');
+	Route::get('tblkdrespuestacombo/index/{filter?}/{filtervalue?}', 'TblKdRespuestaComboController@index');
+
+/* routes for TblKdEducacionFormal */
+	Route::post('tblkdeducacionformal/add', 'TblKdEducacionFormalController@add');	
+	Route::get('tblkdeducacionformal/index/{filter?}/{filtervalue?}', 'TblKdEducacionFormalController@index');
+	Route::get('tblkdeducacionformal/delete/{rec_id}', 'TblKdEducacionFormalController@delete');
 
 /* routes for TblTipoAportante Controller */	
 	Route::get('tbltipoaportante/', 'TblTipoAportanteController@index');

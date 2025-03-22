@@ -93,6 +93,9 @@ class TblCatalogoController extends Controller
 		return $this->respond($arr_id);
 	}
 
+    /**
+     * Get catalogs by tipo
+     */
     public function getByTipo($tabla)
     {
         try {
@@ -104,6 +107,118 @@ class TblCatalogoController extends Controller
                 ->get();
                 
             return $this->respond($records);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get general movement catalogs
+     */
+    function getMovGeneral(){
+        try {
+            $records = TblCatalogo::where('cat_tabla', 'tipo_mov_general')
+                ->where('cat_estado', 'V')
+                ->get();
+            
+            return $this->respond($records);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get domicilio related catalogs
+     */
+    function getDataDomicilio(){
+        try {
+            $records = TblCatalogo::whereIn('cat_tabla', ['zona', 'tipo_via', 'ciudad_localidad'])
+                ->where('cat_estado', 'V')
+                ->get();
+
+            return $this->respond($records);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get education related catalogs
+     */
+    function getDataEducation(){
+        try {
+            $records = TblCatalogo::whereIn('cat_tabla', [
+                'nivel_instruccion', 'centro_formacion_kd', 
+                'carrera', 'titulos'
+            ])
+                ->where('cat_estado', 'V')
+                ->get();
+
+            return $this->respond($records);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get person related catalogs
+     */
+    function getCatalogosAddPerson(){
+        try {
+            $query = TblCatalogo::where('cat_estado', 'V')
+                ->whereIn('cat_tabla', [
+                    'tipo_documento_impreso', 'estado_civil', 'zona',
+                    'pais', 'ciudad_localidad', 'departamento',
+                    'provincia', 'tipo_via'
+                ])
+                ->select("cat_id", "cat_tabla", "cat_descripcion")
+                ->get()
+                ->groupBy('cat_tabla');
+
+            return $this->respond($query);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get catalogs by superior ID
+     */
+    function getCatalogoByCatIdSup($rec_id){
+        try {
+            $query = TblCatalogo::where('cat_id_superior', $rec_id)
+                ->where('cat_estado', 'V')
+                ->get();
+
+            return $this->respond($query);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Add zone with department
+     */
+    function addZoneWithDepartament(Request $request){
+        try {
+            $datos = $request->validate([
+                "cat_id_superior" => "required|integer",
+                "cat_descripcion" => "required|string",
+                "cat_estado" => "required|string",
+                "cat_tabla" => "required|string",
+            ]);
+            
+            $maxSecuencial = TblCatalogo::where('cat_tabla', 'zona')->max('cat_secuencial');
+
+            $catalogo = new TblCatalogo();
+            $catalogo->cat_tabla = $request->cat_tabla;
+            $catalogo->cat_secuencial = $maxSecuencial + 1;
+            $catalogo->cat_descripcion = $request->cat_descripcion;
+            $catalogo->cat_estado = $request->cat_estado;
+            $catalogo->cat_id_superior = $request->cat_id_superior;
+            $catalogo->save();
+
+            return $this->respond($catalogo);
         } catch (Exception $e) {
             return $this->respondWithError($e);
         }

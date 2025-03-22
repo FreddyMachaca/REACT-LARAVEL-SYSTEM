@@ -114,7 +114,11 @@ import TblTipoAportanteView from 'pages/tbltipoaportante/View';
 import TblTransaccionesList from 'pages/tbltransacciones/List';
 import TblTransaccionesAdd from 'pages/tbltransacciones/Add';
 import TblTransaccionesView from 'pages/tbltransacciones/View';
-
+import TblestructuraorganizacionalView from 'pages/tblestructuraorganizacional/View'
+import TbltenoresAdd from 'pages/tbltenores/Add';
+import TbltenoresList from 'pages/tbltenores/List';
+import TblFuncionariosList from 'pages/filiacionfuncionario/List'
+import TblFuncionariosView from 'pages/filiacionfuncionario/View'
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -122,6 +126,8 @@ import 'primereact/resources/primereact.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import 'assets/styles/layout.scss';
+import TblPersonaList from 'pages/Tblpersona/List';
+import TblpersonaAdd from 'pages/Tblpersona/Add';
 const App = () => {
 	return (
 		<Routes>
@@ -366,7 +372,23 @@ const App = () => {
                 <Route path="/tblTransacciones" element={<TblTransaccionesList />} />
                 <Route path="/tblTransacciones/add/:personaId" element={<TblTransaccionesAdd />} />
                 <Route path="/tblTransacciones/view/:id" element={<TblTransaccionesView />} />
-                
+
+				{/* section manual de supuestos */}
+				<Route path="/ManualPuestos/EstructuraOrganizacional" element={<TblestructuraorganizacionalView />} />
+
+				{/* creacion de tenores */}
+				<Route path="/MovimientoPersonal/Tenor/:te_id" element={<TbltenoresAdd/>}/>
+				<Route path="/MovimientoPersonal/Tenor/" element={<TbltenoresAdd/>}/>
+				<Route path="/MovimientoPersonal/ListaTenor" element={<TbltenoresList/>}/>
+
+				{/* Filiacion de funcionarios */}
+				<Route path="/Kardex/FiliacionFuncionario" element={<TblFuncionariosList/>}/> 
+				<Route path="/Kardex/FiliacionFuncionario/:per_id" element={<TblFuncionariosView/>}/> 
+
+				{/* tblpersona pages routes */}
+				<Route path="/MovimientoPersonal/Persona" element={<TblPersonaList/>}/> 
+				<Route path="/MovimientoPersonal/Persona/add" element={<TblpersonaAdd/>}/> 
+				
 			</Route>
 			<Route exact element={<IndexLayout />}>
 				<Route path="/*" element={<IndexPages />} />

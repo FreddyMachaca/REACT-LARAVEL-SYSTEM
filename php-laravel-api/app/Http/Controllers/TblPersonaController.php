@@ -2,10 +2,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TblPersonaAddRequest;
 use App\Models\TblPersona;
+use App\Models\TblPersonaDomicilio;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
+use Carbon\Carbon;
 
 class TblPersonaController extends Controller
 {
@@ -71,14 +74,12 @@ class TblPersonaController extends Controller
             
             if($request->search){
                 $search = trim($request->search);
-                $query->where(function($q) use ($search) {
-                    $q->where('per_nombres', 'ILIKE', "%{$search}%")
-                      ->orWhere('per_ap_paterno', 'ILIKE', "%{$search}%")
-                      ->orWhere('per_ap_materno', 'ILIKE', "%{$search}%")
-                      ->orWhere('per_num_doc', 'ILIKE', "%{$search}%")
-                      ->orWhere('per_ap_casada', 'ILIKE', "%{$search}%");
-                });
+                TblPersona::search($query, $search);
             }
+
+            $orderby = $request->orderby ?? "tbl_persona.per_id";
+            $ordertype = $request->ordertype ?? "desc";
+            $query->orderBy($orderby, $ordertype);
             
             if ($fieldname) {
                 $query->where($fieldname, $fieldvalue);
@@ -112,6 +113,53 @@ class TblPersonaController extends Controller
         }
         catch(Exception $e){
             \Log::error('Error en TblPersonaController@index: ' . $e->getMessage());
+            return $this->respondWithError($e);
+        }
+    }
+
+    function getPersonWithHome(Request $request, $fieldname = null, $fieldvalue = null){
+        $query = TblPersona::with('domicilio');
+
+        if ($request->search) {
+            $search = trim($request->search);
+            TblPersona::search($query, $search);
+        }
+
+        $orderby = $request->orderby ?? "tbl_persona.per_id";
+        $ordertype = $request->ordertype ?? "desc";
+        $query->orderBy($orderby, $ordertype);
+
+        if ($fieldname) {
+            $query->where($fieldname, $fieldvalue);
+        }
+
+        $records = $query->get();
+        return $this->respond($records);
+    }
+
+    function addPersonAndHome(TblPersonaAddRequest $request){
+        try {
+            DB::beginTransaction();
+            
+            $modeldata = $request->validated();
+            $modeldata['per_fecha_registro'] = Carbon::now();
+            $persona = TblPersona::create($modeldata);
+
+            $domicilioData = $request->only([
+                'perd_ciudad_residencia', 
+                'perd_descripcion_via', 
+                'perd_numero', 
+                'perd_tipo_via', 
+                'perd_zona'
+            ]); 
+            $domicilioData['perd_per_id'] = $persona->per_id;
+            $domicilioData['perd_fecha_creacion'] = Carbon::now();
+            $domicilio = TblPersonaDomicilio::create($domicilioData);
+
+            DB::commit();
+            return $this->respond($persona);
+        } catch (Exception $e) {
+            DB::rollback();
             return $this->respondWithError($e);
         }
     }

@@ -214,6 +214,11 @@ body{
 	box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px !important;
 }
 
+.custom-image {
+    border: 2px solid #ccc; 
+    border-radius: 12px; 
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); 
+}
 
 .menu-container {
     background: white;
@@ -237,4 +242,56 @@ body{
 
 .menu-children {
     margin-left: 1rem;
+}
+
+.icon-blue {
+	color: #0069d2;
+	padding: 8px;
+	border-radius: 50%;
+	width: 22px;
+	height: 22px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 5px;
+  }
+
+.scrollable-tree {
+	max-height: 500px; 
+	overflow-y: auto;  
+	padding-right: 8px; 
+}
+
+.page-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3); /* Fondo gris semi-transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+option {
+	color: black !important;
+	background-color: white !important;
+  }
+
+.custom-dropdown-panel .p-dropdown-item {
+    white-space: normal !important; 
+    word-wrap: break-word; 
+    max-width: 250px; 
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }
