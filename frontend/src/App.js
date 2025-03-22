@@ -111,6 +111,9 @@ import TblasignacionList from 'pages/tblasignacion/List';
 import TblasignacionView from 'pages/tblasignacion/View';
 import TblTipoAportanteList from 'pages/tbltipoaportante/List';
 import TblTipoAportanteView from 'pages/tbltipoaportante/View';
+import TblTransaccionesList from 'pages/tbltransacciones/List';
+import TblTransaccionesAdd from 'pages/tbltransacciones/Add';
+import TblTransaccionesView from 'pages/tbltransacciones/View';
 
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
@@ -358,6 +361,11 @@ const App = () => {
                 {/* Tipo Aportante routes */}
                 <Route path="/tbltipoaportante" element={<TblTipoAportanteList />} />
                 <Route path="/tbltipoaportante/asignar/:personaId" element={<TblTipoAportanteView />} />
+                
+                {/* Transacciones routes */}
+                <Route path="/tblTransacciones" element={<TblTransaccionesList />} />
+                <Route path="/tblTransacciones/add/:personaId" element={<TblTransaccionesAdd />} />
+                <Route path="/tblTransacciones/view/:id" element={<TblTransaccionesView />} />
                 
 			</Route>
 			<Route exact element={<IndexLayout />}>

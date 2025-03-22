@@ -34,6 +34,13 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/tblTransacciones",
+            "label": "Tbl Transacciones",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblacreedores",
             "label": "Tbl Acreedores",
             "icon": "pi pi-th-large",
