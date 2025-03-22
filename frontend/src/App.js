@@ -128,6 +128,7 @@ import 'primeflex/primeflex.css';
 import 'assets/styles/layout.scss';
 import TblPersonaList from 'pages/Tblpersona/List';
 import TblpersonaAdd from 'pages/Tblpersona/Add';
+
 const App = () => {
 	return (
 		<Routes>

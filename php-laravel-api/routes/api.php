@@ -3,6 +3,16 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\TblSegMenuController;
+use App\Http\Controllers\TblSegRolController;
+use App\Http\Controllers\TblSegRolMenuController;
+use App\Http\Controllers\TblCatalogoController;
+use App\Http\Controllers\AsignacionHorarioController;
+use App\Http\Controllers\TblPersonaController;
+use App\Http\Controllers\TblUbicacionFisicaController;
+use App\Http\Controllers\TblServiciosController;
+use App\Http\Controllers\ActaEntregacabController;
+use App\Models\TblPersona;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,7 +93,9 @@ Route::get('home', 'HomeController@index');
 	Route::get('tblcatalogo/get/movimiento/general', 'TblCatalogoController@getMovGeneral');
 	Route::get('tblcatalogo/get/domicilio/data', 'TblCatalogoController@getDataDomicilio');
 	Route::get('tblcatalogo/get/education/data', 'TblCatalogoController@getDataEducation');
-
+	Route::get('/tipo-horario', [TblCatalogoController::class, 'tipoHorario']);
+	Route::get('/tipo-licencia', [TblCatalogoController::class, 'obtenerTiposLicencia']);
+	Route::get('/tipo-ubicacion', [TblCatalogoController::class, 'obtenerTipoUbicacion']);
 
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
@@ -223,7 +235,8 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblsegmenu/delete/{rec_id}', 'TblSegMenuController@delete');
 	Route::get('tblsegmenu/getMenuTree', 'TblSegMenuController@getMenuTree');
 	Route::get('tblsegmenu/manageMenuTree', 'TblSegMenuController@manageMenuTree');
-
+	Route::get('/menu-tree', [TblSegMenuController::class, 'getMenuTree']);
+	Route::get('/rol/{rec_id}', [TblSegMenuController::class, 'getMenuByRol']);
 
 /* routes for TblSegMenuUsuario Controller  */	
 	Route::get('tblsegmenuusuario/', 'TblSegMenuUsuarioController@index');
@@ -242,6 +255,11 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblsegrol/add', 'TblSegRolController@add');	
 	Route::any('tblsegrol/edit/{rec_id}', 'TblSegRolController@edit');	
 	Route::any('tblsegrol/delete/{rec_id}', 'TblSegRolController@delete');
+	Route::get('/tblsegrol/all', [TblSegRolController::class, 'getAllRoles']);
+	Route::post('tblsegrol/store', [TblSegRolController::class, 'store']);
+	Route::put('tblsegrol/update/{rec_id}', [TblSegRolController::class, 'update']);
+	Route::get('/tblsegrol/{id_rol}', [TblSegRolController::class, 'getRolById']);
+	Route::delete('tblsegrol/{rol_id}', [TblSegRolController::class, 'destroy']);
 
 /* routes for TblSegRolMenu Controller  */	
 	Route::get('tblsegrolmenu/', 'TblSegRolMenuController@index');
@@ -251,6 +269,8 @@ Route::get('home', 'HomeController@index');
 	Route::post('tblsegrolmenu/add', 'TblSegRolMenuController@add');	
 	Route::any('tblsegrolmenu/edit/{rec_id}', 'TblSegRolMenuController@edit');	
 	Route::any('tblsegrolmenu/delete/{rec_id}', 'TblSegRolMenuController@delete');
+	Route::post('/tblsegrolmenu/create', [TblSegRolMenuController::class, 'createRolMenuRecords']);
+	Route::post('/tblsegrolmenu/delete', [TblSegRolMenuController::class, 'deleteRolMenuRecords']);
 
 /* routes for TblSegUsuario Controller  */	
 	Route::get('tblsegusuario/', 'TblSegUsuarioController@index');
@@ -376,6 +396,41 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
 	Route::post('tblpersona/add/personwithhome', 'TblPersonaController@addPersonAndHome');
 	Route::get('tblpersona/home/{filter?}/{filtervalue?}', 'TblPersonaController@getPersonWithHome');
+	Route::get('/empleado', [TblPersonaController::class, 'obtenerEmpleado']);
+	Route::get('/opciones', [TblPersonaController::class, 'obtenerOpciones']);
+	
+/* New Routes for Licencias */
+Route::prefix('licencias')->group(function () {
+    Route::get('/buscar', 'TblLicenciaJustificadaController@search');
+    Route::get('/show/{id}', 'TblLicenciaJustificadaController@show');
+    Route::post('/add', 'TblLicenciaJustificadaController@store');
+    Route::put('/edit/{id}', 'TblLicenciaJustificadaController@update');
+    Route::delete('/delete/{id}', 'TblLicenciaJustificadaController@destroy');
+    Route::get('/boleta/{id}', 'TblLicenciaJustificadaController@obtenerBoleta');
+    Route::get('/persona/{id}', 'TblLicenciaJustificadaController@obtenerPersona');
+    Route::put('/validate-permission/{id}', 'TblLicenciaJustificadaController@validate_permission');
+});
+
+/* Routes for Ubicaciones */
+Route::prefix('ubicaciones')->group(function () {
+    Route::get('/', [TblUbicacionFisicaController::class, 'index']);
+    Route::get('/show/{id}', [TblUbicacionFisicaController::class, 'show']);
+    Route::post('/store', [TblUbicacionFisicaController::class, 'store']);
+    Route::put('/update/{id}', [TblUbicacionFisicaController::class, 'update']);
+    Route::delete('/destroy/{id}', [TblUbicacionFisicaController::class, 'destroy']);
+    Route::get('/buscar_reg/{id}', [TblUbicacionFisicaController::class, 'getUbicacionFisica']);
+});
+
+/* Routes for Servicios and Actas */
+	Route::get('/servicios', [TblServiciosController::class, 'obtenerServicios']);
+	Route::post('/registros', 'ActaentregadetController@nuevo');
+	Route::put('/registros/{id}', 'ActaentregadetController@nuevo');
+	Route::post('/actas', [ActaEntregacabController::class, 'store']);
+	Route::get('/actas/buscar', [ActaEntregacabController::class, 'buscarActas']);
+
+/* Routes for Asignacion Horario */
+	Route::post('asignacionhorario/store', [AsignacionHorarioController::class, 'store']);
+	Route::get('asignacionhorario/show/{rec_id}', 'AsignacionHorarioController@show');
 
 /*  routes for TblPersonaDomicilio */
 	Route::any('tblpersonadomicilio/edit/{rec_id}', 'tblPersonaDomicilioController@edit');	

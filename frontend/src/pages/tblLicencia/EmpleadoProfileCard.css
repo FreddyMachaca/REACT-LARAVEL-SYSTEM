@@ -1,0 +1,121 @@
+.user-profile-card {
+    width: 100%;
+  }
+  
+  .user-profile-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  .user-profile-header {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Alinea el contenido al fondo */
+    padding: 0;
+    border-radius: 10px;
+    overflow: visible; /* Cambia a visible para que la imagen no se recorte */
+    height: 0px; /* Altura del header (ajusta según necesites) */
+    background-color: #f0f0f0; /* Color de fondo del header (opcional) */
+  }
+   .user-avatar-container {
+    position: absolute;
+    top: -50px; /* Mueve el contenedor hacia arriba (la mitad fuera del Card) */
+    left: 50%;
+    transform: translateX(-50%); /* Centra horizontalmente */
+    width: 100px; /* Tamaño del contenedor de la imagen */
+    height: 100px; /* Tamaño del contenedor de la imagen */
+    border-radius: 50%; /* Hace que el contenedor sea circular */
+    overflow: hidden; /* Oculta el exceso de la imagen */
+    border: 4px solid white; /* Borde para resaltar la imagen */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para dar profundidad */
+  }
+  
+  .user-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .status-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #22c55e;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+  
+  .user-profile-info {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .user-profile-info h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #1e293b;
+  }
+  
+  .user-profile-info p {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+  
+  .info-section {
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .info-header {
+    background-color: #f1f5f9;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    font-size: 0.875rem;
+    color: #475569;
+  }
+  
+  .info-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .info-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0.5rem 1rem;
+  }
+  
+  .info-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+    padding: 0.25rem 0;
+  }
+  
+  .info-value {
+    font-size: 0.875rem;
+    color: #1e293b;
+    padding: 0.25rem 0;
+  }
+  
+  .empty-profile-message {
+    text-align: center;
+    padding: 2rem;
+    color: #64748b;
+  }
+  
+  /* Status colors - add if needed */
+  .status-badge.ACTIVO {
+    background-color: #22c55e;
+  }
+  
+  .status-badge.PASIVO {
+    background-color: #ef4444;
+  }

@@ -41,6 +41,27 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/serviciosprevalorados/busquedaacta",
+            "label": "Servicios prevalorados",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+          },
+          {
+            "to": "/tbllicencia",
+            "label": "Asignacion de horas",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+          },
+          {
+            "to": "/tbllicencia/validacion",
+            "label": "Validar licencia justificada",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+          },
+        {
             "to": "/tblacreedores",
             "label": "Tbl Acreedores",
             "icon": "pi pi-th-large",
