@@ -63,4 +63,10 @@ class TblPersona extends Model
         $search_params = array_fill(0, 5, "%$text%");
         $query->whereRaw($search_condition, $search_params);
     }
+
+    public function asignacionesTipoAportante()
+    {
+        return $this->hasMany(TblMpAsignacionTipoAportante::class, 'at_per_id', 'per_id')
+                    ->where('at_estado', 'V');
+    }
 }

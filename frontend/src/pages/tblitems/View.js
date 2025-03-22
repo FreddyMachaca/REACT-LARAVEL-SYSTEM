@@ -132,35 +132,39 @@ const TblitemsViewPage = (props) => {
                 <Card title="Información General" className="mb-3">
                     <div className="grid">
                         <div className="col-12 md:col-3">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Código Item</div>
-                                    <div className="font-bold">{item.codigo || 'No disponible'}</div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-id-card text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Código Item</span>
                                 </div>
+                                <span className="font-bold">{item.codigo || 'No disponible'}</span>
                             </div>
                         </div>
                         <div className="col-12 md:col-3">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Código Escalafón</div>
-                                    <div className="font-bold">{item.escala_original?.es_escalafon || 'No disponible'}</div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-hashtag text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Código Escalafón</span>
                                 </div>
+                                <span className="font-bold">{item.escala_original?.es_escalafon || 'No disponible'}</span>
                             </div>
                         </div>
                         <div className="col-12 md:col-3">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Clase</div>
-                                    <div className="font-bold">{item.nivel_original?.ns_clase || 'No disponible'}</div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-sort-alt text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Clase</span>
                                 </div>
+                                <span className="font-bold">{item.nivel_original?.ns_clase || 'No disponible'}</span>
                             </div>
                         </div>
                         <div className="col-12 md:col-3">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Nivel</div>
-                                    <div className="font-bold">{item.nivel_original?.ns_nivel || 'No disponible'}</div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-sort-numeric-up text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Nivel</span>
                                 </div>
+                                <span className="font-bold">{item.nivel_original?.ns_nivel || 'No disponible'}</span>
                             </div>
                         </div>
                     </div>
@@ -170,34 +174,37 @@ const TblitemsViewPage = (props) => {
                 <Card title="Información del Cargo" className="mb-3">
                     <div className="grid">
                         <div className="col-12 md:col-4">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Tipo Item</div>
-                                    <div className="font-bold">{item.tipo_item || item.tipo_item_descripcion || 'No disponible'}</div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-tag text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Tipo Item</span>
                                 </div>
+                                <span className="font-bold">{item.tipo_item || item.tipo_item_descripcion || 'No disponible'}</span>
                             </div>
                         </div>
                         <div className="col-12 md:col-4">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Tipo Jornada</div>
-                                    <div className="font-bold">
-                                        {item.tipo_jornada === 'TT' ? 'Tiempo Completo' : 
-                                         item.tipo_jornada === 'MT' ? 'Medio Tiempo' : 'No disponible'}
-                                    </div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-clock text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Tipo Jornada</span>
                                 </div>
+                                <span className="font-bold">
+                                    {item.tipo_jornada === 'TT' ? 'Tiempo Completo' : 
+                                     item.tipo_jornada === 'MT' ? 'Medio Tiempo' : 'No disponible'}
+                                </span>
                             </div>
                         </div>
                         <div className="col-12 md:col-4">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Haber Básico</div>
-                                    <div className="font-bold text-primary">
-                                        {item.haber_basico ? 
-                                            new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' })
-                                                .format(item.haber_basico) : 'No disponible'}
-                                    </div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-money-bill text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Haber Básico</span>
                                 </div>
+                                <span className="font-bold text-primary">
+                                    {item.haber_basico ? 
+                                        new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' })
+                                            .format(item.haber_basico) : 'No disponible'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -207,18 +214,40 @@ const TblitemsViewPage = (props) => {
                 <Card title="Información Organizacional" className="mb-3">
                     <div className="grid">
                         <div className="col-12 md:col-6">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Unidad Organizacional</div>
-                                    <div className="font-bold">{item.unidad_organizacional || 'No disponible'}</div>
+                            <div className="flex flex-column w-full">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-sitemap text-primary mr-2"></i>
+                                    <span className="text-500 font-medium mb-1">Unidad Organizacional</span>
+                                </div>
+                                <div className="flex flex-column">
+                                    <span className="font-medium mb-2">
+                                        {item.unidad_organizacional || 'No asignada'}
+                                    </span>
+                                    <div className="flex align-items-center gap-2">
+                                        <span className="text-sm text-500">CATEGORÍA</span>
+                                        <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
+                                            {item.codigo_administrativo || 'N/A'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div className="col-12 md:col-6">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Categoría Programática</div>
-                                    <div className="font-bold">{item.categoria_programatica}</div>
+                            <div className="flex flex-column w-full">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-bookmark text-primary mr-2"></i>
+                                    <span className="text-500 font-medium mb-1">Categoría Programática</span>
+                                </div>
+                                <div className="flex flex-column">
+                                    <span className="font-medium mb-2">
+                                        {item.categoria_programatica || 'No asignada'}
+                                    </span>
+                                    <div className="flex align-items-center gap-2">
+                                        <span className="text-sm text-500">CATEGORÍA</span>
+                                        <span className="text-sm bg-primary-100 text-primary-700 p-2 border-round">
+                                            {item.codigo_programatico || 'N/A'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -229,16 +258,17 @@ const TblitemsViewPage = (props) => {
                 <Card title="Información Adicional" className="mb-3">
                     <div className="grid">
                         <div className="col-12">
-                            <div className="card flex gap-3 align-items-center card shadow-none p-3 surface-100">
-                                <div>
-                                    <div className="text-500 font-medium mb-1">Fecha Creación</div>
-                                    <div className="font-bold">
-                                        {item.fecha_creacion ? 
-                                            new Date(item.fecha_creacion).toLocaleDateString('es-BO', {
-                                                year: 'numeric', month: 'long', day: 'numeric'
-                                            }) : 'No disponible'}
-                                    </div>
+                            <div className="flex flex-column">
+                                <div className="flex align-items-center mb-2">
+                                    <i className="pi pi-calendar text-primary mr-2"></i>
+                                    <span className="text-500 font-medium">Fecha Creación</span>
                                 </div>
+                                <span className="font-bold">
+                                    {item.fecha_creacion ? 
+                                        new Date(item.fecha_creacion).toLocaleDateString('es-BO', {
+                                            year: 'numeric', month: 'long', day: 'numeric'
+                                        }) : 'No disponible'}
+                                </span>
                             </div>
                         </div>
                     </div>

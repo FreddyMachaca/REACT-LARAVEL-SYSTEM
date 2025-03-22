@@ -27,6 +27,20 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/tblTipoAportante",
+            "label": "Tbl Tipo Aportante",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
+            "to": "/tblTransacciones",
+            "label": "Tbl Transacciones",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblacreedores",
             "label": "Tbl Acreedores",
             "icon": "pi pi-th-large",

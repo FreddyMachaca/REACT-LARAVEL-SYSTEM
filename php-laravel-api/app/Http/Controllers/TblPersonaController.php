@@ -20,6 +20,17 @@ class TblPersonaController extends Controller
         try{
             $query = TblPersona::query();
             
+            $query->whereNotNull('per_nombres')
+                  ->whereNotNull('per_ap_paterno')
+                  ->whereNotNull('per_num_doc')
+                  ->where('per_nombres', '!=', '')
+                  ->where('per_ap_paterno', '!=', '')
+                  ->where('per_num_doc', '!=', '');
+
+            if ($request->with_assignments) {
+                $query->has('asignacionesTipoAportante');
+            }
+            
             $query->leftJoin('tbl_mp_asignacion', function($join) {
                 $join->on('tbl_persona.per_id', '=', 'tbl_mp_asignacion.as_per_id')
                      ->where('tbl_mp_asignacion.as_estado', '=', 'V');
@@ -77,11 +88,19 @@ class TblPersonaController extends Controller
             $page = $request->input('page', 1);
             $limit = $request->input('limit', 10);
             
+            // Obtener el total antes de la paginación
             $total = $query->count();
             
+            // Aplicar paginación
             $records = $query->skip(($page - 1) * $limit)
                             ->take($limit)
                             ->get();
+            
+            $records = $records->filter(function($record) {
+                return !empty(trim($record->per_nombres)) && 
+                       !empty(trim($record->per_ap_paterno)) && 
+                       !empty(trim($record->per_num_doc));
+            })->values();
 
             return $this->respond([
                 'records' => $records,

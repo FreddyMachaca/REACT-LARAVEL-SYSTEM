@@ -361,6 +361,47 @@ Route::get('home', 'HomeController@index');
 	Route::any('tblpersona/edit/{rec_id}', 'TblPersonaController@edit');
 	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
 
+/* routes for TblTipoAportante Controller */	
+	Route::get('tbltipoaportante/', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/index', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/index/{filter?}/{filtervalue?}', 'TblTipoAportanteController@index');
+	Route::get('tbltipoaportante/view/{rec_id}', 'TblTipoAportanteController@view');
+	Route::post('tbltipoaportante/add', 'TblTipoAportanteController@add');
+	Route::any('tbltipoaportante/edit/{rec_id}', 'TblTipoAportanteController@edit');
+	Route::any('tbltipoaportante/delete/{rec_id}', 'TblTipoAportanteController@delete');
+	Route::get('tbltipoaportante/personaInfo/{personaId}', 'TblTipoAportanteController@getPersonaInfo');
+
+/* routes for TblMpAsignacionTipoAportante Controller */	
+	Route::get('tblmpasignaciontipoaportante/', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/index', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/index/{filter?}/{filtervalue?}', 'TblMpAsignacionTipoAportanteController@index');
+	Route::get('tblmpasignaciontipoaportante/view/{rec_id}', 'TblMpAsignacionTipoAportanteController@view');
+	Route::post('tblmpasignaciontipoaportante/add', 'TblMpAsignacionTipoAportanteController@add');
+	Route::any('tblmpasignaciontipoaportante/edit/{rec_id}', 'TblMpAsignacionTipoAportanteController@edit');
+	Route::any('tblmpasignaciontipoaportante/delete/{rec_id}', 'TblMpAsignacionTipoAportanteController@delete');
+	Route::get('tblmpasignaciontipoaportante/listAsignaciones', 'TblMpAsignacionTipoAportanteController@listAsignaciones');
+
+/* routes for TblPlaTransacciones Controller */	
+	Route::get('tblplatransacciones/', 'TblPlaTransaccionesController@index');
+	Route::get('tblplatransacciones/index', 'TblPlaTransaccionesController@index');
+	Route::get('tblplatransacciones/index/{filter?}/{filtervalue?}', 'TblPlaTransaccionesController@index');
+	Route::get('tblplatransacciones/view/{rec_id}', 'TblPlaTransaccionesController@view');
+	Route::post('tblplatransacciones/add', 'TblPlaTransaccionesController@add');
+	Route::any('tblplatransacciones/edit/{rec_id}', 'TblPlaTransaccionesController@edit');
+	Route::any('tblplatransacciones/delete/{rec_id}', 'TblPlaTransaccionesController@delete');
+	Route::get('tblplatransacciones/persona/{personaId}', 'TblPlaTransaccionesController@getTransaccionesPersona');
+	Route::get('tblplatransacciones/personaInfo/{personaId}', 'TblPlaTransaccionesController@getPersonaInfo');
+
+/* routes for TblPlaFactor Controller */
+	Route::get('tblplafactor/', 'TblPlaFactorController@index');
+	Route::get('tblplafactor/index', 'TblPlaFactorController@index');
+	Route::get('tblplafactor/index/{filter?}/{filtervalue?}', 'TblPlaFactorController@index');
+	Route::get('tblplafactor/view/{rec_id}', 'TblPlaFactorController@view');
+	Route::post('tblplafactor/add', 'TblPlaFactorController@add');
+	Route::any('tblplafactor/edit/{rec_id}', 'TblPlaFactorController@edit');
+	Route::any('tblplafactor/delete/{rec_id}', 'TblPlaFactorController@delete');
+	Route::get('tblplafactor/getFactoresEspeciales', 'TblPlaFactorController@getFactoresEspeciales');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
