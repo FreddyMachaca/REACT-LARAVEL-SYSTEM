@@ -13,6 +13,7 @@ use App\Http\Controllers\TblUbicacionFisicaController;
 use App\Http\Controllers\TblServiciosController;
 use App\Http\Controllers\ActaEntregacabController;
 use App\Models\TblPersona;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,15 @@ Route::middleware(['auth:api'])->group(function () {
 
 Route::get('home', 'HomeController@index');
 
+/* Rutas de autenticación separadas */
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+});
+
+/* Rutas de autenticación */
+Route::post('auth/login', [AuthController::class, 'login']);
+Route::post('auth/register', [AuthController::class, 'register']);
 
 /* routes for TblAcreedores Controller  */	
 	Route::get('tblacreedores/', 'TblAcreedoresController@index');

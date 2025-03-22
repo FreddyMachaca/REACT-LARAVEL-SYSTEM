@@ -26,7 +26,20 @@ class TblSegUsuario extends Model
      *
      * @var array
      */
-	protected $fillable = ["us_usuario","us_contrasena","us_per_id","us_estado_clave","us_estado_sesion","us_correo_interno","us_nombre_equipo","us_fecha_inicio","us_fecha_fin","us_estado","us_usuario_creacion","us_fecha_creacion"];
+	protected $fillable = [
+        'us_usuario',
+        'us_contrasena',
+        'us_per_id',
+        'us_estado_clave',
+        'us_estado_sesion',
+        'us_correo_interno',
+        'us_nombre_equipo',
+        'us_fecha_inicio',
+        'us_fecha_fin',
+        'us_estado',
+        'us_usuario_creacion',
+        'us_fecha_creacion'
+    ];
 	
 
 	/**
@@ -178,4 +191,9 @@ class TblSegUsuario extends Model
      * @var bool
      */
 	public $timestamps = false;
+
+    public function persona()
+    {
+        return $this->belongsTo(TblPersona::class, 'us_per_id', 'per_id');
+    }
 }

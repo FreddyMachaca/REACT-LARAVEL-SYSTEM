@@ -1,46 +1,39 @@
 <?php
 
 namespace App\Helpers;
-use Exception;
+
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
 class JWTHelper
 {
-	// encoding data
-	public static function encode($data) {
-		try{
-			$secret = config('auth.jwt_secret');
-			$algorithm = config('auth.jwt_algorithm');
-			$duration = config('auth.jwt_duration');
-			$iat = time(); // time of token issued at
-            $nbf = $iat + 10; //not before in seconds
-            $exp = strtotime("+$duration minutes"); // expire time of token in seconds
-			$iss = config('app.url');
-			$payload = array(
-				"iss" => $iss,
-				"aud" => $iss,
-				"iat" => time(),
-				"nbf" => $nbf,
-				"exp" => $exp,
-				"data" => $data,
-			);
-			//throw new Exception($nbf);
-			return JWT::encode($payload, $secret, $algorithm);
-		}
-		catch(Exception $e){
-			throw new Exception($e->getMessage());
-		}
-	}
+    public static function createToken($data)
+    {
+        $key = env('JWT_SECRET');
+        $algorithm = env('JWT_ALGORITHM', 'HS256');
+        $duration = env('JWT_DURATION', 1);
 
-	// decode the token
-	public static function decode($jwt) {
-		try{
-			$secret = config('auth.jwt_secret');
-			$algorithm = config('auth.jwt_algorithm');
-			$decoded = JWT::decode($jwt, $secret, [$algorithm]);
-			return $decoded->data;
-		}
-		catch(Exception $e){
-			throw new Exception($e->getMessage());
-		}
-	}
+        $payload = array(
+            "iss" => env('APP_URL'),
+            "aud" => env('APP_URL'),
+            "iat" => time(),
+            "exp" => time() + (60 * 60 * 24 * $duration), // token expira en X días
+            "data" => $data
+        );
+
+        return JWT::encode($payload, $key, $algorithm);
+    }
+
+    public static function validateToken($token)
+    {
+        try {
+            $key = env('JWT_SECRET');
+            $algorithm = env('JWT_ALGORITHM', 'HS256');
+            
+            $decoded = JWT::decode($token, new Key($key, $algorithm));
+            return (array) $decoded->data;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

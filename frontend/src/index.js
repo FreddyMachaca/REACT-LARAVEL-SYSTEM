@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import App from 'App';
 import { AppProvider } from "contexts/AppContext";
+import { AuthProvider } from "contexts/AuthContext";
 
 import InjectAxios from "components/InjectAxios";
 
@@ -29,12 +30,12 @@ root.render(
   // <React.StrictMode>
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      
       <AppProvider>
-        <InjectAxios />
-        <App />
+        <AuthProvider>
+          <InjectAxios />
+          <App />
+        </AuthProvider>
       </AppProvider>
-      
     </QueryClientProvider>
   </BrowserRouter>
   // </React.StrictMode>
