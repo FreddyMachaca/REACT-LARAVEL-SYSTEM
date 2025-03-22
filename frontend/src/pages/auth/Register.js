@@ -9,6 +9,8 @@ import { Messages } from 'primereact/messages';
 import { Dialog } from 'primereact/dialog';
 import { useRef } from 'react';
 import { RadioButton } from 'primereact/radiobutton';
+import { BackgroundVideo } from 'components/BackgroundVideo';
+import { GlassCard } from 'components/GlassCard';
 
 export default function Register() {
     const { register } = useAuth();
@@ -107,167 +109,170 @@ export default function Register() {
     );
 
     return (
-        <div className="flex align-items-center justify-content-center min-h-screen bg-gradient-to-br from-indigo-900 to-blue-500">
-            <div className="w-full md:w-8 lg:w-6 xl:w-4 px-4">
-                <Card className="backdrop-blur-sm bg-white/90 shadow-2xl border-round-xl p-4">
-                    <div className="text-center mb-5">
-                        <i className="pi pi-user-plus text-6xl text-primary mb-3"></i>
-                        <div className="text-900 text-3xl font-bold mb-3">Crear Cuenta</div>
-                        <span className="text-600 font-medium">Completa los datos para registrarte</span>
-                    </div>
-
-                    <Messages ref={messages} className="mb-4" />
-                    
-                    <form onSubmit={handleSubmit} className="p-fluid">
-                        <div className="grid formgrid">
-                            <div className="col-12 md:col-4 field mb-4">
-                                <span className="p-float-label">
-                                    <InputText 
-                                        name="per_nombres" 
-                                        value={formData.per_nombres} 
-                                        onChange={handleInputChange}
-                                        className="p-inputtext-lg"
-                                        required 
-                                    />
-                                    <label>Nombres</label>
-                                </span>
-                            </div>
-                            
-                            <div className="col-12 md:col-4 field mb-4">
-                                <span className="p-float-label">
-                                    <InputText 
-                                        name="per_ap_paterno" 
-                                        value={formData.per_ap_paterno} 
-                                        onChange={handleInputChange}
-                                        className="p-inputtext-lg"
-                                        required 
-                                    />
-                                    <label>Apellido Paterno</label>
-                                </span>
-                            </div>
-                            
-                            <div className="col-12 md:col-4 field mb-4">
-                                <span className="p-float-label">
-                                    <InputText 
-                                        name="per_ap_materno" 
-                                        value={formData.per_ap_materno} 
-                                        onChange={handleInputChange}
-                                        className="p-inputtext-lg"
-                                        required 
-                                    />
-                                    <label>Apellido Materno</label>
-                                </span>
-                            </div>
-                            
-                            <div className="col-12 md:col-6 field mb-4">
-                                <span className="p-float-label">
-                                    <InputText 
-                                        name="per_num_doc" 
-                                        value={formData.per_num_doc} 
-                                        onChange={handleInputChange}
-                                        className="p-inputtext-lg"
-                                        required 
-                                    />
-                                    <label>CI</label>
-                                </span>
-                            </div>
-                            
-                            <div className="col-12 md:col-6 field mb-4">
-                                <label className="block mb-2">Sexo</label>
-                                <div className="flex gap-4 p-2 border-1 border-round surface-border">
-                                    <div className="flex align-items-center">
-                                        <RadioButton 
-                                            inputId="sexoM" 
-                                            name="per_sexo" 
-                                            value="M" 
-                                            onChange={handleInputChange} 
-                                            checked={formData.per_sexo === 'M'} 
-                                        />
-                                        <label htmlFor="sexoM" className="ml-2">Masculino</label>
-                                    </div>
-                                    <div className="flex align-items-center">
-                                        <RadioButton 
-                                            inputId="sexoF" 
-                                            name="per_sexo" 
-                                            value="F" 
-                                            onChange={handleInputChange} 
-                                            checked={formData.per_sexo === 'F'} 
-                                        />
-                                        <label htmlFor="sexoF" className="ml-2">Femenino</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="col-12">
-                                <div className="surface-card p-4 border-round mb-4">
-                                    <h3 className="text-xl mb-4 font-medium">Información de Cuenta</h3>
-                                    <div className="grid formgrid">
-                                        <div className="col-12 md:col-6 field mb-4">
-                                            <span className="p-float-label">
-                                                <InputText 
-                                                    name="usuario" 
-                                                    value={formData.usuario} 
-                                                    onChange={handleInputChange}
-                                                    className="p-inputtext-lg"
-                                                    required 
-                                                />
-                                                <label>Usuario</label>
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="col-12 md:col-6 field mb-4">
-                                            <span className="p-float-label">
-                                                <InputText 
-                                                    type="email" 
-                                                    name="correo" 
-                                                    value={formData.correo} 
-                                                    onChange={handleInputChange}
-                                                    className="p-inputtext-lg"
-                                                    required 
-                                                />
-                                                <label>Correo</label>
-                                            </span>
-                                        </div>
-                                        
-                                        <div className="col-12 field mb-4">
-                                            <span className="p-float-label">
-                                                <Password 
-                                                    name="password" 
-                                                    value={formData.password} 
-                                                    onChange={handleInputChange}
-                                                    className="p-inputtext-lg"
-                                                    required 
-                                                    toggleMask
-                                                />
-                                                <label>Contraseña</label>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="col-12 flex justify-content-between gap-2">
-                                <Button 
-                                    type="submit" 
-                                    label="Registrar" 
-                                    icon="pi pi-user-plus"
-                                    loading={loading}
-                                    disabled={loading}
-                                    className="p-button-lg flex-1"
-                                />
-                                
-                                <Button 
-                                    type="button" 
-                                    label="Volver al Login" 
-                                    icon="pi pi-arrow-left"
-                                    className="p-button-outlined p-button-secondary p-button-lg flex-1"
-                                    onClick={() => navigate('/auth/login')}
-                                    disabled={loading}
-                                />
-                            </div>
+        <>
+            <BackgroundVideo />
+            <div className="flex align-items-center justify-content-center min-h-screen backdrop-blur-sm">
+                <div className="w-full md:w-8 lg:w-6 xl:w-4 px-4 transition-all duration-300">
+                    <GlassCard>
+                        <div className="text-center mb-5">
+                            <i className="pi pi-user-plus text-6xl text-primary mb-3"></i>
+                            <div className="text-900 text-3xl font-bold mb-3">Crear Cuenta</div>
+                            <span className="text-600 font-medium">Completa los datos para registrarte</span>
                         </div>
-                    </form>
-                </Card>
+
+                        <Messages ref={messages} className="mb-4" />
+                        
+                        <form onSubmit={handleSubmit} className="p-fluid">
+                            <div className="grid formgrid">
+                                <div className="col-12 md:col-4 field mb-4">
+                                    <span className="p-float-label">
+                                        <InputText 
+                                            name="per_nombres" 
+                                            value={formData.per_nombres} 
+                                            onChange={handleInputChange}
+                                            className="p-inputtext-lg"
+                                            required 
+                                        />
+                                        <label>Nombres</label>
+                                    </span>
+                                </div>
+                                
+                                <div className="col-12 md:col-4 field mb-4">
+                                    <span className="p-float-label">
+                                        <InputText 
+                                            name="per_ap_paterno" 
+                                            value={formData.per_ap_paterno} 
+                                            onChange={handleInputChange}
+                                            className="p-inputtext-lg"
+                                            required 
+                                        />
+                                        <label>Apellido Paterno</label>
+                                    </span>
+                                </div>
+                                
+                                <div className="col-12 md:col-4 field mb-4">
+                                    <span className="p-float-label">
+                                        <InputText 
+                                            name="per_ap_materno" 
+                                            value={formData.per_ap_materno} 
+                                            onChange={handleInputChange}
+                                            className="p-inputtext-lg"
+                                            required 
+                                        />
+                                        <label>Apellido Materno</label>
+                                    </span>
+                                </div>
+                                
+                                <div className="col-12 md:col-6 field mb-4">
+                                    <span className="p-float-label">
+                                        <InputText 
+                                            name="per_num_doc" 
+                                            value={formData.per_num_doc} 
+                                            onChange={handleInputChange}
+                                            className="p-inputtext-lg"
+                                            required 
+                                        />
+                                        <label>CI</label>
+                                    </span>
+                                </div>
+                                
+                                <div className="col-12 md:col-6 field mb-4">
+                                    <label className="block mb-2">Sexo</label>
+                                    <div className="flex gap-4 p-2 border-1 border-round surface-border">
+                                        <div className="flex align-items-center">
+                                            <RadioButton 
+                                                inputId="sexoM" 
+                                                name="per_sexo" 
+                                                value="M" 
+                                                onChange={handleInputChange} 
+                                                checked={formData.per_sexo === 'M'} 
+                                            />
+                                            <label htmlFor="sexoM" className="ml-2">Masculino</label>
+                                        </div>
+                                        <div className="flex align-items-center">
+                                            <RadioButton 
+                                                inputId="sexoF" 
+                                                name="per_sexo" 
+                                                value="F" 
+                                                onChange={handleInputChange} 
+                                                checked={formData.per_sexo === 'F'} 
+                                            />
+                                            <label htmlFor="sexoF" className="ml-2">Femenino</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="col-12">
+                                    <div className="surface-card p-4 border-round mb-4">
+                                        <h3 className="text-xl mb-4 font-medium">Información de Cuenta</h3>
+                                        <div className="grid formgrid">
+                                            <div className="col-12 md:col-6 field mb-4">
+                                                <span className="p-float-label">
+                                                    <InputText 
+                                                        name="usuario" 
+                                                        value={formData.usuario} 
+                                                        onChange={handleInputChange}
+                                                        className="p-inputtext-lg"
+                                                        required 
+                                                    />
+                                                    <label>Usuario</label>
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="col-12 md:col-6 field mb-4">
+                                                <span className="p-float-label">
+                                                    <InputText 
+                                                        type="email" 
+                                                        name="correo" 
+                                                        value={formData.correo} 
+                                                        onChange={handleInputChange}
+                                                        className="p-inputtext-lg"
+                                                        required 
+                                                    />
+                                                    <label>Correo</label>
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="col-12 field mb-4">
+                                                <span className="p-float-label">
+                                                    <Password 
+                                                        name="password" 
+                                                        value={formData.password} 
+                                                        onChange={handleInputChange}
+                                                        className="p-inputtext-lg"
+                                                        required 
+                                                        toggleMask
+                                                    />
+                                                    <label>Contraseña</label>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="col-12 flex justify-content-between gap-2">
+                                    <Button 
+                                        type="submit" 
+                                        label="Registrar" 
+                                        icon="pi pi-user-plus"
+                                        loading={loading}
+                                        disabled={loading}
+                                        className="p-button-lg flex-1"
+                                    />
+                                    
+                                    <Button 
+                                        type="button" 
+                                        label="Volver al Login" 
+                                        icon="pi pi-arrow-left"
+                                        className="p-button-outlined p-button-secondary p-button-lg flex-1"
+                                        onClick={() => navigate('/auth/login')}
+                                        disabled={loading}
+                                    />
+                                </div>
+                            </div>
+                        </form>
+                    </GlassCard>
+                </div>
             </div>
 
             <Dialog
@@ -290,6 +295,6 @@ export default function Register() {
                     </div>
                 </div>
             </Dialog>
-        </div>
+        </>
     );
 }

@@ -34,7 +34,7 @@ Route::middleware(['auth:api'])->group(function () {
 
 Route::get('home', 'HomeController@index');
 
-/* Rutas de autenticación separadas */
+/* Rutas de autenticación*/
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);

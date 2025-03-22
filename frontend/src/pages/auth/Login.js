@@ -7,6 +7,8 @@ import { Button } from 'primereact/button';
 import { Password } from 'primereact/password';
 import { Messages } from 'primereact/messages';
 import { useRef } from 'react';
+import { BackgroundVideo } from 'components/BackgroundVideo';
+import { GlassCard } from 'components/GlassCard';
 
 export default function Login() {
     const [username, setUsername] = useState('');
@@ -54,68 +56,71 @@ export default function Login() {
     };
 
     return (
-        <div className="flex align-items-center justify-content-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-900">
-            <div className="w-full md:w-6 lg:w-4 px-4">
-                <Card className="backdrop-blur-sm bg-white/90 shadow-2xl border-round-xl p-4">
-                    <div className="text-center mb-5">
-                        <i className="pi pi-user-circle text-6xl text-primary mb-3"></i>
-                        <div className="text-900 text-3xl font-bold mb-3">¡Bienvenido!</div>
-                        <span className="text-600 font-medium">Ingresa tus credenciales para continuar</span>
-                    </div>
-
-                    <Messages ref={messages} className="mb-4" />
-                    
-                    <form onSubmit={handleSubmit} className="p-fluid">
-                        <div className="field mb-4">
-                            <span className="p-float-label p-input-icon-right">
-                                <i className="pi pi-user" />
-                                <InputText 
-                                    id="username"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    className="p-inputtext-lg"
-                                    required
-                                />
-                                <label htmlFor="username">Usuario o Correo</label>
-                            </span>
+        <>
+            <BackgroundVideo />
+            <div className="flex align-items-center justify-content-center min-h-screen backdrop-blur-sm">
+                <div className="w-full md:w-6 lg:w-4 px-4 transition-all duration-300 hover:scale-105">
+                    <GlassCard>
+                        <div className="text-center mb-5">
+                            <i className="pi pi-user-circle text-6xl text-primary mb-3"></i>
+                            <div className="text-900 text-3xl font-bold mb-3">¡Bienvenido!</div>
+                            <span className="text-600 font-medium">Ingresa tus credenciales para continuar</span>
                         </div>
 
-                        <div className="field mb-4">
-                            <span className="p-float-label">
-                                <Password
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    toggleMask
-                                    className="p-inputtext-lg"
-                                    feedback={false}
-                                    required
-                                />
-                                <label htmlFor="password">Contraseña</label>
-                            </span>
-                        </div>
-
-                        <Button 
-                            type="submit" 
-                            label="Ingresar" 
-                            icon="pi pi-sign-in"
-                            loading={loading}
-                            disabled={loading}
-                            className="p-button-lg mb-3"
-                        />
+                        <Messages ref={messages} className="mb-4" />
                         
-                        <div className="text-center">
-                            <span className="text-600">¿No tienes cuenta?</span>
-                            <Link 
-                                to="/auth/register" 
-                                className="font-medium text-blue-500 hover:text-blue-700 ml-2 no-underline hover:underline"
-                            >
-                                Regístrate aquí
-                            </Link>
-                        </div>
-                    </form>
-                </Card>
+                        <form onSubmit={handleSubmit} className="p-fluid">
+                            <div className="field mb-4">
+                                <span className="p-float-label p-input-icon-right">
+                                    <i className="pi pi-user" />
+                                    <InputText 
+                                        id="username"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        className="p-inputtext-lg"
+                                        required
+                                    />
+                                    <label htmlFor="username">Usuario o Correo</label>
+                                </span>
+                            </div>
+
+                            <div className="field mb-4">
+                                <span className="p-float-label">
+                                    <Password
+                                        id="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        toggleMask
+                                        className="p-inputtext-lg"
+                                        feedback={false}
+                                        required
+                                    />
+                                    <label htmlFor="password">Contraseña</label>
+                                </span>
+                            </div>
+
+                            <Button 
+                                type="submit" 
+                                label="Ingresar" 
+                                icon="pi pi-sign-in"
+                                loading={loading}
+                                disabled={loading}
+                                className="p-button-lg mb-3"
+                            />
+                            
+                            <div className="text-center">
+                                <span className="text-600">¿No tienes cuenta?</span>
+                                <Link 
+                                    to="/auth/register" 
+                                    className="font-medium text-blue-500 hover:text-blue-700 ml-2 no-underline hover:underline"
+                                >
+                                    Regístrate aquí
+                                </Link>
+                            </div>
+                        </form>
+                    </GlassCard>
+                </div>
             </div>
-        </div>
+        </>
     );
 }
