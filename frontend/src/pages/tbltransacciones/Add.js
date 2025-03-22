@@ -7,6 +7,8 @@ import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
 import { Calendar } from 'primereact/calendar';
 import { InputNumber } from 'primereact/inputnumber';
+import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Dialog } from 'primereact/dialog';
 import { Title } from 'components/Title';
@@ -17,7 +19,6 @@ const TblTransaccionesAdd = () => {
     const { personaId } = useParams();
     const app = useApp();
     
-    // States
     const [loading, setLoading] = useState(true);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const [personaInfo, setPersonaInfo] = useState(null);
@@ -27,6 +28,16 @@ const TblTransaccionesAdd = () => {
     const [deleteDialog, setDeleteDialog] = useState(false);
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [saving, setSaving] = useState(false);
+    
+    const [showGlosaDialog, setShowGlosaDialog] = useState(false);
+    const [glosaFormData, setGlosaFormData] = useState({
+        gl_tipo_doc: '',
+        gl_numero_doc: '',
+        gl_fecha_doc: new Date(),
+        gl_glosa: ''
+    });
+    const [tiposDocumento, setTiposDocumento] = useState([]);
+    const [savingGlosa, setSavingGlosa] = useState(false);
     
     const [formData, setFormData] = useState({
         tr_fa_id: null,
@@ -52,6 +63,14 @@ const TblTransaccionesAdd = () => {
                         label: factor.fa_descripcion
                     }));
                     setTiposTransaccion(tiposOptions);
+                }
+                
+                const tiposDocResponse = await axios.get('/tblcatalogo/byTipo/tipo_documento_impreso');
+                if (tiposDocResponse.data) {
+                    setTiposDocumento(tiposDocResponse.data.map(tipo => ({
+                        value: tipo.cat_id,
+                        label: tipo.cat_descripcion
+                    })));
                 }
                 
                 await loadTransactions();
@@ -81,42 +100,82 @@ const TblTransaccionesAdd = () => {
         }
     };
     
-    const handleSave = async () => {
+    const handleSave = () => {
+        if (!formData.tr_fa_id) {
+            app.flashMsg('Advertencia', 'Por favor seleccione el tipo de transacción', 'warn');
+            return;
+        }
+        
+        setShowGlosaDialog(true);
+    };
+    
+    const handleGlosaSubmit = async () => {
         try {
-            if (!formData.tr_fa_id) {
-                app.flashMsg('Advertencia', 'Por favor seleccione el tipo de transacción', 'warn');
+            if (!glosaFormData.gl_tipo_doc || !glosaFormData.gl_numero_doc || !glosaFormData.gl_glosa) {
+                app.flashMsg('Advertencia', 'Por favor complete todos los campos de la glosa', 'warn');
                 return;
             }
             
-            setSaving(true);
+            setSavingGlosa(true);
             
-            const payload = {
-                ...formData,
+            const transaccionPayload = {
+                tr_fa_id: parseInt(formData.tr_fa_id),
+                tr_pc_id: parseInt(formData.tr_pc_id),
                 tr_per_id: parseInt(personaId),
                 tr_fecha_inicio: new Date().toISOString(),
-                tr_fecha_creacion: new Date().toISOString(),
-                tr_monto: 0.00,
-                tr_estado: 'V'
+                tr_estado: formData.tr_estado,
+                tr_monto: 0.00
             };
             
-            await axios.post('/tblplatransacciones/add', payload);
+            const transaccionResponse = await axios.post('/tblplatransacciones/add', transaccionPayload);
             
-            setFormData({
-                tr_fa_id: null,
-                tr_pc_id: 1,
-                tr_estado: 'V',
-                tr_fecha_inicio: new Date(),
-                tr_monto: 0
-            });
-            
-            await loadTransactions();
-            
-            app.flashMsg('Éxito', 'Transacción guardada correctamente', 'success');
+            if (transaccionResponse.data) {
+                const transaccionId = transaccionResponse.data.tr_id;
+                
+                if (!transaccionId) {
+                    throw new Error('No se pudo obtener el ID de la transacción');
+                }
+                
+                const glosaPayload = {
+                    gl_valor_pk: transaccionId,
+                    gl_nombre_pk: 'tr_id',
+                    gl_tabla: 'tbl_pla_transacciones',
+                    gl_tipo_doc: parseInt(glosaFormData.gl_tipo_doc),
+                    gl_numero_doc: glosaFormData.gl_numero_doc,
+                    gl_fecha_doc: glosaFormData.gl_fecha_doc instanceof Date 
+                        ? glosaFormData.gl_fecha_doc.toISOString() 
+                        : new Date(glosaFormData.gl_fecha_doc).toISOString(),
+                    gl_glosa: glosaFormData.gl_glosa,
+                    gl_estado: 'V'
+                };
+                
+                await axios.post('/tblglosa/add', glosaPayload);
+                
+                setFormData({
+                    tr_fa_id: null,
+                    tr_pc_id: 1,
+                    tr_estado: 'V',
+                    tr_fecha_inicio: new Date(),
+                    tr_monto: 0
+                });
+                
+                setGlosaFormData({
+                    gl_tipo_doc: '',
+                    gl_numero_doc: '',
+                    gl_fecha_doc: new Date(),
+                    gl_glosa: ''
+                });
+                
+                await loadTransactions();
+                setShowGlosaDialog(false);
+                app.flashMsg('Éxito', 'Transacción guardada correctamente', 'success');
+            } else {
+                throw new Error('No se recibió respuesta del servidor al guardar la transacción');
+            }
         } catch (error) {
-            console.error('Error saving transaction:', error);
-            app.flashMsg('Error', 'No se pudo guardar la transacción', 'error');
+            app.flashMsg('Error', `No se pudo guardar: ${error.message}`, 'error');
         } finally {
-            setSaving(false);
+            setSavingGlosa(false);
         }
     };
     
@@ -333,6 +392,75 @@ const TblTransaccionesAdd = () => {
                 <div className="flex align-items-center justify-content-center">
                     <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                     <span>¿Está seguro que desea eliminar esta transacción?</span>
+                </div>
+            </Dialog>
+            
+            <Dialog
+                visible={showGlosaDialog}
+                style={{ width: '500px' }}
+                header="Registrar Glosa"
+                modal
+                footer={
+                    <div>
+                        <Button
+                            label="Cancelar"
+                            icon="pi pi-times"
+                            className="p-button-text"
+                            onClick={() => setShowGlosaDialog(false)}
+                        />
+                        <Button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            loading={savingGlosa}
+                            onClick={handleGlosaSubmit}
+                        />
+                    </div>
+                }
+                onHide={() => setShowGlosaDialog(false)}
+            >
+                <div className="grid p-fluid">
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Tipo de Documento *</label>
+                        <Dropdown
+                            value={glosaFormData.gl_tipo_doc}
+                            options={tiposDocumento}
+                            onChange={(e) => setGlosaFormData({...glosaFormData, gl_tipo_doc: e.value})}
+                            placeholder="Seleccione tipo de documento"
+                            className="w-full"
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Número de Documento *</label>
+                        <InputText
+                            value={glosaFormData.gl_numero_doc}
+                            onChange={(e) => setGlosaFormData({...glosaFormData, gl_numero_doc: e.target.value})}
+                            placeholder="Ingrese número de documento"
+                            className="w-full"
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Fecha Documento *</label>
+                        <Calendar
+                            value={glosaFormData.gl_fecha_doc}
+                            onChange={(e) => setGlosaFormData({...glosaFormData, gl_fecha_doc: e.value})}
+                            dateFormat="dd/mm/yy"
+                            showIcon
+                            className="w-full"
+                        />
+                    </div>
+                    
+                    <div className="col-12">
+                        <label className="font-bold block mb-2">Descripción *</label>
+                        <InputTextarea
+                            value={glosaFormData.gl_glosa}
+                            onChange={(e) => setGlosaFormData({...glosaFormData, gl_glosa: e.target.value})}
+                            rows={3}
+                            placeholder="Ingrese descripción de la glosa"
+                            className="w-full"
+                        />
+                    </div>
                 </div>
             </Dialog>
         </div>

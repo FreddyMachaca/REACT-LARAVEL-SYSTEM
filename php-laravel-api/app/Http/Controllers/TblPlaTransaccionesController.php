@@ -67,22 +67,33 @@ class TblPlaTransaccionesController extends Controller
     public function add(Request $request)
     {
         try {
-            $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
-            DB::statement("SELECT setval('tbl_pla_transacciones_tr_id_seq', {$maxId}, true)");
-            $nextId = $maxId + 1;
+            DB::beginTransaction();
             
             $modeldata = $this->normalizeFormData($request->all());
-            $modeldata['tr_id'] = $nextId;
+            
+            if (isset($modeldata['tr_id'])) {
+                unset($modeldata['tr_id']);
+            }
+            
             $modeldata['tr_fecha_creacion'] = now();
             $modeldata['tr_estado'] = 'V';
             $modeldata['tr_monto'] = floatval($modeldata['tr_monto'] ?? 0);
 
-            \Log::info('Nuevo ID generado:', ['tr_id' => $nextId, 'max_id_encontrado' => $maxId]);        
             $record = TblPlaTransacciones::create($modeldata);
+            
+            if (!$record || !$record->tr_id) {
+                throw new Exception('Error al crear la transacción: No se pudo obtener el ID');
+            }
+
+            DB::commit();
+            
+            $record = TblPlaTransacciones::with(['persona', 'factor'])
+                ->findOrFail($record->tr_id);
+            
             return $this->respond($record);
         }
         catch(Exception $e) {
-            \Log::error('Error en creación de transacción:', ['error' => $e->getMessage()]);
+            DB::rollback();
             return $this->respondWithError($e);
         }
     }

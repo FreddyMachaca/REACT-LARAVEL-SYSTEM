@@ -10,6 +10,7 @@ class TblPlaTransacciones extends Model
     public $timestamps = false;
     
     protected $fillable = [
+        'tr_id', 
         'tr_pc_id',
         'tr_per_id',
         'tr_fa_id',
@@ -21,7 +22,7 @@ class TblPlaTransacciones extends Model
         'tr_fecha_creacion'
     ];
 
-    public $incrementing = false;
+    public $incrementing = true;
 
     public static function search($query, $text){
         $search_condition = '(
