@@ -114,9 +114,9 @@ import TblasignacionList from 'pages/tblasignacion/List';
 import TblasignacionView from 'pages/tblasignacion/View';
 import TblTipoAportanteList from 'pages/tbltipoaportante/List';
 import TblTipoAportanteView from 'pages/tbltipoaportante/View';
-import TblTransaccionesList from 'pages/tbltransacciones/List';
-import TblTransaccionesAdd from 'pages/tbltransacciones/Add';
-import TblTransaccionesView from 'pages/tbltransacciones/View';
+import TblTransaccionesList from 'pages/transaccionesPersonal/List';
+import TblTransaccionesAdd from 'pages/transaccionesPersonal/Add';
+import TblTransaccionesView from 'pages/transaccionesPersonal/View';
 import TblestructuraorganizacionalView from 'pages/tblestructuraorganizacional/View'
 import TbltenoresAdd from 'pages/tbltenores/Add';
 import TbltenoresList from 'pages/tbltenores/List';
@@ -131,6 +131,7 @@ import 'primeflex/primeflex.css';
 import 'assets/styles/layout.scss';
 import TblPersonaList from 'pages/Tblpersona/List';
 import TblpersonaAdd from 'pages/Tblpersona/Add';
+import ExtraHours from 'pages/tbltransaccion/ExtraHours';
 
 const App = () => {
     return (
@@ -379,7 +380,7 @@ const App = () => {
                 <Route path="/tbltipoaportante" element={<TblTipoAportanteList />} />
                 <Route path="/tbltipoaportante/asignar/:personaId" element={<TblTipoAportanteView />} />
                 
-                {/* Transacciones routes */}
+                {/* Transacciones Personal routes */}
                 <Route path="/tblTransacciones" element={<TblTransaccionesList />} />
                 <Route path="/tblTransacciones/add/:personaId" element={<TblTransaccionesAdd />} />
                 <Route path="/tblTransacciones/view/:id" element={<TblTransaccionesView />} />
@@ -399,6 +400,9 @@ const App = () => {
                 {/* tblpersona pages routes */}
                 <Route path="/MovimientoPersonal/Persona" element={<TblPersonaList/>}/> 
                 <Route path="/MovimientoPersonal/Persona/add" element={<TblpersonaAdd/>}/> 
+
+                {/* Transacciones routes */}
+				<Route path="/tbltransaccion" element={<ExtraHours />} />
                 
             </Route>
 

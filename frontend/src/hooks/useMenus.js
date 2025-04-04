@@ -35,7 +35,7 @@ export default function useMenus() {
         },
         {
             "to": "/tblTransacciones",
-            "label": "Tbl Transacciones",
+            "label": "PlaTransacciones Personal",
             "icon": "pi pi-th-large",
             "iconcolor": "",
             "target": "",
@@ -263,6 +263,13 @@ export default function useMenus() {
             "icon": "pi pi-th-large",
             "iconcolor": "",
             "target": "",
+        },
+        {
+            "to": "/tbltransaccion",
+            "label": "Tbl Transaccion",
+            "icon": "pi pi-clock",
+            "iconcolor": "",
+            "target": "",
         }
     ];
 
@@ -286,7 +293,7 @@ export default function useMenus() {
             
             setDynamicMenus(menuItems);
         } catch (error) {
-            console.error('Error loading dynamic menu:', error);
+            //console.error('Error loading dynamic menu:', error);
             setDynamicMenus([]);
         }
     };

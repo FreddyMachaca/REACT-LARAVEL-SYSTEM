@@ -14,6 +14,7 @@ use App\Http\Controllers\TblServiciosController;
 use App\Http\Controllers\ActaEntregacabController;
 use App\Models\TblPersona;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TblTransaccionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -506,6 +507,15 @@ Route::prefix('ubicaciones')->group(function () {
 	Route::any('tblplafactor/edit/{rec_id}', 'TblPlaFactorController@edit');
 	Route::any('tblplafactor/delete/{rec_id}', 'TblPlaFactorController@delete');
 	Route::get('tblplafactor/getFactoresEspeciales', 'TblPlaFactorController@getFactoresEspeciales');
+
+/*routes Transacciones*/
+	Route::prefix('transacciones')->group(function () {
+		Route::get('/', [TblTransaccionController::class, 'index']);
+		Route::post('/', [TblTransaccionController::class, 'store']);
+		Route::get('/{id}', [TblTransaccionController::class, 'show']);
+		Route::put('/{id}', [TblTransaccionController::class, 'update']);
+		Route::delete('/{id}', [TblTransaccionController::class, 'destroy']);
+	});
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
