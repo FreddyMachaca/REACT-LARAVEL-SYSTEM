@@ -35,7 +35,6 @@ const TblitemsAddPage = (props) => {
     const [saving, setSaving] = useState(false);
     const [expandedKeys, setExpandedKeys] = useState({});
     const treeRef = useRef(null);
-    const [debugStats, setDebugStats] = useState(null);
     
     const [categoriaPragmatica, setCategoriaPragmatica] = useState('');
     const [categoriaAdministrativa, setCategoriaAdministrativa] = useState('');
@@ -70,28 +69,6 @@ const TblitemsAddPage = (props) => {
                 const treeResponse = await axios.get('/tblmpestructuraorganizacional/tree');
                 const hierarchyData = treeResponse.data.tree;
                 
-                setDebugStats(treeResponse.data.stats);
-                
-                console.log("API Response:", treeResponse.data);
-                console.log("Tree Structure:", hierarchyData);
-                
-                let totalNodes = 0;
-                let totalChildNodes = 0;
-                
-                const countNodes = (nodes) => {
-                    totalNodes += nodes.length;
-                    nodes.forEach(node => {
-                        if (node.children && node.children.length > 0) {
-                            totalChildNodes += node.children.length;
-                            countNodes(node.children);
-                        }
-                    });
-                };
-                
-                countNodes(hierarchyData);
-                console.log("Total Nodes in Tree:", totalNodes);
-                console.log("Total Child Nodes:", totalChildNodes);
-                
                 setTreeData(hierarchyData);
                 
                 const optionsResponse = await axios.get('/tblitems/options');
@@ -111,7 +88,6 @@ const TblitemsAddPage = (props) => {
                 
                 try {
                     const tipoItemResponse = await axios.get('/tblitems/options');
-                    console.log("Tipo Item Response:", tipoItemResponse.data);
                     
                     if (tipoItemResponse.data && tipoItemResponse.data.tipoItems) {
                         setTipoItemOptions(tipoItemResponse.data.tipoItems.map(item => ({
@@ -155,11 +131,8 @@ const TblitemsAddPage = (props) => {
             setLoadingRelatedData(true);
             setLoadingNodeItems(true);
             
-            console.log("Fetching data for node ID:", nodeId);
-            
             const structureResponse = await axios.get(`/tblmpestructuraorganizacional/view/${nodeId}`);
             const structureData = structureResponse.data;
-            console.log("Structure data:", structureData);
             
             setSelectedNode({
                 key: structureData.eo_id,
@@ -176,7 +149,6 @@ const TblitemsAddPage = (props) => {
             if (structureData.eo_cp_id) {
                 try {
                     const categoryResponse = await axios.get(`/tblmpcategoriaprogramatica/view/${structureData.eo_cp_id}`);
-                    console.log("Category data:", categoryResponse.data);
                     
                     if (categoryResponse.data && categoryResponse.data.cp_descripcion) {
                         setCategoriaPragmatica(categoryResponse.data.cp_descripcion.trim());
@@ -193,14 +165,9 @@ const TblitemsAddPage = (props) => {
             
             try {
                 const itemsResponse = await axios.get(`/tblitems/index?filter=ca_eo_id&filtervalue=${nodeId}`);
-                console.log("Items response:", itemsResponse.data);
                 
                 if (itemsResponse.data && itemsResponse.data.records && Array.isArray(itemsResponse.data.records)) {
                     setNodeItems(itemsResponse.data.records);
-                    
-                    if (itemsResponse.data.estructura_info) {
-                        console.log("Additional estructura info:", itemsResponse.data.estructura_info);
-                    }
                 } else {
                     setNodeItems([]);
                 }
@@ -214,7 +181,6 @@ const TblitemsAddPage = (props) => {
             
         } catch (err) {
             console.error("Error fetching structure data:", err);
-            console.error("Error details:", err.response?.data || err.message);
             setCategoriaPragmatica('Error al cargar');
             setCategoriaAdministrativa('Error al cargar');
             setNodeItems([]);
@@ -365,10 +331,8 @@ const TblitemsAddPage = (props) => {
         
         try {
             setSaving(true);
-            console.log("Submitting form data:", formData);
             
             const response = await axios.post('/tblitems/add', formData);
-            console.log("Server response:", response.data);
             
             if (response.data && response.data.records && response.data.records.length > 0) {
                 setCreatedItemId(response.data.records[0].id);
@@ -732,8 +696,18 @@ const TblitemsAddPage = (props) => {
                                     min="1"
                                     max="100"
                                     value={formData.cantidad}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, cantidad: parseInt(e.target.value) || 1 }))}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        const newValue = val === '' ? '' : parseInt(val);
+                                        setFormData(prev => ({ ...prev, cantidad: newValue }));
+                                    }}
                                     placeholder="Cantidad de items a crear"
+                                    onBlur={(e) => {
+                                        const currentVal = formData.cantidad;
+                                        if (currentVal === '' || isNaN(currentVal) || currentVal < 1) {
+                                            setFormData(prev => ({ ...prev, cantidad: 1 }));
+                                        }
+                                    }}
                                 />
                             </div>
                             <small className="text-500">Número de items que se crearán con los mismos datos</small>
@@ -781,6 +755,86 @@ const TblitemsAddPage = (props) => {
         );
     }
     
+    const renderGlosaDialog = () => {
+        return (
+            <Dialog
+                visible={showGlosaDialog}
+                onHide={() => setShowGlosaDialog(false)}
+                header="Registrar Glosa"
+                style={{ width: '500px' }}
+                modal
+                blockScroll
+                closeOnEscape
+                footer={
+                    <div>
+                        <Button
+                            label="Cancelar"
+                            icon="pi pi-times"
+                            className="p-button-text"
+                            onClick={() => {
+                                setShowGlosaDialog(false);
+                                app.navigate('/tblitems');
+                            }}
+                        />
+                        <Button
+                            label="Guardar"
+                            icon="pi pi-check"
+                            loading={savingGlosa}
+                            onClick={handleGlosaSubmit}
+                        />
+                    </div>
+                }
+            >
+                <div className="grid p-fluid">
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Tipo de Documento *</label>
+                        <Dropdown
+                            value={glosaFormData.gl_tipo_doc}
+                            options={tiposDocumento}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
+                            placeholder="Seleccione tipo de documento"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Número Documento *</label>
+                        <InputText
+                            value={glosaFormData.gl_numero_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
+                            placeholder="Ingrese número de documento"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12 mb-3">
+                        <label className="font-bold block mb-2">Fecha Documento *</label>
+                        <Calendar
+                            value={glosaFormData.gl_fecha_doc}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
+                            showIcon
+                            dateFormat="dd/mm/yy"
+                            className="w-full"
+                            required
+                        />
+                    </div>
+                    
+                    <div className="col-12">
+                        <label className="font-bold block mb-2">Descripción *</label>
+                        <InputTextarea
+                            value={glosaFormData.gl_glosa}
+                            onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
+                            rows={3}
+                            placeholder="Ingrese la descripción"
+                            required
+                        />
+                    </div>
+                </div>
+            </Dialog>
+        );
+    };
+
     return (
         <div>
             <main id="TblitemsAddPage" className="main-page">
@@ -862,79 +916,7 @@ const TblitemsAddPage = (props) => {
                     </div>
                 </section>
                 
-                <Dialog
-                    visible={showGlosaDialog}
-                    onHide={() => setShowGlosaDialog(false)}
-                    header="Registrar Glosa"
-                    style={{ width: '500px' }}
-                    modal
-                    footer={
-                        <div>
-                            <Button
-                                label="Cancelar"
-                                icon="pi pi-times"
-                                className="p-button-text"
-                                onClick={() => {
-                                    setShowGlosaDialog(false);
-                                    app.navigate('/tblitems'); // Navigate away if user cancels glosa
-                                }}
-                            />
-                            <Button
-                                label="Guardar"
-                                icon="pi pi-check"
-                                loading={savingGlosa}
-                                onClick={handleGlosaSubmit}
-                            />
-                        </div>
-                    }
-                >
-                    <div className="grid p-fluid">
-                        <div className="col-12 mb-3">
-                            <label className="font-bold block mb-2">Tipo de Documento *</label>
-                            <Dropdown
-                                value={glosaFormData.gl_tipo_doc}
-                                options={tiposDocumento}
-                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_tipo_doc: e.value}))}
-                                placeholder="Seleccione tipo de documento"
-                                className="w-full"
-                                required
-                            />
-                        </div>
-                        
-                        <div className="col-12 mb-3">
-                            <label className="font-bold block mb-2">Número Documento *</label>
-                            <InputText
-                                value={glosaFormData.gl_numero_doc}
-                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_numero_doc: e.target.value}))}
-                                placeholder="Ingrese número de documento"
-                                required
-                            />
-                        </div>
-                        
-                        <div className="col-12 mb-3">
-                            <label className="font-bold block mb-2">Fecha Documento *</label>
-                            <Calendar
-                                value={glosaFormData.gl_fecha_doc}
-                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_fecha_doc: e.value}))}
-                                showIcon
-                                dateFormat="dd/mm/yy"
-                                className="w-full"
-                                required
-                            />
-                        </div>
-                        
-                        <div className="col-12">
-                            <label className="font-bold block mb-2">Descripción *</label>
-                            <InputTextarea
-                                value={glosaFormData.gl_glosa}
-                                onChange={(e) => setGlosaFormData(prev => ({...prev, gl_glosa: e.target.value}))}
-                                rows={3}
-                                placeholder="Ingrese la descripción"
-                                required
-                            />
-                        </div>
-                    </div>
-                </Dialog>
+                {renderGlosaDialog()}
             </main>
         </div>
     );
