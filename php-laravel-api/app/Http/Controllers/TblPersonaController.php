@@ -23,6 +23,23 @@ class TblPersonaController extends Controller
         try{
             $query = TblPersona::query();
             
+            // Aplicar filtros solo si tienen valor
+            if ($request->nombres && trim($request->nombres) !== '') {
+                $query->where('per_nombres', 'ILIKE', '%'.trim($request->nombres).'%');
+            }
+            
+            if ($request->apellido_paterno && trim($request->apellido_paterno) !== '') {
+                $query->where('per_ap_paterno', 'ILIKE', '%'.trim($request->apellido_paterno).'%');
+            }
+            
+            if ($request->apellido_materno && trim($request->apellido_materno) !== '') {
+                $query->where('per_ap_materno', 'ILIKE', '%'.trim($request->apellido_materno).'%');
+            }
+            
+            if ($request->num_doc && trim($request->num_doc) !== '') {
+                $query->where('per_num_doc', 'ILIKE', '%'.trim($request->num_doc).'%');
+            }
+
             $query->whereNotNull('per_nombres')
                   ->whereNotNull('per_ap_paterno')
                   ->whereNotNull('per_num_doc')

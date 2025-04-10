@@ -71,17 +71,21 @@ function TblFuncionariosList() {
         const fetchFindPerson = async () => {
           try {
               const params = {
-                search: formData.per_nombres || formData.per_ap_materno || formData.per_ap_paterno || "",
+                apellido_paterno: formData.per_ap_paterno || "",
+                apellido_materno: formData.per_ap_materno || "",
+                nombres: formData.per_nombres || "",
+                num_doc: formData.carnetIdentidad || "",
               };
   
               const { data } = await axios.get('/tblpersona/index', { params });
-              setDataPeople(data);
+              setDataPeople(data.records || []);
             } catch (err) {
               console.error('Error:', err);
+              setDataPeople([]);
           }
         };
         fetchFindPerson();
-      }
+    }
 
     const handleChange = (e) => {
     setFormData({
@@ -89,6 +93,8 @@ function TblFuncionariosList() {
         [e.target.id]: e.target.value
     });
     };
+
+    const safeDataPeople = Array.isArray(dataPeople) ? dataPeople : [];
 
   return (
     <>
@@ -149,11 +155,15 @@ function TblFuncionariosList() {
         <DataTable
           value={dataPeople}
           paginator
-          first={first} rows={10} onPage={onCustomPage}
+          rows={10}
+          first={first}
+          totalRecords={dataPeople.length}
+          onPage={onCustomPage}
           paginatorTemplate={template}
           paginatorClassName="justify-content-end"
           className="mt-6"
           responsiveLayout="scroll"
+          emptyMessage="No se han encontrado resultados"
         >
           <Column field="per_id" header="CÓDIGO"></Column>
           <Column field="per_ap_paterno" header="APELLIDO PATERNO"></Column>
