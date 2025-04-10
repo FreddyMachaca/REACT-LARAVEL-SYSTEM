@@ -13,6 +13,13 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/gestionPersonal",
+            "label": "Gestión de Personal",
+            "icon": "pi pi-users",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblitems",
             "label": "Tbl Items",
             "icon": "pi pi-th-large",
