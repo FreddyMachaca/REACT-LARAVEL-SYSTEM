@@ -132,6 +132,8 @@ import 'assets/styles/layout.scss';
 import TblPersonaList from 'pages/Tblpersona/List';
 import TblpersonaAdd from 'pages/Tblpersona/Add';
 import ExtraHours from 'pages/tbltransaccion/ExtraHours';
+import TblPersonalList from 'pages/gestionPersonal/List';
+import PersonalConfiguracion from 'pages/gestionPersonal/personalMenu';
 
 const App = () => {
     return (
@@ -401,8 +403,12 @@ const App = () => {
                 <Route path="/MovimientoPersonal/Persona" element={<TblPersonaList/>}/> 
                 <Route path="/MovimientoPersonal/Persona/add" element={<TblpersonaAdd/>}/> 
 
-                {/* Transacciones routes */}
+                {/* ExtraHours routes */}
 				<Route path="/tbltransaccion" element={<ExtraHours />} />
+                
+                {/* Gestión de Personal routes */}
+                <Route path="/gestionPersonal" element={<TblPersonalList />} />
+                <Route path="/gestionPersonal/configuracion/:personaId" element={<PersonalConfiguracion />} />
                 
             </Route>
 

@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\TblPlaTransacciones;
+use App\Models\TblPlaTransaccionesCuotas;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
@@ -184,6 +185,76 @@ class TblPlaTransaccionesController extends Controller
 
             return $this->respond($query);
         } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Store a new transaction record
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $validatedData = $request->validate([
+                'tr_pc_id'       => 'required|integer',
+                'tr_per_id'      => 'required|integer',
+                'tr_fa_id'       => 'required|integer',
+                'tr_fecha_inicio'=> 'required|date',
+                'tr_fecha_fin'   => 'nullable|date',
+                'tr_monto'       => 'required|numeric',
+                'tr_estado'      => 'required|string|max:3'
+            ]);
+            
+            $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
+            $validatedData['tr_fecha_creacion'] = now();
+            
+            $transaccion = TblPlaTransacciones::create($validatedData);
+            
+            if (!$transaccion || !$transaccion->tr_id) {
+                throw new Exception('Error al crear la transacción: No se pudo obtener el ID');
+            }
+
+            DB::commit();
+            
+            $transaccion = TblPlaTransacciones::with(['persona', 'factor'])
+                ->findOrFail($transaccion->tr_id);
+            
+            return $this->respond($transaccion);
+        }
+        catch(Exception $e) {
+            DB::rollback();
+            return $this->respondWithError($e);
+        }
+    }
+    
+    /**
+     * Store transaction installment record
+     * @param Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function storeCuotas(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            
+            $validatedData = $request->validate([
+                'tc_tr_id'       => 'required|integer|exists:tbl_pla_transacciones,tr_id',
+                'tc_cant_cuotas' => 'required|integer|min:1',
+                'tc_monto'       => 'required|numeric|min:0',
+                'tc_estado'      => 'required|string|max:3'
+            ]);
+            
+            $cuotas = TblPlaTransaccionesCuotas::create($validatedData);
+            
+            DB::commit();
+            
+            return $this->respond($cuotas);
+        } catch (Exception $e) {
+            DB::rollBack();
             return $this->respondWithError($e);
         }
     }
