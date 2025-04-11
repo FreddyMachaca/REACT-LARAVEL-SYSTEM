@@ -7,6 +7,9 @@ use App\Models\TblPlaTransaccionesCuotas;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class TblPlaTransaccionesController extends Controller
 {
@@ -34,7 +37,7 @@ class TblPlaTransaccionesController extends Controller
             return $this->respond($records);
         }
         catch(Exception $e) {
-            return $this->respondWithError($e);
+            return Response::json(['message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
     
@@ -55,36 +58,55 @@ class TblPlaTransaccionesController extends Controller
                 ->first();
                 
             if (!$record) {
-                return $this->respondWithError("Record not found", 404);
+                return Response::json(['message' => 'Registro no encontrado'], 404);
             }
             
-            return $this->respond($record);
+            return Response::json($record);
         }
         catch(Exception $e) {
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@view: ' . $e->getMessage());
+            return Response::json(['message' => 'Error al ver el registro: ' . $e->getMessage()], 500);
         }
     }
     
     public function add(Request $request)
     {
         try {
+             $validatedData = $request->validate([
+                'tr_fa_id'       => 'required|integer|exists:tbl_pla_factor,fa_id',
+                'tr_pc_id'       => 'required|integer',
+                'tr_per_id'      => 'required|integer|exists:tbl_persona,per_id',
+                'tr_estado'      => 'required|string|max:3',
+            ]);
+
+        } catch (ValidationException $e) {
+             return Response::json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        try {
             DB::beginTransaction();
             
             $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
+            $nextId = $maxId + 1;
             
-            $modeldata = $this->normalizeFormData($request->all());
-            
-            if (isset($modeldata['tr_id'])) {
-                unset($modeldata['tr_id']);
-            }
-            
-            $modeldata['tr_fecha_creacion'] = now();
-            $modeldata['tr_monto'] = floatval($modeldata['tr_monto'] ?? 0);
+            $modeldata = [
+                'tr_id' => $nextId,
+                'tr_fa_id' => $validatedData['tr_fa_id'],
+                'tr_pc_id' => $validatedData['tr_pc_id'],
+                'tr_per_id' => $validatedData['tr_per_id'],
+                'tr_estado' => $validatedData['tr_estado'],
+                'tr_monto' => 0.00,
+                'tr_fecha_inicio' => now(),
+                'tr_fecha_creacion' => now(),
+            ];
 
             $record = TblPlaTransacciones::create($modeldata);
             
-            if (!$record || !$record->tr_id) {
-                throw new Exception('Error al crear la transacción: No se pudo obtener el ID');
+            if (!$record) {
+                throw new Exception('Error al crear la transacción.');
             }
 
             DB::commit();
@@ -92,11 +114,14 @@ class TblPlaTransaccionesController extends Controller
             $record = TblPlaTransacciones::with(['persona', 'factor'])
                 ->findOrFail($record->tr_id);
             
-            return $this->respond($record);
-        }
-        catch(Exception $e) {
+            return $this->respond($record); 
+
+        } catch(Exception $e) {
             DB::rollback();
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@add: ' . $e->getMessage());
+            return Response::json([
+                'message' => 'Error al guardar la transacción: ' . $e->getMessage()
+            ], 500);
         }
     }
     
@@ -106,10 +131,11 @@ class TblPlaTransaccionesController extends Controller
             $modeldata = $this->normalizeFormData($request->all());
             $record = TblPlaTransacciones::findOrFail($rec_id);
             $record->update($modeldata);
-            return $this->respond($record);
+            return Response::json($record);
         }
         catch(Exception $e) {
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@edit: ' . $e->getMessage());
+            return Response::json(['message' => 'Error al editar el registro: ' . $e->getMessage()], 500);
         }
     }
     
@@ -118,27 +144,35 @@ class TblPlaTransaccionesController extends Controller
         try {
             $arr_id = explode(",", $rec_id);
             TblPlaTransacciones::whereIn("tr_id", $arr_id)->delete();
-            return $this->respond([
+            return Response::json([
                 "status" => "success",
                 "message" => "Registros eliminados exitosamente"
             ]);
         }
         catch(Exception $e) {
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@delete: ' . $e->getMessage());
+            return Response::json(['message' => 'Error al eliminar el registro: ' . $e->getMessage()], 500);
         }
     }
 
     public function getTransaccionesPersona($personaId)
     {
         try {
+            $allowedFactorDescriptions = [
+                'DESC.SINDICATO DE EMPLEADOS', 
+                'DESC.SINDICATO DE OBREROS'
+            ];
+
             $records = DB::table('tbl_pla_transacciones as t')
-                ->leftJoin('tbl_pla_factor as f', 't.tr_fa_id', '=', 'f.fa_id')
+                ->join('tbl_pla_factor as f', 't.tr_fa_id', '=', 'f.fa_id')
                 ->where('t.tr_per_id', $personaId)
+                ->whereIn('f.fa_descripcion', $allowedFactorDescriptions)
                 ->select([
                     't.*',
                     'f.fa_descripcion',
                     DB::raw('CAST(t.tr_monto AS FLOAT) as tr_monto') 
                 ])
+                ->orderBy('t.tr_fecha_creacion', 'desc')
                 ->get();
 
             return $this->respond([
@@ -147,7 +181,10 @@ class TblPlaTransaccionesController extends Controller
             ]);
         }
         catch(Exception $e) {
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@getTransaccionesPersona: ' . $e->getMessage());
+            return Response::json([
+                'message' => 'Error al obtener transacciones: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -182,17 +219,13 @@ class TblPlaTransaccionesController extends Controller
                 ->where('p.per_id', $personaId)
                 ->first();
 
-            return $this->respond($query);
+            return Response::json($query);
         } catch (Exception $e) {
-            return $this->respondWithError($e);
+            Log::error('Error en TblPlaTransaccionesController@getPersonaInfo: ' . $e->getMessage());
+            return Response::json(['message' => 'Error al obtener información de la persona: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Store a new transaction record
-     * @param Request $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         try {
@@ -204,7 +237,6 @@ class TblPlaTransaccionesController extends Controller
                 'tr_pc_id'       => 'required|integer',
                 'tr_per_id'      => 'required|integer',
                 'tr_fa_id'       => 'required|integer',
-                'tr_fecha_inicio'=> 'required|date',
                 'tr_fecha_fin'   => 'nullable|date',
                 'tr_monto'       => 'required|numeric',
                 'tr_estado'      => 'required|string|max:3'
@@ -213,7 +245,8 @@ class TblPlaTransaccionesController extends Controller
             $validatedData['tr_id'] = $maxId + 1;
             $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
             $validatedData['tr_fecha_creacion'] = now();
-            
+            $validatedData['tr_fecha_inicio'] = now();
+
             $transaccion = TblPlaTransacciones::create($validatedData);
             
             if (!$transaccion || !$transaccion->tr_id) {
@@ -227,17 +260,22 @@ class TblPlaTransaccionesController extends Controller
             
             return $this->respond($transaccion);
         }
+        catch(ValidationException $e) {
+            DB::rollback();
+             return Response::json([
+                'message' => 'Error de validación',
+                'errors' => $e->errors()
+            ], 422);
+        }
         catch(Exception $e) {
             DB::rollback();
-            return $this->respondWithError($e);
+             Log::error('Error en TblPlaTransaccionesController@store: ' . $e->getMessage());
+             return Response::json([
+                'message' => 'Error al guardar la transacción: ' . $e->getMessage()
+            ], 500);
         }
     }
     
-    /**
-     * Store transaction installment record
-     * @param Request $request
-     * @return \Illuminate\Http\Response
-     */
     public function storeCuotas(Request $request)
     {
         try {
@@ -257,7 +295,7 @@ class TblPlaTransaccionesController extends Controller
             return $this->respond($cuotas);
         } catch (Exception $e) {
             DB::rollBack();
-            return $this->respondWithError($e);
+            return Response::json(['message' => 'Error al guardar las cuotas: ' . $e->getMessage()], 500);
         }
     }
 }
