@@ -70,6 +70,8 @@ class TblPlaTransaccionesController extends Controller
         try {
             DB::beginTransaction();
             
+            $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
+            
             $modeldata = $this->normalizeFormData($request->all());
             
             if (isset($modeldata['tr_id'])) {
@@ -77,7 +79,6 @@ class TblPlaTransaccionesController extends Controller
             }
             
             $modeldata['tr_fecha_creacion'] = now();
-            $modeldata['tr_estado'] = 'V';
             $modeldata['tr_monto'] = floatval($modeldata['tr_monto'] ?? 0);
 
             $record = TblPlaTransacciones::create($modeldata);
@@ -197,6 +198,8 @@ class TblPlaTransaccionesController extends Controller
         try {
             DB::beginTransaction();
             
+            $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
+            
             $validatedData = $request->validate([
                 'tr_pc_id'       => 'required|integer',
                 'tr_per_id'      => 'required|integer',
@@ -207,6 +210,7 @@ class TblPlaTransaccionesController extends Controller
                 'tr_estado'      => 'required|string|max:3'
             ]);
             
+            $validatedData['tr_id'] = $maxId + 1;
             $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
             $validatedData['tr_fecha_creacion'] = now();
             

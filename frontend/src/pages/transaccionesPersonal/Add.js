@@ -54,8 +54,6 @@ const TblTransaccionesAdd = () => {
                 
                 const personaResponse = await axios.get(`/tblplatransacciones/personaInfo/${personaId}`);
                 setPersonaInfo(personaResponse.data);
-                
-                //(fa_id = 32,33)
                 const factoresResponse = await axios.get('/tblplafactor/getFactoresEspeciales');
                 if (factoresResponse.data && factoresResponse.data.records) {
                     const tiposOptions = factoresResponse.data.records.map(factor => ({
@@ -77,7 +75,6 @@ const TblTransaccionesAdd = () => {
                 
                 setLoading(false);
             } catch (error) {
-                console.error('Error fetching data:', error);
                 app.flashMsg('Error', 'No se pudo cargar la información inicial', 'error');
                 setLoading(false);
             }
@@ -93,7 +90,6 @@ const TblTransaccionesAdd = () => {
             setTransactions(response.data.records);
             setLoadingTransactions(false);
         } catch (error) {
-            console.error('Error loading transactions:', error);
             app.flashMsg('Error', 'No se pudieron cargar las transacciones', 'error');
             setLoadingTransactions(false);
         }
@@ -190,7 +186,6 @@ const TblTransaccionesAdd = () => {
             app.flashMsg('Éxito', 'Transacción eliminada correctamente', 'success');
             await loadTransactions();
         } catch (error) {
-            console.error('Error deleting transaction:', error);
             app.flashMsg('Error', 'No se pudo eliminar la transacción', 'error');
         }
     };
@@ -341,7 +336,9 @@ const TblTransaccionesAdd = () => {
                                 <Dropdown 
                                     value={formData.tr_estado}
                                     options={[{label: 'APORTA', value: 'V'}, {label: 'NO APORTA', value: 'I'}]}
-                                    onChange={(e) => setFormData({...formData, tr_estado: e.value})}
+                                    onChange={(e) => {
+                                        setFormData({...formData, tr_estado: e.value});
+                                    }}
                                     placeholder="Seleccione un estado"
                                     className="w-full"
                                 />
