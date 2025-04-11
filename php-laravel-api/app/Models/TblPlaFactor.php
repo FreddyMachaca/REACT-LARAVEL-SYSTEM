@@ -8,8 +8,10 @@ class TblPlaFactor extends Model
     protected $table = 'tbl_pla_factor';
     protected $primaryKey = 'fa_id';
     public $timestamps = false;
+    public $incrementing = false; 
     
     protected $fillable = [
+        'fa_id', 
         'fa_descripcion',
         'fa_signo',
         'fa_ac_id',

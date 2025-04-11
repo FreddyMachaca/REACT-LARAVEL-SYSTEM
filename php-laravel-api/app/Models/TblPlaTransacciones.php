@@ -8,7 +8,8 @@ class TblPlaTransacciones extends Model
     protected $table = 'tbl_pla_transacciones';
     protected $primaryKey = 'tr_id';
     public $timestamps = false;
-    
+    public $incrementing = false; 
+
     protected $fillable = [
         'tr_id', 
         'tr_pc_id',
@@ -21,8 +22,6 @@ class TblPlaTransacciones extends Model
         'tr_usuario_creacion',
         'tr_fecha_creacion'
     ];
-
-    public $incrementing = true;
 
     public static function search($query, $text)
     {

@@ -517,6 +517,10 @@ Route::prefix('ubicaciones')->group(function () {
 		Route::delete('/{id}', [TblTransaccionController::class, 'destroy']);
 	});
 
+/* routes for PagosServicios */
+	Route::get('pagosservicios/repsalarios', 'TblPlaPagosServiciosController@getRepSalarios');
+	Route::post('pagosservicios/store', 'TblPlaPagosServiciosController@store');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');
