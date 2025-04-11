@@ -53,16 +53,16 @@ function TblEducation({ef_per_id, educationData, setEducationData, visibleDialog
         visibleDialog(true);
         fillData(rowData);
     }
-    
+
   return (
     <>
         <Toast ref={toast} />
         <DataTable value={educationData} responsiveLayout="scroll">
-            <Column field="ef_nivel_instruccion" header="NIVEL DE INSTRUCCIÓN"></Column>
-            <Column field="ef_centro_form" header="CENTRO DE FORMACIÓN"></Column>
-            <Column field="ef_carrera_especialidad" header="CARRERA/ESPECIALIDAD"></Column>
+            <Column field="nivel_instruccion_desc" header="NIVEL DE INSTRUCCIÓN"></Column>
+            <Column field="centro_form_desc" header="CENTRO DE FORMACIÓN"></Column>
+            <Column field="carrera_especialidad_desc" header="CARRERA/ESPECIALIDAD"></Column>
             <Column field="ef_anios_estudio" header="AÑOS DE ESTUDIO"></Column>
-            <Column field="ef_titulo_obtenido" header="TITULO OBTENIDO"></Column>
+            <Column field="titulo_obtenido_desc" header="TITULO OBTENIDO"></Column>
             <Column body={actionButtons} header="OPCIONES"></Column>
         </DataTable>
     </>
