@@ -74,32 +74,38 @@ function TblFuncionariosView() {
                 <div>
                   <label>CÓD. FUNCIONARIO</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_id}</span>
+                    <span className='text-color-secondary text-lg'>{personaData.per_id ?? ''}</span>
                   </div>
                 </div>
                 <div>
                   <label>CI</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_num_doc}</span>
+                    <span className='text-color-secondary text-lg'>{personaData.per_num_doc ?? ''}</span>
                   </div>
                 </div>
                 <div>
                   <label>NOMBRE FUNCIONARIO</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{`${personaData.per_nombres} ${personaData.per_ap_paterno} ${personaData.per_ap_materno}`.toUpperCase()}</span>
+                    <span className='text-color-secondary text-lg'>
+                      {`${personaData.per_nombres} ${personaData.per_ap_paterno ?? ''} ${personaData.per_ap_materno ?? ''}`.toUpperCase()}
+                    </span>
                   </div>
                 </div>
                 
                 <div>
                   <label>ESTADO CIVIL</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_estado_civil}</span>
+                    <span className='text-color-secondary text-lg'>
+                      {personaData.per_estado_civil ?? 'No registrado'}
+                    </span>
                   </div>
                 </div>
                 <div>
                   <label>SEXO</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_sexo}</span>
+                    <span className='text-color-secondary text-lg'>
+                      {personaData.per_sexo ?? 'No registrado'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -113,13 +119,17 @@ function TblFuncionariosView() {
                 <div>
                   <label>FECHA DE NACIMIENTO</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_fecha_nac.split(' ')[0]}</span>
+                    <span className='text-color-secondary text-lg'>
+                      {personaData.per_fecha_nac ? personaData.per_fecha_nac.split(' ')[0] : 'Sin fecha'}
+                    </span>
                   </div>
                 </div>
                 <div>
                   <label>PAÍS</label>
                   <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_procedencia}</span>
+                    <span className='text-color-secondary text-lg'>
+                      {personaData.per_procedencia ? personaData.per_procedencia : 'No registrado'}
+                    </span>
                   </div>
                 </div>
                 <div>
