@@ -56,7 +56,7 @@ function TblFamily({familyData, setFamilyData, pf_per_id, visibleDialog, fillDat
     <>
         <Toast ref={toast} />
         <DataTable value={familyData} responsiveLayout="scroll">
-            <Column field="pf_tipo_parentesco" header="TIPO PARENTESTO"></Column>
+            <Column field="parentesco" header="TIPO PARENTESTO"></Column>
             <Column field="pf_paterno" header="APELLIDO PATERNO"></Column>
             <Column field="pf_materno" header="APELLIDO MATERNO"></Column>
             <Column field="pf_nombres" header="NOMBRE(S)"></Column>

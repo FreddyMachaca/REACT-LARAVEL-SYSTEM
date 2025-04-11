@@ -59,7 +59,7 @@ function TblFuncionariosView() {
   const getModalContent = () => {
     switch (activeIndex) {
       case 1:
-        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData} dataToEdit={dataToEdit}/>;
+        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData} dataToEdit={dataToEdit} visible={setVisible}/>;
       case 3:
         return <EducationForm ef_per_id={per_id} addEducation={setEducationData} dataToEdit={dataToEdit} visible={setVisible}/>;
       default:
