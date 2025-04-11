@@ -21,6 +21,7 @@ function TblFuncionariosView() {
   const [personaData, setPersonaData] = useState();
   const [familyData, setFamilyData] = useState();
   const [educationData, setEducationData] = useState();
+  const [dataToEdit, setDataToEdit] = useState()
 
   const fechData = async () => {
     const { data } = await axios.get(`tblpersona/home/per_id/${per_id}`);
@@ -49,12 +50,18 @@ function TblFuncionariosView() {
     }
   }
 
+  const fillData = (data) => {
+    setDataToEdit(data);
+  }
+
+  const cleanData = () => setDataToEdit();
+
   const getModalContent = () => {
     switch (activeIndex) {
       case 1:
-        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData}/>;
+        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData} dataToEdit={dataToEdit}/>;
       case 3:
-        return <EducationForm ef_per_id={per_id} addEducation={setEducationData}/>;
+        return <EducationForm ef_per_id={per_id} addEducation={setEducationData} dataToEdit={dataToEdit}/>;
       default:
         return null;
     }
@@ -165,7 +172,7 @@ function TblFuncionariosView() {
                 <PersonalDataForm data={personaData.domicilio} perd_per_id={per_id}/>
               </TabPanel>
               <TabPanel header="FAMILIARES" leftIcon='pi pi-users'>
-                <TblFamily pf_per_id={per_id} familyData={familyData}/>
+                <TblFamily pf_per_id={per_id} familyData={familyData} setFamilyData={setFamilyData} visibleDialog={setVisible} fillData={fillData}/>
               </TabPanel>
               <TabPanel header="REQUISITOS" leftIcon='pi pi-list'>
                 <RequirementsForm/>

@@ -8,22 +8,36 @@ import { classNames } from 'primereact/utils';
 import { Calendar } from 'primereact/calendar';
 import axios from 'axios'
 
-function FamilyForm({perd_per_id, addMember}) {
+function FamilyForm({perd_per_id, addMember, dataToEdit}) {
     const [dataRelationship, setDataRelationship] = useState([]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const { data: {records} } = await axios.get(`tblcatalogo/index/cat_tabla/parentesco`);
-            setDataRelationship(
-                records.filter(item => item.cat_estado === 'V')
-                .map(item => ({
-                    cat_id: item.cat_id,
-                    cat_descripcion: item.cat_descripcion,
-                }))
-            );
-        }
         fetchData();
+        
+        if(dataToEdit){
+            formik.setValues({
+                pf_per_id: dataToEdit.pf_per_id || parseInt(perd_per_id),
+                pf_ap_esposo: dataToEdit.pf_ap_esposo || null,
+                pf_paterno: dataToEdit.pf_paterno || null,
+                pf_materno: dataToEdit.pf_materno || null,
+                pf_nombres: dataToEdit.pf_nombres || null,
+                pf_fecha_nac: dataToEdit.pf_fecha_nac ? new Date(dataToEdit.pf_fecha_nac) : null,
+                pf_tipo_parentesco: dataToEdit.pf_tipo_parentesco || null,
+                pf_estado: dataToEdit.pf_estado || null,
+            });
+        }
     }, []);
+    
+    const fetchData = async () => {
+        const { data: {records} } = await axios.get(`tblcatalogo/index/cat_tabla/parentesco`);
+        setDataRelationship(
+            records.filter(item => item.cat_estado === 'V')
+            .map(item => ({
+                cat_id: item.cat_id,
+                cat_descripcion: item.cat_descripcion,
+            }))
+        );
+    }
 
     const onSubmit = async (values) => {
         try {
