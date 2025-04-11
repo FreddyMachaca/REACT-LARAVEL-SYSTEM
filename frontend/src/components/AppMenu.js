@@ -27,7 +27,7 @@ export const AppMenu = (props) => {
     };
 
     const processedModel = processItems(props.model);
-    console.log('PanelMenu model:', processedModel);
+    //console.log('PanelMenu model:', processedModel);
 
     return (
         <div className="layout-menu-container">
