@@ -1,24 +1,28 @@
 import { InputText } from 'primereact/inputtext';
 import { Avatar } from 'primereact/avatar';
 import { Dropdown } from 'primereact/dropdown';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useFormik } from 'formik';
 import { Button } from 'primereact/button';
 import { classNames } from 'primereact/utils';
 import { Calendar } from 'primereact/calendar';
+import { Toast } from 'primereact/toast';
 import axios from 'axios';
 
-function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
+function EducatioForm({ef_per_id, addEducation, dataToEdit, visible}) {
     const [dataLevelInst, setDataLevelInst] = useState([]);
     const [dataTrCenter, setDataTrCenter] = useState([]);
     const [dataCareer, setDataCareer] = useState([]);
     const [dataDegrees, setDataDegrees] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const toast = useRef(null);    
 
     useEffect(() => {
         fetchData();
 
         if(dataToEdit) {
             formik.setValues({
+                ef_id: dataToEdit.ef_id || parseInt(ef_id),
                 ef_per_id: dataToEdit.ef_per_id || parseInt(ef_per_id),
                 ef_nivel_instruccion: dataToEdit.ef_nivel_instruccion || null,
                 ef_centro_form: dataToEdit.ef_centro_form || null,
@@ -33,7 +37,7 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
             });
         } 
     }, [])
-    
+
     const fetchData = async () => {
         const { data } = await axios.get('tblcatalogo/get/education/data');
 
@@ -58,6 +62,7 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
 
     const formik = useFormik({
         initialValues: {  
+            ef_id: null,
             ef_per_id: parseInt(ef_per_id),
             ef_nivel_instruccion: null,
             ef_centro_form: null,
@@ -112,14 +117,23 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
 
     const handleSubmit = async(data) => {
         try{    
+            setIsSubmitting(true);
             const response = await axios.post('tblkdeducacionformal/add', data);
+            toast.current?.show({ 
+                severity: 'info', 
+                summary: 'Éxito', 
+                detail: 'Registro agregado con éxito', 
+                life: 3000 
+            });
+    
+            setTimeout(() => {
+                rechargeList();
+                visible(false);
+            }, 1000);
 
-            console.log("Datos enviados con éxito:", response.data);
         }catch(error){
             console.error("Error al actualizar los datos:", error.response?.data || error.message);
-        } finally {
-            rechargeList();
-        }
+        } 
     }
 
     const rechargeList = async() => {
@@ -157,8 +171,10 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
             </div>
         );
     }
+    
   return (
     <>
+        <Toast ref={toast} />
         <div className='flex justify-content-center'>
             <Avatar image="/images/icons/grade-icon.jpeg" className="mb-5"  shape="circle" style={{ width: "125px", height: "125px" }}  />
         </div>
@@ -167,6 +183,7 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
         </div>
         <div className='mt-5'>
             <form onSubmit={formik.handleSubmit}>
+                <input type='hidden' id='ef_id' name='ef_id' value={formik.values.ef_id}/>
                 <input type='hidden' value={formik.values.ef_estado} id='ef_estado' name='ef_estado'/>
 
                 <div className='grid p-fluid mt-2'>
@@ -233,7 +250,7 @@ function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
                 </div>
 
                 <div className='flex justify-content-end mt-5'>
-                    <Button label='Guardar' type='submit'/>
+                    <Button label='Guardar' type='submit' disabled={isSubmitting}/>
                 </div>
             </form>
         </div>

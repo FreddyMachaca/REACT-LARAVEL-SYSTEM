@@ -61,7 +61,7 @@ function TblFuncionariosView() {
       case 1:
         return <FamilyForm perd_per_id={per_id} addMember={setFamilyData} dataToEdit={dataToEdit}/>;
       case 3:
-        return <EducationForm ef_per_id={per_id} addEducation={setEducationData} dataToEdit={dataToEdit}/>;
+        return <EducationForm ef_per_id={per_id} addEducation={setEducationData} dataToEdit={dataToEdit} visible={setVisible}/>;
       default:
         return null;
     }

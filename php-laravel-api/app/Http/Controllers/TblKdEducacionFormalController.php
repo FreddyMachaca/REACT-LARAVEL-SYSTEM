@@ -67,10 +67,16 @@ class TblKdEducacionFormalController extends Controller
      * @return \Illuminate\Http\Response
      */
 	function add(TblKdEducacionFormalAddRequest $request){
-		$modeldata = $request->validated();
-		
-		//save TblKdEducacionFormal record
-		$record = TblKdEducacionFormal::create($modeldata);
+		if($request->ef_id != null) {
+			$record = TblKdEducacionFormal::find($request->ef_id);
+
+			$record->update($request->validated());
+		} else {
+			$modeldata = $request->validated();
+			
+			//save TblKdEducacionFormal record
+			$record = TblKdEducacionFormal::create($modeldata);
+		}
 		$rec_id = $record->ac_id;
 		return $this->respond($record);
 	}
