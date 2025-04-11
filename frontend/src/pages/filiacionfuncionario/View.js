@@ -178,14 +178,17 @@ function TblFuncionariosView() {
                 <RequirementsForm/>
               </TabPanel>
               <TabPanel header="EDUCACIÓN FORMAL" leftIcon='pi pi-grade'>
-                <TblEducation educationData={educationData}/>
+                <TblEducation ef_per_id={per_id} educationData={educationData} visibleDialog={setVisible} setEducationData={setEducationData} fillData={fillData}/>
               </TabPanel>
           </TabView>
         </section>
       </Card>
 
       {(activeIndex==1 || activeIndex==3) && (
-        <SpeedDial onClick={() => setVisible(true)} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-plus" />
+        <SpeedDial onClick={() => {
+          cleanData();
+          setVisible(true)
+        }} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-plus" />
       )}
 
       <Dialog header="Información" visible={visible} style={{ width: "50vw" }} onHide={() => setVisible(false)}>

@@ -8,37 +8,53 @@ import { classNames } from 'primereact/utils';
 import { Calendar } from 'primereact/calendar';
 import axios from 'axios';
 
-function EducatioForm({ef_per_id, addEducation}) {
+function EducatioForm({ef_per_id, addEducation, dataToEdit}) {
     const [dataLevelInst, setDataLevelInst] = useState([]);
     const [dataTrCenter, setDataTrCenter] = useState([]);
     const [dataCareer, setDataCareer] = useState([]);
     const [dataDegrees, setDataDegrees] = useState([]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            const { data } = await axios.get('tblcatalogo/get/education/data');
-
-            const categorizedData = {
-                nivel_instruccion: [],
-                centro_formacion_kd: [],
-                carrera: [],
-                titulos: []
-            };
-
-            data.forEach(({ cat_id, cat_tabla, cat_descripcion }) => {
-                if (categorizedData[cat_tabla]) {
-                    categorizedData[cat_tabla].push({ cat_id, cat_descripcion });
-                }
-            });
-
-            setDataLevelInst(categorizedData.nivel_instruccion);
-            setDataTrCenter(categorizedData.centro_formacion_kd);
-            setDataCareer(categorizedData.carrera);
-            setDataDegrees(categorizedData.titulos);
-        }
-
         fetchData();
+
+        if(dataToEdit) {
+            formik.setValues({
+                ef_per_id: dataToEdit.ef_per_id || parseInt(ef_per_id),
+                ef_nivel_instruccion: dataToEdit.ef_nivel_instruccion || null,
+                ef_centro_form: dataToEdit.ef_centro_form || null,
+                ef_carrera_especialidad: dataToEdit.ef_carrera_especialidad || null,
+                ef_titulo_obtenido: dataToEdit.ef_titulo_obtenido || null,
+                ef_nro_titulo: dataToEdit.ef_nro_titulo || '',
+                ef_fecha_ini: dataToEdit.ef_fecha_ini ? new Date(dataToEdit.ef_fecha_ini) : null,
+                ef_fecha_fin: dataToEdit.ef_fecha_fin ? new Date(dataToEdit.ef_fecha_fin) : null,
+                ef_anios_estudio: dataToEdit.ef_anios_estudio || '',
+                ef_fecha_titulo_obtenido: dataToEdit.ef_fecha_titulo_obtenido ? new Date(dataToEdit.ef_fecha_titulo_obtenido) : null,
+                ef_estado: dataToEdit.ef_estado || 'V',
+            });
+        } 
     }, [])
+    
+    const fetchData = async () => {
+        const { data } = await axios.get('tblcatalogo/get/education/data');
+
+        const categorizedData = {
+            nivel_instruccion: [],
+            centro_formacion_kd: [],
+            carrera: [],
+            titulos: []
+        };
+
+        data.forEach(({ cat_id, cat_tabla, cat_descripcion }) => {
+            if (categorizedData[cat_tabla]) {
+                categorizedData[cat_tabla].push({ cat_id, cat_descripcion });
+            }
+        });
+
+        setDataLevelInst(categorizedData.nivel_instruccion);
+        setDataTrCenter(categorizedData.centro_formacion_kd);
+        setDataCareer(categorizedData.carrera);
+        setDataDegrees(categorizedData.titulos);
+    }
 
     const formik = useFormik({
         initialValues: {  
