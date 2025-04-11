@@ -133,8 +133,6 @@ class TblPlaTransaccionesController extends Controller
             $records = DB::table('tbl_pla_transacciones as t')
                 ->leftJoin('tbl_pla_factor as f', 't.tr_fa_id', '=', 'f.fa_id')
                 ->where('t.tr_per_id', $personaId)
-                ->where('t.tr_estado', 'V')
-                ->whereIn('t.tr_fa_id', [32, 33])
                 ->select([
                     't.*',
                     'f.fa_descripcion',

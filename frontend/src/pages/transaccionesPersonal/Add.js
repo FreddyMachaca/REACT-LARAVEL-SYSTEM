@@ -90,8 +90,7 @@ const TblTransaccionesAdd = () => {
         try {
             setLoadingTransactions(true);
             const response = await axios.get(`/tblplatransacciones/persona/${personaId}`);
-            const activeRecords = response.data.records.filter(record => record.tr_estado === 'V');
-            setTransactions(activeRecords);
+            setTransactions(response.data.records);
             setLoadingTransactions(false);
         } catch (error) {
             console.error('Error loading transactions:', error);
