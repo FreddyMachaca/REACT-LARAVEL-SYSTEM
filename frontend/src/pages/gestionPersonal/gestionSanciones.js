@@ -119,12 +119,7 @@ const GestionSanciones = ({ personaId }) => {
             sa_per_id: parseInt(personaId),
             sa_tipo_sancion: selectedTipoSancion.abreviacion,
             tipo_sancion_descripcion: selectedTipoSancion.descripcion,
-            sa_estado: 'V',
-            sa_minutos: null,
-            sa_fecha_inicio: null,
-            sa_fecha_fin: null,
-            sa_dias_sancion: 0,
-            sa_factor: null 
+            sa_estado: 'V'
         };
 
         switch (selectedTipoSancion.descripcion) {
@@ -133,29 +128,43 @@ const GestionSanciones = ({ personaId }) => {
                     app.flashMsg('Advertencia', 'Debe ingresar minutos y fechas de inicio/fin', 'warn');
                     return null;
                 }
-                basePayload.sa_minutos = formData.sa_minutos;
-                basePayload.sa_fecha_inicio = formatDateToYYYYMMDD(formData.sa_fecha_inicio);
-                basePayload.sa_fecha_fin = formatDateToYYYYMMDD(formData.sa_fecha_fin);
-                break;
+                return {
+                    ...basePayload,
+                    sa_minutos: formData.sa_minutos,
+                    sa_fecha_inicio: formatDateToYYYYMMDD(formData.sa_fecha_inicio),
+                    sa_fecha_fin: formatDateToYYYYMMDD(formData.sa_fecha_fin),
+                    sa_dias_sancion: 0
+                };
 
             case SANCTION_DESCRIPTIONS.INASISTENCIA:
+                if (!formData.sa_fecha_sancion || !formData.sa_dias_sancion) {
+                    app.flashMsg('Advertencia', 'Debe ingresar fecha y días de sanción', 'warn');
+                    return null;
+                }
+                return {
+                    ...basePayload,
+                    sa_fecha_inicio: formatDateToYYYYMMDD(formData.sa_fecha_sancion),
+                    sa_dias_sancion: formData.sa_dias_sancion
+                };
+
             case SANCTION_DESCRIPTIONS.ABANDONO:
             case SANCTION_DESCRIPTIONS.MARCADO_30:
             case SANCTION_DESCRIPTIONS.INTERNA:
-                if (!formData.sa_fecha_sancion || !formData.sa_dias_sancion) {
-                    app.flashMsg('Advertencia', 'Debe ingresar fecha de sanción y días de sanción', 'warn');
+                if (!formData.sa_fecha_sancion || !formData.sa_dias_sancion || !formData.sa_dias_acumulados) {
+                    app.flashMsg('Advertencia', 'Debe ingresar todos los campos requeridos', 'warn');
                     return null;
                 }
-                basePayload.sa_dias_sancion = formData.sa_dias_sancion;
-                basePayload.sa_fecha_inicio = formatDateToYYYYMMDD(formData.sa_fecha_sancion);
-                break;
+                return {
+                    ...basePayload,
+                    sa_fecha_inicio: formatDateToYYYYMMDD(formData.sa_fecha_sancion),
+                    sa_dias_sancion: formData.sa_dias_acumulados, // Use accumulated days as sanction days
+                    sa_dias_acumulados: formData.sa_dias_acumulados
+                };
 
             default:
                 app.flashMsg('Error', 'Tipo de sanción no reconocido', 'error');
                 return null;
         }
-
-        return basePayload;
     };
 
     const handleSave = async () => {
@@ -219,26 +228,33 @@ const GestionSanciones = ({ personaId }) => {
                 );
 
             case SANCTION_DESCRIPTIONS.INASISTENCIA:
+                return (
+                    <>
+                        <div className="col-12 md:col-6">
+                            <label htmlFor="diasSancion" className="font-bold block mb-2">Días Sanción</label>
+                            <InputNumber id="diasSancion" value={formData.sa_dias_sancion} onValueChange={(e) => handleInputChange('sa_dias_sancion', e.value)} className="w-full" placeholder="0" min={1} />
+                        </div>
+                        <div className="col-12 md:col-6">
+                            <label htmlFor="fechaSancion" className="font-bold block mb-2">Fecha Sanción</label>
+                            <Calendar id="fechaSancion" value={formData.sa_fecha_sancion} onChange={(e) => handleInputChange('sa_fecha_sancion', e.value)} dateFormat="dd/mm/yy" showIcon className="w-full" />
+                        </div>
+                    </>
+                );
+
             case SANCTION_DESCRIPTIONS.ABANDONO:
             case SANCTION_DESCRIPTIONS.MARCADO_30:
             case SANCTION_DESCRIPTIONS.INTERNA:
                 return (
                     <>
-                        <div className="col-12 md:col-6">
-                            <label htmlFor="diasSancion" className="font-bold block mb-2">Días Sanción</label>
-                            <InputNumber 
-                                id="diasSancion" 
-                                value={formData.sa_dias_sancion} 
-                                onValueChange={(e) => handleInputChange('sa_dias_sancion', e.value)} 
-                                className="w-full" 
-                                placeholder="0" 
-                                min={1}
-                                mode="decimal"
-                                minFractionDigits={0}
-                                maxFractionDigits={0}
-                            />
+                        <div className="col-12 md:col-4">
+                            <label htmlFor="diasAcumulados" className="font-bold block mb-2">Días Acumulados</label>
+                            <InputNumber id="diasAcumulados" value={formData.sa_dias_acumulados} onValueChange={(e) => handleInputChange('sa_dias_acumulados', e.value)} className="w-full" placeholder="0" min={1} />
                         </div>
-                        <div className="col-12 md:col-6">
+                        <div className="col-12 md:col-4">
+                            <label htmlFor="diasSancion" className="font-bold block mb-2">Días Sanción</label>
+                            <InputNumber id="diasSancion" value={formData.sa_dias_sancion} onValueChange={(e) => handleInputChange('sa_dias_sancion', e.value)} className="w-full" placeholder="0" min={1} />
+                        </div>
+                        <div className="col-12 md:col-4">
                             <label htmlFor="fechaSancion" className="font-bold block mb-2">Fecha Sanción</label>
                             <Calendar id="fechaSancion" value={formData.sa_fecha_sancion} onChange={(e) => handleInputChange('sa_fecha_sancion', e.value)} dateFormat="dd/mm/yy" showIcon className="w-full" />
                         </div>
