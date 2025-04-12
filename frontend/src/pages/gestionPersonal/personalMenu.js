@@ -9,6 +9,7 @@ import useApp from 'hooks/useApp';
 import axios from 'axios';
 import PagosServicioModal from './pagosServivicio'; 
 import GestionSanciones from './gestionSanciones';
+import HorasExtras from './horasExtras';
 
 const PersonalConfiguracion = () => {
     const { personaId } = useParams();
@@ -16,16 +17,6 @@ const PersonalConfiguracion = () => {
     const [persona, setPersona] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
-
-    // pestañas 
-    const HorasExtrasComponent = ({personaId}) => (
-        <div className="p-3">
-            <h3>Gestión de Horas Extras</h3>
-            <p>Aquí podrá gestionar las horas extras del funcionario.</p>
-            <div className="flex justify-content-end">
-            </div>
-        </div>
-    );
 
     useEffect(() => {
         const fetchPersonaDetails = async () => {
@@ -202,7 +193,7 @@ const PersonalConfiguracion = () => {
 
             <TabView activeIndex={activeIndex} onTabChange={(e) => setActiveIndex(e.index)}>
                 <TabPanel header="Horas Extras" leftIcon="pi pi-clock">
-                    <HorasExtrasComponent personaId={personaId} />
+                    <HorasExtras personaId={personaId} />
                 </TabPanel>
                 <TabPanel header="Sanciones" leftIcon="pi pi-exclamation-triangle">
                     <GestionSanciones personaId={personaId} />
