@@ -45,11 +45,12 @@ function PersonalDataForm({data, perd_per_id}) {
     }, []);
 
     const onSubmit = async (values) => {
+        values.perd_per_id = perd_per_id;
+        console.log(values)
         try {
             const cleanedData = Object.fromEntries(
                 Object.entries(values).map(([key, value]) => [key, value === "" ? null : value])
             );
-            console.log(cleanedData)
     
             const response = await axios.post(`tblpersonadomicilio/edit/${values.perd_per_id}`, cleanedData);
     
