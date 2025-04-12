@@ -34,4 +34,10 @@ class TblPlaFactor extends Model
         $search_params = array_fill(0, 5, "%$text%");
         $query->whereRaw($search_condition, $search_params);
     }
+    
+    public static function getNextId()
+    {
+        $maxId = self::max('fa_id') ?? 0;
+        return $maxId + 1;
+    }
 }

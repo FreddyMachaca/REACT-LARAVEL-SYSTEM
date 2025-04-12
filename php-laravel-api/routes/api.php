@@ -15,6 +15,7 @@ use App\Http\Controllers\ActaEntregacabController;
 use App\Models\TblPersona;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TblTransaccionController;
+use App\Http\Controllers\TblCpSancionesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -107,6 +108,7 @@ Route::post('auth/register', [AuthController::class, 'register']);
 	Route::get('/tipo-horario', [TblCatalogoController::class, 'tipoHorario']);
 	Route::get('/tipo-licencia', [TblCatalogoController::class, 'obtenerTiposLicencia']);
 	Route::get('/tipo-ubicacion', [TblCatalogoController::class, 'obtenerTipoUbicacion']);
+	Route::get('tblcatalogo/getTiposSancion', [TblCatalogoController::class, 'getTiposSancion']); // <-- Nueva ruta
 
 /* routes for TblCategoriaLicencias Controller  */	
 	Route::get('tblcategorialicencias/', 'TblCategoriaLicenciasController@index');
@@ -507,6 +509,7 @@ Route::prefix('ubicaciones')->group(function () {
 	Route::any('tblplafactor/edit/{rec_id}', 'TblPlaFactorController@edit');
 	Route::any('tblplafactor/delete/{rec_id}', 'TblPlaFactorController@delete');
 	Route::get('tblplafactor/getFactoresEspeciales', 'TblPlaFactorController@getFactoresEspeciales');
+	Route::get('tblplafactor/getFactoresSancion', 'TblPlaFactorController@getFactoresSancion'); // <-- Nueva ruta
 
 /*routes Transacciones*/
 	Route::prefix('transacciones')->group(function () {
@@ -520,6 +523,16 @@ Route::prefix('ubicaciones')->group(function () {
 /* routes for PagosServicios */
 	Route::get('pagosservicios/repsalarios', 'TblPlaPagosServiciosController@getRepSalarios');
 	Route::post('pagosservicios/store', 'TblPlaPagosServiciosController@store');
+
+/* routes for Sanciones */
+Route::prefix('sanciones')->group(function () {
+    Route::get('/', [TblCpSancionesController::class, 'index']);          
+    Route::post('/', [TblCpSancionesController::class, 'store']);         
+    Route::get('/{id}', [TblCpSancionesController::class, 'show']);       
+    Route::put('/{id}', [TblCpSancionesController::class, 'update']);     
+    Route::patch('/{id}', [TblCpSancionesController::class, 'update']);   
+    Route::delete('/{ids}', [TblCpSancionesController::class, 'destroy']);
+});
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

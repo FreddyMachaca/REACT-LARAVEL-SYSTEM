@@ -6,6 +6,8 @@ use App\Models\TblPlaFactor;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Log; 
 
 class TblPlaFactorController extends Controller
 {
@@ -107,6 +109,27 @@ class TblPlaFactorController extends Controller
         }
         catch(Exception $e) {
             return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get factors of type 'SANCION'
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getFactoresSancion()
+    {
+        try {
+            $records = TblPlaFactor::where('fa_tipo', 'SANCION') 
+                                    ->where('fa_estado', 'V')
+                                    ->select('fa_id', 'fa_descripcion')
+                                    ->orderBy('fa_descripcion')
+                                    ->get();
+
+            return Response::json(['records' => $records]); // Alternativa
+
+        } catch (Exception $e) {
+            Log::error("Error fetching sanction factors: " . $e->getMessage());
+            return Response::json(['message' => 'Error al obtener factores de sanción: ' . $e->getMessage()], 500);
         }
     }
 }

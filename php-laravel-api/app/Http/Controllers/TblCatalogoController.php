@@ -7,6 +7,8 @@ use App\Models\TblCatalogo;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log; // Asegúrate de importar Log
+use Illuminate\Support\Facades\Response; // Asegúrate de importar Response
 
 class TblCatalogoController extends Controller
 {
@@ -221,6 +223,27 @@ class TblCatalogoController extends Controller
             return $this->respond($catalogo);
         } catch (Exception $e) {
             return $this->respondWithError($e);
+        }
+    }
+
+    /**
+     * Get catalogs for Tipo_Sancion
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTiposSancion()
+    {
+        try {
+            $records = TblCatalogo::where('cat_tabla', 'Tipo_Sancion')
+                                    ->where('cat_estado', 'V')
+                                    ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion']) 
+                                    ->orderBy('cat_secuencial') 
+                                    ->get();
+                
+            return Response::json($records); 
+
+        } catch (Exception $e) {
+            Log::error("Error fetching Tipos Sancion: " . $e->getMessage());
+            return Response::json(['message' => 'Error al obtener tipos de sanción: ' . $e->getMessage()], 500);
         }
     }
 }

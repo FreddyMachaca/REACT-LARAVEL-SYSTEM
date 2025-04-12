@@ -8,6 +8,7 @@ import { Title } from 'components/Title';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 import PagosServicioModal from './pagosServivicio'; 
+import GestionSanciones from './gestionSanciones';
 
 const PersonalConfiguracion = () => {
     const { personaId } = useParams();
@@ -21,15 +22,6 @@ const PersonalConfiguracion = () => {
         <div className="p-3">
             <h3>Gestión de Horas Extras</h3>
             <p>Aquí podrá gestionar las horas extras del funcionario.</p>
-            <div className="flex justify-content-end">
-            </div>
-        </div>
-    );
-
-    const SancionesComponent = ({personaId}) => (
-        <div className="p-3">
-            <h3>Gestión de Sanciones</h3>
-            <p>Aquí podrá gestionar las sanciones del funcionario.</p>
             <div className="flex justify-content-end">
             </div>
         </div>
@@ -213,7 +205,7 @@ const PersonalConfiguracion = () => {
                     <HorasExtrasComponent personaId={personaId} />
                 </TabPanel>
                 <TabPanel header="Sanciones" leftIcon="pi pi-exclamation-triangle">
-                    <SancionesComponent personaId={personaId} />
+                    <GestionSanciones personaId={personaId} />
                 </TabPanel>
                 <TabPanel header="Pagos de Servicios" leftIcon="pi pi-paperclip">
                     <PagosServicioModal 
