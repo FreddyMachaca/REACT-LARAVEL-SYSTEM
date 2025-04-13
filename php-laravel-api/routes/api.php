@@ -534,6 +534,11 @@ Route::prefix('sanciones')->group(function () {
     Route::delete('/{ids}', [TblCpSancionesController::class, 'destroy']);
 });
 
+/* routes for TblPlaCas Controller */
+	Route::get('tblplacas/index', 'TblPlaCasController@index');
+	Route::get('tblplacas/index/{filter?}/{filtervalue?}', 'TblPlaCasController@index');
+	Route::post('tblplacas/add', 'TblPlaCasController@add');
+
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
 	Route::post('fileuploader/s3upload/{fieldname}', 'FileUploaderController@s3upload');

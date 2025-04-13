@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -23,45 +23,71 @@ function BonoAntiguedad({ personaId }) {
         cs_estado: '',
       });
       
-  const [bonos, setBonos] = useState([
-    {
-      cs_id: 1,
-      cs_res_adm: '464/2016',
-      cs_nro_cas: '459/2016',
-      cs_fecha_cas: '10/10/2016',
-      antiguedad: {
-        cs_anos: 20,
-        cs_meses: 0,
-        cs_dias: 29
-      },
-      cs_tipo_reg: 'ACTUALIZACIÓN',
-      cs_estado: 'VIGENTE'
-    }
-  ]);
+  const [bonos, setBonos] = useState();
+
+  useEffect(() => {
+    fetchData();
+  }, [])
+  
+  const fetchData = async () => {
+    const { data: { records } } = await axios.get(`tblplacas/index/cs_per_id/${personaId}`);
+
+    const transformados = records.map(item => ({
+    cs_id: item.cs_id,
+    cs_res_adm: item.cs_res_adm,
+    cs_nro_cas: item.cs_nro_cas,
+    cs_fecha_cas: new Date(item.cs_fecha_cas).toLocaleDateString(),
+    antiguedad: {
+        cs_anos: item.cs_anos,
+        cs_meses: item.cs_meses,
+        cs_dias: item.cs_dias
+    },
+    cs_tipo_reg: item.cs_tipo_reg === 'N' ? 'NUEVO' : 'ACTUALIZACIÓN',
+    cs_estado: item.cs_estado === 'V' ? 'VIGENTE' : 'INACTIVO' 
+    }));
+
+    setBonos(transformados);
+  }
 
   const handleGuardar = () => {
-    const { nResolucion, nCas, fechaCas, anios, meses, dias } = formData;
+    const { cs_res_adm, cs_nro_cas, cs_fecha_cas, cs_anos, cs_meses, cs_dias } = formData;
   
-    if (!nResolucion || !nCas || !fechaCas || anios === '') {
+    if (!cs_res_adm || !cs_nro_cas || !cs_fecha_cas || cs_anos==='' || cs_meses==='' || cs_dias==='') {
       app.flashMsg('Error', 'Por favor completa todos los campos obligatorios', 'error');
       return;
     }
   
     const nuevoBono = {
-      cs_res_adm: nResolucion,
-      cs_nro_cas: nCas,
-      cs_fecha_cas: fechaCas,
+      cs_res_adm: cs_res_adm,
+      cs_nro_cas: cs_nro_cas,
+      cs_fecha_cas: cs_fecha_cas,
+      cs_per_id: personaId,
       antiguedad: {
-        cs_anos: parseInt(anios) || 0,
-        cs_meses: parseInt(meses) || 0,
-        cs_dias: parseInt(dias) || 0
+        cs_anos: parseInt(cs_anos) || 0,
+        cs_meses: parseInt(cs_meses) || 0,
+        cs_dias: parseInt(cs_dias) || 0
       },
-      cs_tipo_reg: 'NUEVO',
-      cs_estado: 'VIGENTE'
+      cs_tipo_reg: 'N',
+      cs_estado: 'V'
     };
-  
-    console.log(nuevoBono);
-  
+
+    handleSubmit(nuevoBono)
+  };
+
+  const handleSubmit = async (newRecord) => {
+    try {
+        const response = await axios.post('tblplacas/add', newRecord);
+        
+        app.flashMsg('Éxito', 'Bono registrado correctamente', 'success');
+
+        fetchData();
+        cleanForm();
+    } catch(error) {
+        console.log(error)
+    }
+  }
+
+  const cleanForm = () => {
     setFormData({
         cs_res_adm: '',
         cs_nro_cas: '',
@@ -72,7 +98,7 @@ function BonoAntiguedad({ personaId }) {
         cs_tipo_reg: '',
         cs_estado: '',
     });
-  };
+  }
 
   const antiguedadTemplate = ({ antiguedad }) => {
     return (
@@ -108,10 +134,9 @@ function BonoAntiguedad({ personaId }) {
   const handleCalendarChange = (value) => {
     setFormData({
       ...formData,
-      fechaCas: value
+      cs_fecha_cas: value
     });
   };
-  
 
   return (
     <>
@@ -121,7 +146,8 @@ function BonoAntiguedad({ personaId }) {
                 <div className="field col-12 md:col-3">
                     <label>N° RESOLUCIÓN ADM.</label>
                     <InputText 
-                    value={formData.nResolucion}
+                    name='cs_res_adm'
+                    value={formData.cs_res_adm}
                     onChange={handleChange}
                     placeholder="Ej.: 001/2020"
                     />
@@ -130,8 +156,9 @@ function BonoAntiguedad({ personaId }) {
                 <div className="field col-12 md:col-3">
                     <label>N° CAS</label>
                     <InputText 
+                    name='cs_nro_cas'
                     placeholder="Ej.: 001/2020"
-                    value={formData.nCas}
+                    value={formData.cs_nro_cas}
                     onChange={handleChange}
                     />
                 </div>
@@ -139,8 +166,8 @@ function BonoAntiguedad({ personaId }) {
                 <div className="field col-12 md:col-3">
                     <label htmlFor='fecha_cas'>FECHA CAS</label>
                     <Calendar 
-                    id='fecha_cas' 
-                    value={formData.fechaCas}
+                    name='cs_fecha_cas' 
+                    value={formData.cs_fecha_cas}
                     onChange={(e) => handleCalendarChange(e.value)}
                     />
                 </div>
@@ -149,7 +176,8 @@ function BonoAntiguedad({ personaId }) {
                     <label htmlFor='fecha_cas'>AÑOS</label>
                     <InputText 
                     type="number" 
-                    value={formData.anios}
+                    name='cs_anos'
+                    value={formData.cs_anos}
                     onChange={handleChange}
                     />
                 </div>
@@ -160,7 +188,8 @@ function BonoAntiguedad({ personaId }) {
                     <label htmlFor='fecha_cas'>MESES</label>
                     <InputText 
                     type="number" 
-                    value={formData.meses}
+                    name='cs_meses'
+                    value={formData.cs_meses}
                     onChange={handleChange}
                     />
                 </div>
@@ -169,7 +198,8 @@ function BonoAntiguedad({ personaId }) {
                     <label htmlFor='fecha_cas'>DÍAS</label>
                     <InputText 
                     type="number" 
-                    value={formData.dias}
+                    name='cs_dias'
+                    value={formData.cs_dias}
                     onChange={handleChange}
                     />
                 </div>
