@@ -107,7 +107,7 @@ const HorasExtras = ({ personaId }) => {
             <p className="text-sm text-gray-600">Detalle de las horas extra asignada al funcionario seleccionado.</p>
             </div>
             
-            {tieneHorasAsignadas ? (
+            {!tieneHorasAsignadas ? (
             <div className="bg-blue-100 text-blue-800 p-2 rounded-md inline-block">
                 EL FUNCIONARIO NO TIENE HORAS EXTRAS ASIGNADAS.
             </div>

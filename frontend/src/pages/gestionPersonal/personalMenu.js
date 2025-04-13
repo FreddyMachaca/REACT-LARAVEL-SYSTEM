@@ -10,6 +10,7 @@ import axios from 'axios';
 import PagosServicioModal from './pagosServivicio'; 
 import GestionSanciones from './gestionSanciones';
 import HorasExtras from './horasExtras';
+import BonoAntiguedad from './bonoAntiguedad';
 
 const PersonalConfiguracion = () => {
     const { personaId } = useParams();
@@ -194,6 +195,9 @@ const PersonalConfiguracion = () => {
             <TabView activeIndex={activeIndex} onTabChange={(e) => setActiveIndex(e.index)}>
                 <TabPanel header="Horas Extras" leftIcon="pi pi-clock">
                     <HorasExtras personaId={personaId} />
+                </TabPanel>
+                <TabPanel header="Bono Antigüedad">
+                    <BonoAntiguedad personaId={personaId} />
                 </TabPanel>
                 <TabPanel header="Sanciones" leftIcon="pi pi-exclamation-triangle">
                     <GestionSanciones personaId={personaId} />
