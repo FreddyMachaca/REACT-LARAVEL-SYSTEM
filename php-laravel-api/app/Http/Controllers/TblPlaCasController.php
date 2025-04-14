@@ -48,4 +48,14 @@ class TblPlaCasController extends Controller
 		$records = $this->paginate($query, TblPlaCas::listFields());
 		return $this->respond($records);
 	}
+
+    function delete(Request $request, $rec_id = null){
+		$arr_id = explode(",", $rec_id);
+		$query = TblPlaCas::query();
+		$query->whereIn("cs_id", $arr_id);
+		$query->update(['cs_estado' => 'C']);
+
+		//$query->delete();
+		return $this->respond($arr_id);
+	}
 }

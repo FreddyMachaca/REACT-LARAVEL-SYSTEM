@@ -6,6 +6,7 @@ import { InputText } from 'primereact/inputtext';
 import { Calendar } from 'primereact/calendar';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
+import { confirmDialog } from 'primereact/confirmdialog'; 
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 
@@ -43,7 +44,7 @@ function BonoAntiguedad({ personaId }) {
         cs_dias: item.cs_dias
     },
     cs_tipo_reg: item.cs_tipo_reg === 'N' ? 'NUEVO' : 'ACTUALIZACIÓN',
-    cs_estado: item.cs_estado === 'V' ? 'VIGENTE' : 'INACTIVO' 
+    cs_estado: item.cs_estado === 'V' ? 'VIGENTE' : 'HISTORICO' 
     }));
 
     setBonos(transformados);
@@ -106,8 +107,25 @@ function BonoAntiguedad({ personaId }) {
     );
   }
 
-  const confirmDelete = (rowData) => {
+  const confirmDelete = ({cs_id}) => {
+    confirmDialog({
+      message: 'Are you sure you want to proceed?',
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => handleDelete(cs_id)
+    });
+  }
 
+  const handleDelete = async (cs_id) => {
+    try {
+        await axios.post(`tblplacas/delete/${cs_id}`);
+        
+        app.flashMsg('Éxito', 'Bono eliminado correctamente', 'success');
+
+        fetchData();
+    } catch(error) {
+        console.log(error)
+    }
   }
 
   const handleChange = (e) => {
@@ -119,14 +137,17 @@ function BonoAntiguedad({ personaId }) {
   };  
 
   const controlesTemplate = (rowData) => {
+    console.log(rowData)
     return (
         <div>
+          {rowData.cs_estado === "VIGENTE" && (
             <Button
                 icon="pi pi-trash"
                 className="p-button-rounded p-button-danger p-button-text"
                 onClick={() => confirmDelete(rowData)}
                 tooltip="Eliminar"
             />
+          )}
         </div>
     );
   }

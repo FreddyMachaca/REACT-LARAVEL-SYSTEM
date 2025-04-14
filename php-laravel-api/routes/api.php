@@ -538,6 +538,7 @@ Route::prefix('sanciones')->group(function () {
 	Route::get('tblplacas/index', 'TblPlaCasController@index');
 	Route::get('tblplacas/index/{filter?}/{filtervalue?}', 'TblPlaCasController@index');
 	Route::post('tblplacas/add', 'TblPlaCasController@add');
+	Route::any('tblplacas/delete/{rec_id}', 'TblPlaCasController@delete');
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');
