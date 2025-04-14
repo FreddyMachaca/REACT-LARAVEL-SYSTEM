@@ -21,7 +21,7 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'username' => 'required', // puede ser correo o usuario
+                'username' => 'required',
                 'password' => 'required',
             ]);
 
@@ -141,6 +141,70 @@ class AuthController extends Controller
             return response()->json([
                 'error' => 'Error en el registro',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cambiar la contraseña del usuario
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function changePassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'currentPassword' => 'required',
+                'newPassword' => 'required|min:6',
+            ]);
+
+            // Obtener el token del encabezado
+            $token = str_replace('Bearer ', '', $request->header('Authorization'));
+            if (!$token) {
+                return response()->json(['message' => 'Token no proporcionado'], 401);
+            }
+
+            try {
+                // Decodificar el token para obtener el ID del usuario
+                $decoded = JWTHelper::decodeToken($token);
+                $userId = $decoded->user_id;
+                
+                if (!$userId) {
+                    return response()->json(['message' => 'ID de usuario no encontrado en el token'], 401);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error decodificando token: ' . $e->getMessage());
+                return response()->json(['message' => 'Token inválido'], 401);
+            }
+
+            // Buscar el usuario
+            $user = TblSegUsuario::find($userId);
+            if (!$user) {
+                \Log::error('Usuario no encontrado: ' . $userId);
+                return response()->json(['message' => 'Usuario no encontrado'], 404);
+            }
+
+            // Verificar la contraseña actual
+            $currentPasswordHash = sha1($request->currentPassword);
+            if ($user->us_contrasena !== $currentPasswordHash) {
+                \Log::info('Contraseña incorrecta para usuario: ' . $userId);
+                return response()->json(['message' => 'La contraseña actual es incorrecta'], 400);
+            }
+
+            // Actualizar la contraseña
+            $newPasswordHash = sha1($request->newPassword);
+            $user->us_contrasena = $newPasswordHash;
+            $saved = $user->save();
+            
+            if (!$saved) {
+                \Log::error('Error al guardar nueva contraseña para usuario: ' . $userId);
+                return response()->json(['message' => 'Error al actualizar la contraseña en la base de datos'], 500);
+            }
+            return response()->json(['message' => 'Contraseña actualizada correctamente']);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Error al actualizar la contraseña',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

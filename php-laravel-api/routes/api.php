@@ -40,6 +40,7 @@ Route::get('home', 'HomeController@index');
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('register', [AuthController::class, 'register']);
+    Route::post('change-password', [AuthController::class, 'changePassword']);
 });
 
 /* Rutas de autenticación */

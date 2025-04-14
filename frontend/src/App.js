@@ -134,6 +134,7 @@ import TblpersonaAdd from 'pages/Tblpersona/Add';
 import ExtraHours from 'pages/tbltransaccion/ExtraHours';
 import TblPersonalList from 'pages/gestionPersonal/List';
 import PersonalConfiguracion from 'pages/gestionPersonal/personalMenu';
+import UserProfile from 'pages/profile/UserProfile';
 
 const App = () => {
     return (
@@ -148,6 +149,9 @@ const App = () => {
             }>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/home" element={<HomePage />} />
+
+                {/* Perfil de Uusuario route */}
+                <Route path="profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 
                 {/* tblitems pages routes */}
                 <Route path="/tblitems" element={<TblitemsList />} />
