@@ -16,7 +16,9 @@ class tblPersonaFamiliaresController extends Controller
      * @return \Illuminate\View\View
      */
 	function index(Request $request, $fieldname = null , $fieldvalue = null){
-		$query = TblPersonaFamiliares::query();
+		$query = TblPersonaFamiliares::query()
+		->join('tbl_catalogo as tipo_parentesco', 'tbl_persona_familiares.pf_tipo_parentesco', '=', 'tipo_parentesco.cat_id');
+
 		if($request->search){
 			$search = trim($request->search);
 			TblPersonaFamiliares::search($query, $search);
@@ -28,7 +30,14 @@ class tblPersonaFamiliaresController extends Controller
 			$query->where('pf_estado', 'V');
 			$query->where($fieldname , $fieldvalue); //filter by a single field name
 		}
-		$records = $query->get(TblPersonaFamiliares::listFields());
+		// $records = $query->get(TblPersonaFamiliares::listFields());
+		// return $this->respond($records);
+
+		$records = $query->get([
+			'tbl_persona_familiares.*',
+			'tipo_parentesco.cat_descripcion as parentesco',
+		]);
+
 		return $this->respond($records);
 	}
 	
@@ -50,9 +59,15 @@ class tblPersonaFamiliaresController extends Controller
      * @return \Illuminate\Http\Response
      */
 	function add(TblPersonaFamiliaresAddRequest $request){
-		$modeldata = $request->validated();
-		
-		$record = TblPersonaFamiliares::create($modeldata);
+		if($request->pf_id != null){
+			$record = TblPersonaFamiliares::find($request->pf_id);
+
+			$record->update($request->validated());
+		} else {
+			$modeldata = $request->validated();
+			
+			$record = TblPersonaFamiliares::create($modeldata);
+		}
 		$rec_id = $record->pf_per_id;
 		return $this->respond($record);
 	}

@@ -59,8 +59,8 @@ function TblPersonaList() {
                 search: formData.per_nombres || formData.per_ap_materno || formData.per_ap_paterno || "",
               };
   
-              const { data } = await axios.get('/tblpersona/index', { params });
-              setDataPeople(data);
+              const { data: {records} } = await axios.get('/tblpersona/index', { params });
+              setDataPeople(records);
             } catch (err) {
               console.error('Error:', err);
           }
@@ -93,7 +93,7 @@ function TblPersonaList() {
     }
 
     const handleClick = (id, action) => {
-    console.log(``);
+        console.log(``);
     };
 
     const handleDirect = () => {
@@ -151,7 +151,10 @@ function TblPersonaList() {
             </div>
         </div>
 
-        <Button label="Buscar" className="col-12 md:col-3" onClick={handleFind} />
+        <div className="flex justify-content-end">
+            <Button label="Buscar" className="col-12 md:col-3" onClick={handleFind} />
+        </div>
+
         </div>
         { dataPeople && (
         <DataTable

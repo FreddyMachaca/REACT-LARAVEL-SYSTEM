@@ -21,6 +21,7 @@ function TblFuncionariosView() {
   const [personaData, setPersonaData] = useState();
   const [familyData, setFamilyData] = useState();
   const [educationData, setEducationData] = useState();
+  const [dataToEdit, setDataToEdit] = useState()
 
   const fechData = async () => {
     const { data } = await axios.get(`tblpersona/home/per_id/${per_id}`);
@@ -49,12 +50,18 @@ function TblFuncionariosView() {
     }
   }
 
+  const fillData = (data) => {
+    setDataToEdit(data);
+  }
+
+  const cleanData = () => setDataToEdit();
+
   const getModalContent = () => {
     switch (activeIndex) {
       case 1:
-        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData}/>;
+        return <FamilyForm perd_per_id={per_id} addMember={setFamilyData} dataToEdit={dataToEdit} visible={setVisible}/>;
       case 3:
-        return <EducationForm ef_per_id={per_id} addEducation={setEducationData}/>;
+        return <EducationForm ef_per_id={per_id} addEducation={setEducationData} dataToEdit={dataToEdit} visible={setVisible}/>;
       default:
         return null;
     }
@@ -165,20 +172,23 @@ function TblFuncionariosView() {
                 <PersonalDataForm data={personaData.domicilio} perd_per_id={per_id}/>
               </TabPanel>
               <TabPanel header="FAMILIARES" leftIcon='pi pi-users'>
-                <TblFamily pf_per_id={per_id} familyData={familyData}/>
+                <TblFamily pf_per_id={per_id} familyData={familyData} setFamilyData={setFamilyData} visibleDialog={setVisible} fillData={fillData}/>
               </TabPanel>
               <TabPanel header="REQUISITOS" leftIcon='pi pi-list'>
                 <RequirementsForm/>
               </TabPanel>
               <TabPanel header="EDUCACIÓN FORMAL" leftIcon='pi pi-grade'>
-                <TblEducation educationData={educationData}/>
+                <TblEducation ef_per_id={per_id} educationData={educationData} visibleDialog={setVisible} setEducationData={setEducationData} fillData={fillData}/>
               </TabPanel>
           </TabView>
         </section>
       </Card>
 
       {(activeIndex==1 || activeIndex==3) && (
-        <SpeedDial onClick={() => setVisible(true)} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-plus" />
+        <SpeedDial onClick={() => {
+          cleanData();
+          setVisible(true)
+        }} direction="up" style={{ position: "fixed", bottom: "2rem", right: "2rem" }} showIcon="pi pi-plus" />
       )}
 
       <Dialog header="Información" visible={visible} style={{ width: "50vw" }} onHide={() => setVisible(false)}>

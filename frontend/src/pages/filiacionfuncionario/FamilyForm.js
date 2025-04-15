@@ -1,43 +1,71 @@
 import { InputText } from 'primereact/inputtext';
 import { Avatar } from 'primereact/avatar';
 import { Dropdown } from 'primereact/dropdown';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useFormik } from 'formik';
 import { Button } from 'primereact/button';
 import { classNames } from 'primereact/utils';
 import { Calendar } from 'primereact/calendar';
+import { Toast } from 'primereact/toast';
 import axios from 'axios'
 
-function FamilyForm({perd_per_id, addMember}) {
+function FamilyForm({perd_per_id, addMember, dataToEdit, visible}) {
     const [dataRelationship, setDataRelationship] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const toast = useRef(null);  
 
     useEffect(() => {
-        const fetchData = async () => {
-            const { data: {records} } = await axios.get(`tblcatalogo/index/cat_tabla/parentesco`);
-            setDataRelationship(
-                records.filter(item => item.cat_estado === 'V')
-                .map(item => ({
-                    cat_id: item.cat_id,
-                    cat_descripcion: item.cat_descripcion,
-                }))
-            );
-        }
         fetchData();
+        
+        if(dataToEdit){
+            formik.setValues({
+                pf_id: parseInt(dataToEdit.pf_id),
+                pf_per_id: dataToEdit.pf_per_id || parseInt(perd_per_id),
+                pf_ap_esposo: dataToEdit.pf_ap_esposo || null,
+                pf_paterno: dataToEdit.pf_paterno || null,
+                pf_materno: dataToEdit.pf_materno || null,
+                pf_nombres: dataToEdit.pf_nombres || null,
+                pf_fecha_nac: dataToEdit.pf_fecha_nac ? new Date(dataToEdit.pf_fecha_nac) : null,
+                pf_tipo_parentesco: dataToEdit.pf_tipo_parentesco || null,
+                pf_estado: dataToEdit.pf_estado || null,
+            });
+        }
     }, []);
+    
+    const fetchData = async () => {
+        const { data: {records} } = await axios.get(`tblcatalogo/index/cat_tabla/parentesco`);
+        setDataRelationship(
+            records.filter(item => item.cat_estado === 'V')
+            .map(item => ({
+                cat_id: item.cat_id,
+                cat_descripcion: item.cat_descripcion,
+            }))
+        );
+    }
 
     const onSubmit = async (values) => {
         try {
+            setIsSubmitting(true);
             const cleanedData = Object.fromEntries(
                 Object.entries(values).map(([key, value]) => [key, value === "" ? null : value])
             );
     
             const response = await axios.post(`tblpersonafamiliares/add`, cleanedData);
+
+            toast.current?.show({ 
+                severity: 'info', 
+                summary: 'Éxito', 
+                detail: 'Registro agregado con éxito', 
+                life: 3000 
+            });
+            setTimeout(() => {
+                rechargeList();
+                visible(false);
+            }, 1000);
     
-            console.log("Datos actualizados con éxito:", response.data);
+            //console.log("Datos actualizados con éxito:", response.data);
         } catch (error) {
             console.error("Error al actualizar los datos:", error.response?.data || error.message);
-        } finally{
-            rechargeList();
         }
     };
 
@@ -88,6 +116,7 @@ function FamilyForm({perd_per_id, addMember}) {
 
   return (
     <>
+        <Toast ref={toast} />
         <div className='flex justify-content-center'>
             <Avatar image="/images/icons/family-icon.jpeg" className="my-5"  shape="circle" style={{ width: "125px", height: "125px" }}  />
         </div>
@@ -137,7 +166,7 @@ function FamilyForm({perd_per_id, addMember}) {
                 </div>
 
                 <div className='flex justify-content-end mt-5'>
-                    <Button label='Guardar' type='submit'/>
+                    <Button label='Guardar' type='submit' disabled={isSubmitting}/>
                 </div>
             </form>
         </div>

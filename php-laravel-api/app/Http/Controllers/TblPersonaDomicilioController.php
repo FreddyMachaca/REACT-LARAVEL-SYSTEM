@@ -17,10 +17,19 @@ class tblPersonaDomicilioController extends Controller
 	function edit(TblPersonaDomicilioEditRequest $request, $rec_id = null){
 		$query = TblPersonaDomicilio::query();
 		$record = $query->where('perd_per_id', $rec_id)->first();
+	
 		if ($request->isMethod('post')) {
 			$modeldata = $request->validated();
-			$record->update($modeldata);
+	
+			if ($record) {
+				$record->update($modeldata);
+			} else {
+				$modeldata['perd_per_id'] = $rec_id;
+				$record = TblPersonaDomicilio::create($modeldata);
+			}
 		}
+	
 		return $this->respond($record);
 	}
+	
 }
