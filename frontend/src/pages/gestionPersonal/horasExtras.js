@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { confirmDialog } from 'primereact/confirmdialog'; 
 import { Dropdown } from 'primereact/dropdown';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
@@ -11,42 +12,89 @@ import axios from 'axios';
 
 const HorasExtras = ({ personaId }) => {
     const app = useApp();
-    const [tieneHorasAsignadas, setTieneHorasAsignadas] = useState(false);
     const [horasInput, setHorasInput] = useState('');
     const [horasAsignadas, setHorasAsignadas] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [tiposSancion, setTiposSancion] = useState([]); 
+    const currentMonth = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async() => {
+        try {
+            const response = await axios.get(`/tblplatransacciones/index/tr_per_id/${personaId}`);
+            if(response.data.data){
+                setHorasAsignadas(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error al obtener transacciones:', error);
+        }
+    }
 
   const guardarHoras = () => {
     if (!horasInput) return;
     
-    const nuevaHora = {
-      id: Date.now(),
-      horas: horasInput,
-      fecha: new Date().toLocaleDateString()
-    };
-    
-    setHorasAsignadas([...horasAsignadas, nuevaHora]);
-    setTieneHorasAsignadas(true);
-    setHorasInput('');
+    if(horasInput <= 36){
+        handleSubmit(horasInput);
+    }else {
+        console.log('no se puede registrar')
+        app.flashMsg('Error', 'Error, no se puede proceder con el registro.', 'error');
+    }
   };
 
-  useEffect( () => {
-    fetchTiposSancion()
-  }, []);
+  const handleSubmit = async (horas) => {
+    const data = {
+        tr_per_id: personaId,
+        tr_fa_id: 1,
+        tr_monto: horas, 
+        tr_estado: 'V',
+        tr_pc_id: 0,
+    }
+    try{
+        const response = await axios.post('tblplatransacciones/store', data);
+        app.flashMsg('Éxito', 'Horas extras registradas exitosamente.', 'success');
+        fetchData();
+    }catch(error){
+        console.log(`Error el registrar horas extras: ${error}`)
+    }
+  }
 
-    const fetchTiposSancion = async () => {
-        try {
-            const response = await axios.get('/tblcatalogo/getTiposSancion');
-            setTiposSancion(response.data?.map(cat => ({
-                id: cat.cat_id,
-                descripcion: cat.cat_descripcion,
-                abreviacion: cat.cat_abreviacion
-            })) || []);
-        } catch (error) {
-            app.flashMsg('Error', 'No se pudieron cargar los tipos de sanción', 'error');
-        }
-    };
+  const controlesTemplate = (rowData) => {
+    return (
+        <div>
+          {rowData.tr_estado === "V" && (
+            <Button
+                icon="pi pi-trash"
+                className="p-button-rounded p-button-danger p-button-text"
+                onClick={() => confirmDelete(rowData)}
+                tooltip="Eliminar"
+            />
+          )}
+        </div>
+    );
+  }
+
+  const confirmDelete = ({tr_id}) => {
+    confirmDialog({
+      message: '¿Esta seguro de eliminar el registro?',
+      header: 'Confirmación',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => handleDelete(tr_id)
+    });
+  }
+
+  const handleDelete = async (tr_id) => {
+    try {
+        await axios.post(`tblplatransacciones/delete/${tr_id}`);
+        
+        app.flashMsg('Éxito', 'Registro eliminado correctamente', 'success');
+
+        fetchData();
+    } catch(error) {
+        console.log(error)
+    }
+  }
 
     return (
         <div className="p-3">
@@ -68,7 +116,7 @@ const HorasExtras = ({ personaId }) => {
                 </div>
                 <div>
                 <p className="text-xs uppercase font-medium text-green-800">MES</p>
-                <p>FEBRERO</p>
+                <p>{currentMonth}</p>
                 </div>
             </div>
             </div>
@@ -78,19 +126,10 @@ const HorasExtras = ({ personaId }) => {
                     <label htmlFor="tipo_sancion" className="font-bold block mb-2">Horas</label>
                     <span className="p-input-icon-left">
                         <i className="pi pi-clock" />
-                        <InputText type='number' />
+                        <InputText type='number' onChange={({target: {value}}) => setHorasInput(value)} />
                     </span>
                 </div>
-                <div className='mr-2'>
-                    <label htmlFor="tipo_sancion" className="font-bold block mb-2">Tipo Sanción</label>
-                    <Dropdown
-                        id="tipo_sancion"
-                        options={tiposSancion.map(t => ({ label: t.descripcion, value: t.id }))}
-                        placeholder="Seleccione un tipo"
-                        className="w-full"
-                        filter 
-                    />
-                </div>
+                
                 <Button 
                     onClick={guardarHoras}
                     className="bg-green-500 text-white py-2 px-4 rounded-md flex items-center mt-5"
@@ -106,29 +145,22 @@ const HorasExtras = ({ personaId }) => {
             <h4 className="text-lg font-medium text-blue-800">Horas Extras del Funcionario</h4>
             <p className="text-sm text-gray-600">Detalle de las horas extra asignada al funcionario seleccionado.</p>
             </div>
-            
-            {!tieneHorasAsignadas ? (
-            <div className="bg-blue-100 text-blue-800 p-2 rounded-md inline-block">
-                EL FUNCIONARIO NO TIENE HORAS EXTRAS ASIGNADAS.
-            </div>
-            ) : (
             <div>
                 <DataTable
                 loading={loading}
+                value={horasAsignadas}
                 paginator
                 rows={10}
                 emptyMessage={loading ? <ProgressSpinner style={{width: '30px', height: '30px'}}/> : "No se encontraron sanciones."}
                 className="p-datatable-sm"
                 responsiveLayout="scroll"
                 >
-                    <Column field='' header='ID' sortable/>
-                    <Column field='' header='Tipo sanción' sortable/>
-                    <Column field='' header='Fecha inicio' sortable/>
-                    <Column field='' header='Fecha fin' sortable/>
-                    <Column field='' header='Monto' sortable/>
+                    <Column field='tr_fa_id' header='Codigo' sortable/>
+                    <Column field='tr_fecha_creacion' header='Fecha creación' sortable/>
+                    <Column field='tr_monto' header='Monto' sortable/>
+                    <Column body={controlesTemplate} header='ACCIONES' sortable/>
                 </DataTable>
             </div>
-            )}
         </div>
         </div>
     );

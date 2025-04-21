@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\TblPlaTransacciones;
 use App\Models\TblPlaTransaccionesCuotas;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Exception;
 use DB;
@@ -124,6 +125,37 @@ class TblPlaTransaccionesController extends Controller
             ], 500);
         }
     }
+
+    public function store(Request $request){
+        try {
+            DB::beginTransaction();
+            
+            $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
+
+            $validatedData = $request->validate([
+                'tr_fa_id'      => 'required|integer',
+                'tr_monto'      => 'required|numeric',
+                'tr_per_id'     => 'required|integer',
+                'tr_estado'     => 'required|string|max:3'
+            ]);
+            
+            $validatedData['tr_id'] = $maxId + 1;
+            $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
+            $validatedData['tr_pc_id'] = null;
+            $validatedData['tr_fecha_creacion'] = Carbon::now();
+            $validatedData['tr_fecha_inicio'] = Carbon::now();
+            
+            $transaccion = TblPlaTransacciones::create($validatedData);
+            
+            DB::commit();
+            
+            return $this->respond($transaccion);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return Response::json(['message' => 'Error al guardar la transaccion: ' . $e->getMessage()], 500);
+        }
+        return response()->json($request);
+    }
     
     public function edit(Request $request, $rec_id = null)
     {
@@ -143,7 +175,10 @@ class TblPlaTransaccionesController extends Controller
     {
         try {
             $arr_id = explode(",", $rec_id);
-            TblPlaTransacciones::whereIn("tr_id", $arr_id)->delete();
+            //TblPlaTransacciones::whereIn("tr_id", $arr_id)->delete();
+            TblPlaTransacciones::whereIn("tr_id", $arr_id)
+            ->update(['tr_estado' => 'C']);
+            
             return Response::json([
                 "status" => "success",
                 "message" => "Registros eliminados exitosamente"
@@ -226,55 +261,55 @@ class TblPlaTransaccionesController extends Controller
         }
     }
 
-    public function store(Request $request)
-    {
-        try {
-            DB::beginTransaction();
+    // public function store(Request $request)
+    // {
+    //     try {
+    //         DB::beginTransaction();
             
-            $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
+    //         $maxId = DB::table('tbl_pla_transacciones')->max('tr_id') ?? 0;
             
-            $validatedData = $request->validate([
-                'tr_pc_id'       => 'required|integer',
-                'tr_per_id'      => 'required|integer',
-                'tr_fa_id'       => 'required|integer',
-                'tr_fecha_fin'   => 'nullable|date',
-                'tr_monto'       => 'required|numeric',
-                'tr_estado'      => 'required|string|max:3'
-            ]);
+    //         $validatedData = $request->validate([
+    //             'tr_pc_id'       => 'required|integer',
+    //             'tr_per_id'      => 'required|integer',
+    //             'tr_fa_id'       => 'required|integer',
+    //             'tr_fecha_fin'   => 'nullable|date',
+    //             'tr_monto'       => 'required|numeric',
+    //             'tr_estado'      => 'required|string|max:3'
+    //         ]);
             
-            $validatedData['tr_id'] = $maxId + 1;
-            $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
-            $validatedData['tr_fecha_creacion'] = now();
-            $validatedData['tr_fecha_inicio'] = now();
+    //         $validatedData['tr_id'] = $maxId + 1;
+    //         $validatedData['tr_usuario_creacion'] = auth()->user() ? auth()->user()->id : null;
+    //         $validatedData['tr_fecha_creacion'] = now();
+    //         $validatedData['tr_fecha_inicio'] = now();
 
-            $transaccion = TblPlaTransacciones::create($validatedData);
+    //         $transaccion = TblPlaTransacciones::create($validatedData);
             
-            if (!$transaccion || !$transaccion->tr_id) {
-                throw new Exception('Error al crear la transacción: No se pudo obtener el ID');
-            }
+    //         if (!$transaccion || !$transaccion->tr_id) {
+    //             throw new Exception('Error al crear la transacción: No se pudo obtener el ID');
+    //         }
 
-            DB::commit();
+    //         DB::commit();
             
-            $transaccion = TblPlaTransacciones::with(['persona', 'factor'])
-                ->findOrFail($transaccion->tr_id);
+    //         $transaccion = TblPlaTransacciones::with(['persona', 'factor'])
+    //             ->findOrFail($transaccion->tr_id);
             
-            return $this->respond($transaccion);
-        }
-        catch(ValidationException $e) {
-            DB::rollback();
-             return Response::json([
-                'message' => 'Error de validación',
-                'errors' => $e->errors()
-            ], 422);
-        }
-        catch(Exception $e) {
-            DB::rollback();
-             Log::error('Error en TblPlaTransaccionesController@store: ' . $e->getMessage());
-             return Response::json([
-                'message' => 'Error al guardar la transacción: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+    //         return $this->respond($transaccion);
+    //     }
+    //     catch(ValidationException $e) {
+    //         DB::rollback();
+    //          return Response::json([
+    //             'message' => 'Error de validación',
+    //             'errors' => $e->errors()
+    //         ], 422);
+    //     }
+    //     catch(Exception $e) {
+    //         DB::rollback();
+    //          Log::error('Error en TblPlaTransaccionesController@store: ' . $e->getMessage());
+    //          return Response::json([
+    //             'message' => 'Error al guardar la transacción: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     
     public function storeCuotas(Request $request)
     {

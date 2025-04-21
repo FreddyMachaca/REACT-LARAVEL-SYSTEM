@@ -496,6 +496,7 @@ Route::prefix('ubicaciones')->group(function () {
 	Route::get('tblplatransacciones/index/{filter?}/{filtervalue?}', 'TblPlaTransaccionesController@index');
 	Route::get('tblplatransacciones/view/{rec_id}', 'TblPlaTransaccionesController@view');
 	Route::post('tblplatransacciones/add', 'TblPlaTransaccionesController@add');
+	Route::post('tblplatransacciones/store', 'TblPlaTransaccionesController@store');
 	Route::any('tblplatransacciones/edit/{rec_id}', 'TblPlaTransaccionesController@edit');
 	Route::any('tblplatransacciones/delete/{rec_id}', 'TblPlaTransaccionesController@delete');
 	Route::get('tblplatransacciones/persona/{personaId}', 'TblPlaTransaccionesController@getTransaccionesPersona');

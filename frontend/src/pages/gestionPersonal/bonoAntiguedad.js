@@ -109,8 +109,8 @@ function BonoAntiguedad({ personaId }) {
 
   const confirmDelete = ({cs_id}) => {
     confirmDialog({
-      message: 'Are you sure you want to proceed?',
-      header: 'Confirmation',
+      message: '¿Esta seguro de eliminar el registro?',
+      header: 'Confirmación',
       icon: 'pi pi-exclamation-triangle',
       accept: () => handleDelete(cs_id)
     });
@@ -137,7 +137,6 @@ function BonoAntiguedad({ personaId }) {
   };  
 
   const controlesTemplate = (rowData) => {
-    console.log(rowData)
     return (
         <div>
           {rowData.cs_estado === "VIGENTE" && (
@@ -254,7 +253,7 @@ function BonoAntiguedad({ personaId }) {
                 <Column body={antiguedadTemplate} header='ANTIGÜEDAD' sortable/>
                 <Column field='cs_tipo_reg' header='TIPO REGISTRO' sortable/>
                 <Column field='cs_estado' header='ESTADO' sortable/>
-                <Column body={controlesTemplate} header='CONTROLES'/>
+                <Column body={controlesTemplate} header='ACCIONES'/>
             </DataTable>
           </div>
         </div>
