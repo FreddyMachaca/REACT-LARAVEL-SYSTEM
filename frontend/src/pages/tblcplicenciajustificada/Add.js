@@ -1,13 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { Calendar } from "primereact/calendar";
 import { Button } from "primereact/button";
 import { InputSwitch } from "primereact/inputswitch";
+import axios from "axios";
 
 function TtblCpLicenciaJustificadaAdd() {
-    const [tipoLicencia, setTipoLicencia] = useState(null);
+    const [tiposLicencia, setTiposLicencia] = useState(null);
+    const [autorizadores, setAutorizadores] = useState(null);
     const [habilitarTexto, setHabilitarTexto] = useState(true);
+
+
+    useEffect(() => {
+      fetchData();
+
+    }, []);
+    
+    const fetchData = async () => {
+        try {
+            const [resLicencias, resAutorizadores] = await Promise.all([
+                axios.get('/tblcatalogo/get-tipo-licencia'),
+                axios.get('/tblpersona/getoptions')
+            ]);
+
+            const tiposLicencia = resLicencias.data;
+            const autorizadores = resAutorizadores.data;
+
+            setTiposLicencia(tiposLicencia);
+            setAutorizadores(autorizadores);
+
+        } catch(error){
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+      console.log(autorizadores)
+    }, [autorizadores])
+    
 
     return (
         <>
@@ -17,7 +48,7 @@ function TtblCpLicenciaJustificadaAdd() {
                 <div className="grid formgrid">
                     <div className="field col-12">
                         <label htmlFor="tipoLicencia">Tipo Licencia</label>
-                        <Dropdown onChange={(e) => setTipoLicencia(e.value)}placeholder="Seleccionar..." className="w-full" />
+                        <Dropdown options={tiposLicencia} optionValue='cat_id' optionLabel="cat_descripcion" placeholder="Seleccionar..." className="w-full" />
                     </div>
 
                     <div className="field col-6">
@@ -57,7 +88,9 @@ function TtblCpLicenciaJustificadaAdd() {
 
                     <div className="field col-6">
                         <label htmlFor="autorizador">Autorizado por</label>
-                        <Dropdown placeholder="Seleccionar autorizador" className="w-full" />
+                        <Dropdown options={autorizadores} optionValue='per_id' 
+                        optionLabel={(option) => `${option.per_nombres} ${option?.per_ap_materno} ${option?.per_ap_paterno}`}
+                        placeholder="Seleccionar autorizador" className="w-full" />
                     </div>
 
                     <div className="field col-12 text-right">

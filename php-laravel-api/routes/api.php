@@ -107,7 +107,7 @@ Route::post('auth/register', [AuthController::class, 'register']);
 	Route::get('tblcatalogo/get/domicilio/data', 'TblCatalogoController@getDataDomicilio');
 	Route::get('tblcatalogo/get/education/data', 'TblCatalogoController@getDataEducation');
 	Route::get('/tipo-horario', [TblCatalogoController::class, 'tipoHorario']);
-	Route::get('/tipo-licencia', [TblCatalogoController::class, 'obtenerTiposLicencia']);
+	Route::get('/tblcatalogo/get-tipo-licencia', 'TblCatalogoController@getTiposLicencia');
 	Route::get('/tipo-ubicacion', [TblCatalogoController::class, 'obtenerTipoUbicacion']);
 	Route::get('tblcatalogo/getTiposSancion', [TblCatalogoController::class, 'getTiposSancion']); // <-- Nueva ruta
 
@@ -410,6 +410,7 @@ Route::post('auth/register', [AuthController::class, 'register']);
 	Route::any('tblpersona/delete/{rec_id}', 'TblPersonaController@delete');
 	Route::post('tblpersona/add/personwithhome', 'TblPersonaController@addPersonAndHome');
 	Route::get('tblpersona/home/{filter?}/{filtervalue?}', 'TblPersonaController@getPersonWithHome');
+	Route::get('tblpersona/getoptions', 'TblPersonaController@getDataForSelect'); // data for select
 	Route::get('/empleado', [TblPersonaController::class, 'obtenerEmpleado']);
 	Route::get('/opciones', [TblPersonaController::class, 'obtenerOpciones']);
 	

@@ -246,4 +246,19 @@ class TblCatalogoController extends Controller
             return Response::json(['message' => 'Error al obtener tipos de sanción: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getTiposLicencia(){
+        try {
+            $records = TblCatalogo::where('cat_tabla', 'Tipo_Licencia')
+                ->where('cat_estado', 'V')
+                ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion']) 
+                ->orderBy('cat_secuencial') 
+                ->get();
+                
+            return Response::json($records); 
+        } catch(Exception $e){
+            Log::error("Error fetching Tipos Licencia justificada: " . $e->getMessage());
+            return Response::json(['message' => 'Error al obtener tipos de sanción: ' . $e->getMessage()], 500);
+        }
+    }
 }
