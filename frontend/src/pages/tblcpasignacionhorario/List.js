@@ -32,13 +32,13 @@ function tblCpAsignacionHorarioList() {
               <Button 
                   icon="pi pi-id-card" 
                   className="p-button-rounded p-button-success p-button-text"
-                  onClick={() => app.navigate(`/gestionPersonal/configuracion/${rowData.per_id}`)}
+                  onClick={() => app.navigate(`/tblcplicenciajustificada/add/${rowData.per_id}`)}
                   tooltip="Gestionar"
               />
               <Button 
                   icon="pi pi-clock" 
                   className="p-button-rounded p-button-primary p-button-text"
-                  onClick={() => app.navigate(`/gestionPersonal/configuracion/${rowData.per_id}`)}
+                  // onClick={() => app.navigate(`/gestionPersonal/configuracion/${rowData.per_id}`)}
                   tooltip="Gestionar"
               />
           </div>
@@ -97,7 +97,7 @@ function tblCpAsignacionHorarioList() {
   return (
       <div className="card">
           <Toast ref={toast} />
-          <Title title="Gestión de Personal" />
+          <Title title="Asignación de horario" />
           
           <Card className="mb-4">
               <div className="grid">
