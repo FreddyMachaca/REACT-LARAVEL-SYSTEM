@@ -261,4 +261,14 @@ class TblCatalogoController extends Controller
             return Response::json(['message' => 'Error al obtener tipos de sanción: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getTipoHorario()
+    {
+        $horarios = TblCatalogo::where('cat_tabla', 'Tipo_Horario')
+            ->where('cat_estado', 'V')
+            ->orderBy('cat_secuencial', 'asc')
+            ->get();
+
+        return response()->json($horarios);
+    }
 }

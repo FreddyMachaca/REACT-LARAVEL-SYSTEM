@@ -136,6 +136,7 @@ import TblPersonalList from 'pages/gestionPersonal/List';
 import PersonalConfiguracion from 'pages/gestionPersonal/personalMenu';
 import UserProfile from 'pages/profile/UserProfile';
 import TblCpAsignacionHorarioList from 'pages/tblcpasignacionhorario/List';
+import TblCpAsigcionHorarioAdd from 'pages/tblcpasignacionhorario/Add'
 import TblCpLicenciaJustificadaAdd from 'pages/tblcplicenciajustificada/Add';
 
 const App = () => {
@@ -218,6 +219,7 @@ const App = () => {
                 
                 {/* tblCpAsignacionHorario pages routes */}
                 <Route path="/tblcpasignacionhorario" element={<TblCpAsignacionHorarioList />} />
+                <Route path="/tblcpasignacionhorario/add/:personaId" element={<TblCpAsigcionHorarioAdd />} />
                 
                 {/* tblCpLicenciaJustificada pages routes */}
                 <Route path="/tblcplicenciajustificada/add/:personaId" element={<TblCpLicenciaJustificadaAdd />} />

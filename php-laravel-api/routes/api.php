@@ -106,7 +106,7 @@ Route::post('auth/register', [AuthController::class, 'register']);
 	Route::get('tblcatalogo/get/movimiento/general', 'TblCatalogoController@getMovGeneral');
 	Route::get('tblcatalogo/get/domicilio/data', 'TblCatalogoController@getDataDomicilio');
 	Route::get('tblcatalogo/get/education/data', 'TblCatalogoController@getDataEducation');
-	Route::get('/tipo-horario', [TblCatalogoController::class, 'tipoHorario']);
+	Route::get('tblcatalogo/get-tipo-horario', 'TblCatalogoController@getTipoHorario');
 	Route::get('/tblcatalogo/get-tipo-licencia', 'TblCatalogoController@getTiposLicencia');
 	Route::get('/tipo-ubicacion', [TblCatalogoController::class, 'obtenerTipoUbicacion']);
 	Route::get('tblcatalogo/getTiposSancion', [TblCatalogoController::class, 'getTiposSancion']); // <-- Nueva ruta
@@ -445,9 +445,10 @@ Route::prefix('ubicaciones')->group(function () {
 	Route::post('/actas', [ActaEntregacabController::class, 'store']);
 	Route::get('/actas/buscar', [ActaEntregacabController::class, 'buscarActas']);
 
-/* Routes for Asignacion Horario */
+/* Routes for tblcpasignacionhorario */
 	Route::post('asignacionhorario/store', [AsignacionHorarioController::class, 'store']);
 	Route::get('asignacionhorario/show/{rec_id}', 'AsignacionHorarioController@show');
+	Route::get('tblcpasignacionhorario/getschedule/{persona_id}', 'AsignacionHorarioController@getSchedule');
 
 /*  routes for TblPersonaDomicilio */
 	Route::any('tblpersonadomicilio/edit/{rec_id}', 'tblPersonaDomicilioController@edit');	

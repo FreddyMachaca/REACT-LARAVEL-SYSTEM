@@ -38,7 +38,7 @@ function tblCpAsignacionHorarioList() {
               <Button 
                   icon="pi pi-clock" 
                   className="p-button-rounded p-button-primary p-button-text"
-                  // onClick={() => app.navigate(`/gestionPersonal/configuracion/${rowData.per_id}`)}
+                  onClick={() => app.navigate(`/tblcpasignacionhorario/add/${rowData.per_id}`)}
                   tooltip="Gestionar"
               />
           </div>

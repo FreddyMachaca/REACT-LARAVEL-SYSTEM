@@ -118,4 +118,18 @@ class AsignacionHorarioController extends Controller
 
         return response()->json(['message' => 'Horario eliminado correctamente'], 200);
     }
+
+    public function getSchedule(Request $request, $persona_id = null){
+        try{
+            $records = AsignacionHorario::where('ah_per_id', $persona_id)
+                ->with(['tipoHorario:cat_id,cat_descripcion'])
+                ->get();
+
+            return response()->json($records);
+        }
+		catch (Exception $e) {
+			return response()->json(['error' => $e->getMessage()], 500);
+		}
+
+    }
 }

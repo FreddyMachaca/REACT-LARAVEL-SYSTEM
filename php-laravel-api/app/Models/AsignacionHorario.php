@@ -52,10 +52,6 @@ class AsignacionHorario extends Model
         'ah_dom_sal2',
     ];
 
-    public function tipoHorario()
-    {
-        return $this->belongsTo(Tblcatalogo::class, 'ah_tipo_horario', 'cat_id');
-    }
     public static function listFields()
     {
         return [
@@ -292,6 +288,11 @@ class AsignacionHorario extends Model
             'ah_dom_ing2',
             'ah_dom_sal2',
         ];
+    }
+
+    public function tipoHorario()
+    {
+        return $this->belongsTo(Tblcatalogo::class, 'ah_tipo_horario', 'cat_id');
     }
 
 
