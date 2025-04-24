@@ -220,7 +220,7 @@ const App = () => {
                 <Route path="/tblcpasignacionhorario" element={<TblCpAsignacionHorarioList />} />
                 
                 {/* tblCpLicenciaJustificada pages routes */}
-                <Route path="/tblcplicenciajustificada/add/:fieldValue" element={<TblCpLicenciaJustificadaAdd />} />
+                <Route path="/tblcplicenciajustificada/add/:personaId" element={<TblCpLicenciaJustificadaAdd />} />
 
 
                 {/* tblempleador pages routes */}
