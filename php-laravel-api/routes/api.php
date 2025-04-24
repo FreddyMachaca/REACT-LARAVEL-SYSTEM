@@ -415,10 +415,12 @@ Route::post('auth/register', [AuthController::class, 'register']);
 	Route::get('/opciones', [TblPersonaController::class, 'obtenerOpciones']);
 	
 /* New Routes for Licencias */
-Route::prefix('licencias')->group(function () {
+Route::prefix('tblcplicenciajustificada')->group(function () {
+    Route::post('/add', 'TblLicenciaJustificadaController@add');
+
     Route::get('/buscar', 'TblLicenciaJustificadaController@search');
     Route::get('/show/{id}', 'TblLicenciaJustificadaController@show');
-    Route::post('/add', 'TblLicenciaJustificadaController@store');
+    //Route::post('/add', 'TblLicenciaJustificadaController@store');
     Route::put('/edit/{id}', 'TblLicenciaJustificadaController@update');
     Route::delete('/delete/{id}', 'TblLicenciaJustificadaController@destroy');
     Route::get('/boleta/{id}', 'TblLicenciaJustificadaController@obtenerBoleta');

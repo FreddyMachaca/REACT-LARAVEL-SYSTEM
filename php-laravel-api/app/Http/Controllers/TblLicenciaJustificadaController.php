@@ -206,7 +206,7 @@ class TblLicenciaJustificadaController extends Controller
     /**
      * Crear una nueva licencia justificada.
      */
-    public function store(Request $request): JsonResponse
+    public function add(Request $request): JsonResponse
     {
         $request->validate([
             'lj_per_id' => 'required|integer',
@@ -217,7 +217,7 @@ class TblLicenciaJustificadaController extends Controller
             'lj_hora_retorno' => 'nullable|date_format:H:i',
             'lj_motivo' => 'nullable|string|max:200',
             'lj_lugar' => 'nullable|string|max:200',
-            'lj_per_id_autoriza' => 'nullable|string|max:200',
+            'lj_per_id_autoriza' => 'nullable|integer|max:200',
         ]);
 
         $licenciaData = $request->all();
