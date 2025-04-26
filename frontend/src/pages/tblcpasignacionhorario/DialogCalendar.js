@@ -6,7 +6,7 @@ import { Calendar } from "primereact/calendar";
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 
-function DialogCalendar({ visible, setVisible }) {
+function DialogCalendar({ visible, setVisible, handleGenerate }) {
     const app = useApp();
     const [ tipoHorarioOptions, setTipoHorarioOptions ] = useState();
     const [formData, setFormData] = useState({
@@ -24,26 +24,6 @@ function DialogCalendar({ visible, setVisible }) {
 
         fetchData();
     }, []);
-
-    const handleGenerarCalendario = () => {
-        try {
-          const payload = new FormData();
-          payload.append('tipo_horario', formData.tipoHorario);
-          payload.append(
-            'fecha_inicio',
-            formData.fechaInicio?.toISOString().split('T')[0] || ''
-          );
-          payload.append(
-            'fecha_fin',
-            formData.fechaFin?.toISOString().split('T')[0] || ''
-          );
-      
-          console.log('exito')
-      
-        } catch (error) {
-          app.flashMsg('Error', error.message, 'error');
-        }
-    };
 
   return (
     <Dialog
@@ -64,7 +44,6 @@ function DialogCalendar({ visible, setVisible }) {
                 id="tipoHorario"
                 options={tipoHorarioOptions} 
                 optionLabel="cat_descripcion" 
-                optionValue="cat_id" 
                 value={formData.tipoHorario}
                 className="w-full"
                 placeholder="Seleccione un tipo de horario"
@@ -104,7 +83,7 @@ function DialogCalendar({ visible, setVisible }) {
             <Button
               label="GENERAR CALENDARIO"
               icon="pi pi-plus"
-              onClick={handleGenerarCalendario}
+              onClick={() => handleGenerate(formData)}
             />
             <Button
               label="Cancelar"

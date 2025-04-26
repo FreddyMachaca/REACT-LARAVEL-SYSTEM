@@ -4,22 +4,84 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Card } from 'primereact/card';
+import { Checkbox } from "primereact/checkbox";
 import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
+import { InputSwitch } from "primereact/inputswitch";
+import { Divider } from 'primereact/divider';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 import DialogCalendar from './DialogCalendar';
+import DialogSchedule from './DialogSchedule';
 
+
+
+const generateCalendar = (start, end) => {
+    const days = [];
+    let current = new Date(start);
+    while (current <= end) {
+      days.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+    return days;
+};
+
+const getWeekNumber = (date) => {
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    startOfYear.setDate(startOfYear.getDate() + (1 - startOfYear.getDay())); // Ajustar al primer Lunes del año
+    const pastDaysOfYear = (date - startOfYear) / 86400000;
+    return Math.floor(pastDaysOfYear / 7) + 1;
+  };
+const getMonthFromWeek = (days) => {
+    const firstDay = days.find((day) => day !== null);
+    if (firstDay) {
+        return firstDay.toLocaleDateString("es-ES", { month: "long" });
+    }
+    return "";
+};
+
+const groupDaysByWeek = (days) => {
+const weeks = {};
+
+days.forEach((day) => {
+    const weekNumber = getWeekNumber(day);
+
+    if (!weeks[weekNumber]) {
+    weeks[weekNumber] = Array(7).fill(null); // Lunes a Domingo
+    }
+    const adjustedDayOfWeek = (day.getDay() + 6) % 7; // Lunes (0) a Domingo (6)
+    weeks[weekNumber][adjustedDayOfWeek] = day;
+});
+return weeks;
+};
 
 function TblCpAsigcionHorarioAdd() {
     const app = useApp();
     const { personaId } = useParams();
     const [ persona, setPersona ] = useState(null);
     const [ personaSchedule, setPersonaSchedule ] = useState();
+
     const [ loading, setLoading ] = useState(true);
+
+    const [ scheduleValuesByDay, setScheduleValuesByDay ] = useState({});
     const [ tipoHorario, setTipoHorario ] = useState('');
+    const [ weeks, setWeeks ] = useState({});
+
     const [ dialogCalendar, setDialogCalendar ] = useState(false);
+    const [ dialogSchedule, setDialogSchedule ] = useState(false);    
     
+    const [ firstCard, setFirstCard ] = useState(true);
+    const [ secondCard, setSecondCard ] = useState(false);
+
+    const [ data, setData ] = useState();
+    const [ checkedDays, setCheckedDays ] = useState({});
+    const [ switchChecked, setSwitchChecked ] = useState(true);    
+    const [ scheduleValues, setScheduleValues ] = useState({
+        ingress1: null,
+        exit1: null,
+        ingress2: null,
+        exit2: null,
+    });
 
     useEffect(() => {
         fetchPersonaDetails();
@@ -65,6 +127,191 @@ function TblCpAsigcionHorarioAdd() {
         });
     };
 
+    const handleGenerate = (form) => {
+        if(form && form.tipoHorario && form.fechaInicio && form.fechaFin){
+            if(form.fechaInicio >= form.fechaFin){
+                app.flashMsg('Error', 'La fecha de inicio debe ser menor a la fecha fin.', 'error');
+                return;
+            }
+
+            const days = generateCalendar(form.fechaInicio, form.fechaFin);
+            const groupedWeeks = groupDaysByWeek(days);
+
+            setWeeks(groupedWeeks);
+
+            const initialValues = {};
+            days.forEach((day) => {
+                const dateString = day.toDateString();
+                initialValues[dateString] = {
+                ingress1: null,
+                exit1: null,
+                ingress2: null,
+                exit2: null,
+                };
+            });
+
+            setScheduleValuesByDay(initialValues);
+            setData(form);
+
+            // hide table, dialog and show calendar
+            setFirstCard(false);
+            setSecondCard(true);
+            setDialogCalendar(false);
+        }else {
+            app.flashMsg('Error', 'Campos vacios.', 'error');
+        }
+    }
+    const onCheckboxChange = (day) => {
+        const dateString = day.toDateString();
+        const newCheckedDays = { ...checkedDays };
+        newCheckedDays[dateString] = !checkedDays[dateString];
+        setCheckedDays(newCheckedDays);
+    
+        // Si la casilla está marcada, aplica los valores de horario actuales a este día
+        if (!checkedDays[dateString]) {
+          setScheduleValuesByDay((prev) => ({
+            ...prev,
+            [dateString]: { ...scheduleValues },
+          }));
+        } else {
+          // Si está desmarcada, limpia el horario para este día
+          setScheduleValuesByDay((prev) => {
+            const updated = { ...prev };
+            updated[dateString] = {
+              ingress1: null,
+              exit1: null,
+              ingress2: null,
+              exit2: null,
+            };
+            return updated;
+          });
+        }
+    };
+
+    useEffect(() => {
+        console.log(data)
+    }, [data])
+
+    const renderDay = (day) => {
+        if (!day) return null;
+    
+        const dateString = day.toDateString();
+        const dayValues = scheduleValuesByDay[dateString] || {};
+        const dayOfWeek = day
+          .toLocaleDateString("es-ES", { weekday: "long" })
+          .toLowerCase();
+    
+        return (
+          <div key={dateString} style={{ padding: "5px", margin: "5px" }}>
+            <div className="fecha-estilizada">{day.getDate()}</div>
+            <Checkbox
+              checked={checkedDays[dateString] || false}
+              onChange={() => onCheckboxChange(day)}
+              disabled={!switchChecked}
+            />
+    
+            {/* Siempre muestra la grilla de horario si existen valores */}
+            {(dayValues.ingress1 ||
+              dayValues.exit1 ||
+              dayValues.ingress2 ||
+              dayValues.exit2) && (
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  marginTop: "10px",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      ING
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      SAL
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {dayValues.ingress1
+                        ? dayValues.ingress1.toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "--:--"}
+                    </td>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {dayValues.exit1
+                        ? dayValues.exit1.toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "--:--"}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {dayValues.ingress2
+                        ? dayValues.ingress2.toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "--:--"}
+                    </td>
+                    <td
+                      style={{
+                        border: "1px solid #ccc",
+                        padding: "5px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {dayValues.exit2
+                        ? dayValues.exit2.toLocaleTimeString("es-ES", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "--:--"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
+    };
+
     const actionTemplate = (rowData) => {
         return (
           <div className="flex gap-2">
@@ -85,7 +332,7 @@ function TblCpAsigcionHorarioAdd() {
   return (
     <>
         <div className='card'>
-            <Card className="mb-4">
+            <Card>
                 <div className="flex flex-column md:flex-row">
                     {/* Avatar Section */}
                     <div className="flex align-items-center justify-content-center mr-4 mb-3 md:mb-0" style={{minWidth: '200px'}}>
@@ -228,37 +475,231 @@ function TblCpAsigcionHorarioAdd() {
             </Card>
         </div>
 
-        <div className='card'>
-            <Tag className="m-2 py-2 px-4" value={`Tipo: ${tipoHorario}`}/>
+        { firstCard && (
+            <div className='card mt-3'>
+                <Tag className="m-2 py-2 px-4" value={`Tipo: ${tipoHorario}`}/>
 
-            <DataTable
-                loading={loading}
-                emptyMessage={
-                    <div className="p-4 text-center">
-                        {loading ? (
-                            <ProgressSpinner style={{width:'50px', height:'50px'}} />
-                        ) : (
-                            "No se encontraron registros válidos"
-                        )}
+                <DataTable
+                    loading={loading}
+                    emptyMessage={
+                        <div className="p-4 text-center">
+                            {loading ? (
+                                <ProgressSpinner style={{width:'50px', height:'50px'}} />
+                            ) : (
+                                "No se encontraron registros válidos"
+                            )}
+                        </div>
+                    }
+                    className="p-datatable-sm"
+                    responsiveLayout="scroll"
+                    stripedRows
+                    lazy
+                    paginator
+                    rows={10}
+                    value={personaSchedule}
+                    >
+                    <Column field="dia" header="Día" />
+                    <Column field="ingreso1" header="Ingreso 1" />
+                    <Column field="salida1" header="Salida 1" />
+                    <Column field="ingreso2" header="Ingreso 2" />
+                    <Column field="salida2" header="Salida 2" />
+                    
+                    <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
+                </DataTable>
+            </div>
+        ) }
+
+        { secondCard && ( 
+            <div className="card mt-3">
+              <div className="flex justify-content-between align-items-center mb-4">
+                <h5 className="m-0">Calendario</h5>
+              </div>
+              <Divider/>
+              <h4 className="text-center text-gray-500 text-sm mb-2">
+                DATOS HORARIO
+              </h4>
+              <div style={{ display: "flex", justifyContent: "space-evenly" }}>
+                {/* Estilos personalizados */}
+                <div style={{ paddingLeft: "1.5cm" }}>
+                  <h6 className="text-center font-medium text-gray-600">
+                    TIPO
+                  </h6>
+                  <p className="text-center">
+                    {data.tipoHorario
+                      ? data.tipoHorario.cat_descripcion
+                      : "Ninguno"}
+                  </p>
+                </div>
+                <div>
+                  <h6 className="text-center font-medium text-gray-600">
+                    FECHA INICIO
+                  </h6>
+                  <p className="text-center">
+                    {data.fechaInicio
+                      ? data.fechaInicio.toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "01/02/2025"}
+                  </p>
+                </div>
+                <div style={{ paddingRight: "1.5cm" }}>
+                  <h6 className="text-center font-medium text-gray-600">
+                    FECHA FIN
+                  </h6>
+                  <p className="text-center">
+                    {data.fechaFin
+                      ? data.fechaFin.toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "28/02/2025"}
+                  </p>
+                </div>
+              </div>
+              <Divider/>
+
+              <div className="mb-4 pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between gap-4 mb-6">
+                    <div className='w-26rem'>
+                      <Button
+                        icon="pi pi-calendar"
+                        label="LLENAR HORARIO"
+                        className="w-full text-white"
+                        onClick={() => setDialogSchedule(true)}
+                      />
                     </div>
-                }
-                className="p-datatable-sm"
-                responsiveLayout="scroll"
-                stripedRows
-                lazy
-                paginator
-                rows={10}
-                value={personaSchedule}
-                >
-                <Column field="dia" header="Día" />
-                <Column field="ingreso1" header="Ingreso 1" />
-                <Column field="salida1" header="Salida 1" />
-                <Column field="ingreso2" header="Ingreso 2" />
-                <Column field="salida2" header="Salida 2" />
-                
-                <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
-            </DataTable>
-        </div>
+                    <div className='w-26rem'>
+                      <Button
+                        icon="pi pi-trash"
+                        label="LIMPIAR HORARIO"
+                        className="w-full bg-white text-gray-700 border border-gray-300"
+                      />
+                      </div>
+                  </div>
+                  <div className="flex flex-column ml-5 items-center justify-between gap-4 w-full max-w-[400px]">
+                    <span className="text-sm font-medium">
+                      ¿APLICAR CASILLAS?
+                    </span>
+                    <InputSwitch
+                      checked={switchChecked}
+                      onChange={(e) => setSwitchChecked(e.value)}
+                    />
+                  </div>
+                </div>
+                {/* Segunda fila */}
+                <div className="flex justify-between items-center mb-6">
+                  {/* Contenedor de la izquierda */}
+                  <div className="flex gap-4 flex-1">
+                    <Button
+                      icon="pi pi-times"
+                      label="CANCELAR"
+                      className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                    />
+                    <Button
+                      icon="pi pi-save"
+                      label="GUARDAR"
+                      className="bg-green-500 text-white px-4 py-2 rounded"
+                    //   onClick={handleSave}
+                    />
+                  </div>
+
+                  {/* Espacio adicional entre los grupos */}
+                  <div className="flex-1"></div>
+
+                  {/* Contenedor de la derecha */}
+                  <div className="flex gap-4">
+                    <Button
+                      label="HORARIO NO PRESENCIAL"
+                      className="bg-red-400 text-white rounded-full py-1 px-4 text-sm"
+                      style={{ borderRadius: "999px" }}
+                    />
+                    <Button
+                      label="SIN TOLERANCIA HORARIA"
+                      className="bg-white text-gray-700 border border-gray-300 rounded-full py-1 px-4 text-sm"
+                      style={{ borderRadius: "999px" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <table
+                style={{
+                  width: "100%",
+                  marginTop: "20px",
+                  borderCollapse: "collapse",
+                  border: "1px solid #ddd",
+                }}
+              >
+                <thead>
+                  <tr>
+                    {[
+                      "N Sem",
+                      "Lunes",
+                      "Martes",
+                      "Miércoles",
+                      "Jueves",
+                      "Viernes",
+                      "Sábado",
+                      "Domingo",
+                    ].map((header, idx) => (
+                      <th
+                        key={idx}
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "8px",
+                          backgroundColor: "#f8f9fa",
+                          textAlign: "center",
+                          verticalAlign: "middle",
+                        }}
+                      >
+                        {header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(weeks).map(([weekNumber, days]) => {
+                    const month = getMonthFromWeek(days);
+                    return (
+                      <tr key={weekNumber}>
+                        <td
+                          style={{
+                            border: "1px solid #ddd",
+                            padding: "8px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {`${weekNumber} - ${month}`}
+                        </td>
+                        {days.map((day, index) => (
+                          <td
+                            key={index}
+                            style={{
+                              border: "1px solid #ddd",
+                              padding: "8px",
+                              textAlign: "center",
+                              verticalAlign: "middle",
+                              height: "50px", // Altura mínima para mejor visualización
+                            }}
+                          >
+                            {day ? renderDay(day) : null}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+          
+          </div>
+        )}
+
         <div className="fixed bottom-0 right-0 p-3">
             <div className="flex flex-column align-items-center gap-2">
             <Button
@@ -274,7 +715,8 @@ function TblCpAsigcionHorarioAdd() {
             </div>
         </div>
 
-        <DialogCalendar visible={dialogCalendar} setVisible={setDialogCalendar}/>
+        <DialogCalendar visible={dialogCalendar} setVisible={setDialogCalendar} handleGenerate={handleGenerate}/>
+        <DialogSchedule visible={dialogSchedule} setVisible={setDialogSchedule} setScheduleValues={setScheduleValues} scheduleValues={scheduleValues}/>
     </>
   )
 }
