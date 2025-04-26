@@ -3,11 +3,9 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { Dropdown } from "primereact/dropdown";
 import { Calendar } from "primereact/calendar";
-import useApp from 'hooks/useApp';
 import axios from 'axios';
 
 function DialogCalendar({ visible, setVisible, handleGenerate }) {
-    const app = useApp();
     const [ tipoHorarioOptions, setTipoHorarioOptions ] = useState();
     const [formData, setFormData] = useState({
         tipoHorario: null,
@@ -15,14 +13,25 @@ function DialogCalendar({ visible, setVisible, handleGenerate }) {
         fechaFin: null,
     });
       
-    useEffect(() => {
-        const fetchData = async () => {
-            const { data } = await axios.get('tblcatalogo/get-tipo-horario');
-            setTipoHorarioOptions(data);
-        }
-
-        fetchData();
+    useEffect(() => {  
+      fetchData();
     }, []);
+
+    const fetchData = async () => {
+        const { data } = await axios.get('tblcatalogo/get-tipo-horario');
+        setTipoHorarioOptions(data);
+    }
+
+    const handleSubmit = () => {
+      const formDataBackup = formData;
+      setFormData({
+        tipoHorario: null,
+        fechaInicio: null,
+        fechaFin: null,
+      });
+
+      handleGenerate(formDataBackup);
+    }
 
   return (
     <Dialog
@@ -82,7 +91,7 @@ function DialogCalendar({ visible, setVisible, handleGenerate }) {
             <Button
               label="GENERAR CALENDARIO"
               icon="pi pi-plus"
-              onClick={() => handleGenerate(formData)}
+              onClick={() => handleSubmit()}
             />
             <Button
               label="Cancelar"

@@ -108,7 +108,6 @@ function TblCpAsigcionHorarioAdd() {
     });
 
     const [ dataAssistance, setDataAssistance ] = useState();
-
     const [ daysWork, setDaysWork ] = useState([]);
 
     useEffect(() => {
@@ -146,29 +145,13 @@ function TblCpAsigcionHorarioAdd() {
         try {
             const { data } = await axios.get(`tblcpasignacionhorario/getschedule/${personaId}`);
 
-            setPersonaSchedule( transformSchedule(data[0]) );
+            setPersonaSchedule( data );
+            console.log(data)
             setTipoHorario(data[0].tipo_horario.cat_descripcion);
         } catch (error){
-            app.flashMsg('Error', error.message, 'error');
+            console.log('Error', error.message);
         }
     }
-
-    const transformSchedule = (registro) => {
-        const dias = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
-        return dias.map((dia) => {
-            return {
-                dia: dia.charAt(0).toUpperCase() + dia.slice(1),
-                ingreso1: registro[`ah_${dia}_ing1`] || 'No registrado',
-                salida1: registro[`ah_${dia}_sal1`] || 'No registrado',
-                ingreso2: registro[`ah_${dia}_ing2`] || 'No registrado',
-                salida2: registro[`ah_${dia}_sal2`] || 'No registrado',
-            };
-        });
-    };
-
-    useEffect(() => {
-      console.log(dataAssistance)
-    },[dataAssistance])
 
     function formatDate(date) {
       const day = String(date.getDate()).padStart(2, '0');
@@ -510,6 +493,11 @@ function TblCpAsigcionHorarioAdd() {
         "sábado": "sab",
         "domingo": "dom"
       };
+
+      if((editingScheduleValues.ingress1 >= editingScheduleValues.exit1) || (editingScheduleValues.ingress2 >= editingScheduleValues.exit2)){
+        app.flashMsg('Error', "El horario de ingreso no puede ser mayor o igual al horario de salida.", 'error');
+        return; 
+      }
       
       // Si no hay días específicos seleccionados en checkedDays
       if (Object.keys(checkedDays).length === 0) {
@@ -631,46 +619,29 @@ function TblCpAsigcionHorarioAdd() {
     .map((day) => weekdayMapInverted[day]);
     
     const handleSave = () => {
-      const payload = {
-        ah_per_id: personaId, 
-        ah_tipo_horario: data ? data.cat_id : null,
-        ah_fecha_inicial: data.fechaInicio
-          ? data.fechaFin.toISOString().split("T")[0]
-          : null,
-        ah_fecha_final: data.fechaFin ? data.fechaFin.toISOString().split("T")[0] : null,
-        selected_days: selectedDaysInSpanish,
-        ah_estado: "V",
-        ingress1: scheduleValues.ingress1
-          ? scheduleValues.ingress1.toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : null,
-        exit1: scheduleValues.exit1
-          ? scheduleValues.exit1.toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : null,
-        ingress2: scheduleValues.ingress2
-          ? scheduleValues.ingress2.toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : null,
-        exit2: scheduleValues.exit2
-          ? scheduleValues.exit2.toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : null,
-      };
-      
-      if(payload.selected_days.length == 0){
+      if(dataAssistance.length == 0){
         app.flashMsg('Error', 'Debe de llenar horario.', 'error');
         return;
       }
-      console.log("Datos enviados al backend:", payload);
+
+      const payload = {
+        tipoHorarioId: data.tipoHorario.cat_id,
+        personaId: personaId,
+        asistencias: dataAssistance
+      }
+      
+      try {
+        axios.post('asignacionhorario/store/perweek', payload);
+        
+        app.flashMsg('Exito', 'Horario registrado exitosamente.', 'success');
+        setSecondCard(false);
+        setFirstCard(true);
+
+        fetchSchedule();
+      } catch(error) {
+        app.flashMsg('Error', `Ocurrio un error: ${error}`, 'error');
+        console.error(error)
+      }
     }
 
   return (
@@ -821,35 +792,39 @@ function TblCpAsigcionHorarioAdd() {
 
         { firstCard && (
             <div className='card mt-3'>
-                <Tag className="m-2 py-2 px-4" value={`Tipo: ${tipoHorario}`}/>
 
-                <DataTable
-                    loading={loading}
-                    emptyMessage={
-                        <div className="p-4 text-center">
-                            {loading ? (
-                                <ProgressSpinner style={{width:'50px', height:'50px'}} />
-                            ) : (
-                                "No se encontraron registros válidos"
-                            )}
-                        </div>
-                    }
-                    className="p-datatable-sm"
-                    responsiveLayout="scroll"
-                    stripedRows
-                    lazy
-                    paginator
-                    rows={10}
-                    value={personaSchedule}
-                    >
-                    <Column field="dia" header="Día" />
-                    <Column field="ingreso1" header="Ingreso 1" />
-                    <Column field="salida1" header="Salida 1" />
-                    <Column field="ingreso2" header="Ingreso 2" />
-                    <Column field="salida2" header="Salida 2" />
-                    
-                    <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
-                </DataTable>
+                { personaSchedule && personaSchedule.length > 0 ? (
+                  <DataTable
+                      loading={loading}
+                      emptyMessage={
+                          <div className="p-4 text-center">
+                              {loading ? (
+                                  <ProgressSpinner style={{width:'50px', height:'50px'}} />
+                              ) : (
+                                  "No se encontraron registros válidos"
+                              )}
+                          </div>
+                      }
+                      className="p-datatable-sm"
+                      responsiveLayout="scroll"
+                      stripedRows
+                      lazy
+                      paginator
+                      rows={10}
+                      value={personaSchedule}
+                      >
+                      <Column field="tipo_horario.cat_descripcion" header="TIPO" />
+                      <Column field="ah_fecha_inicial" header="FECHA INICIO" />
+                      <Column field="ah_fecha_final" header="FECHA FIN" />                    
+                      <Column body={actionTemplate} header="Acciones" style={{width: '100px'}} />
+                  </DataTable>
+                ) : (
+                  !loading && (
+                    <div className="p-4 text-center text-gray-500 border rounded-md mt-4">
+                      No hay horarios registrados para esta persona.
+                    </div>
+                  )
+                ) }
             </div>
         ) }
 

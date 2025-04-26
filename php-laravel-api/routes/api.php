@@ -447,6 +447,7 @@ Route::prefix('ubicaciones')->group(function () {
 
 /* Routes for tblcpasignacionhorario */
 	Route::post('asignacionhorario/store', [AsignacionHorarioController::class, 'store']);
+	Route::post('asignacionhorario/store/perweek', 'AsignacionHorarioController@addPerWeek');
 	Route::get('asignacionhorario/show/{rec_id}', 'AsignacionHorarioController@show');
 	Route::get('tblcpasignacionhorario/getschedule/{persona_id}', 'AsignacionHorarioController@getSchedule');
 
