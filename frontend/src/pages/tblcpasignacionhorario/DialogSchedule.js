@@ -14,7 +14,7 @@ const weekDays = [
   { label: "DOMINGO", value: "sunday" },
 ];
 
-function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValues,  handleAccept,  checkedDays}) {
+function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValues,  handleAccept,  checkedDays, setEditingScheduleValues, editingScheduleValues}) {
   const [selectedDays, setSelectedDays] = useState({
     monday: false,
     tuesday: false,
@@ -32,8 +32,14 @@ function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValu
     }));
   };
 
+  // const handleScheduleChange = (field, value) => {
+  //   setScheduleValues((prevState) => ({
+  //     ...prevState,
+  //     [field]: value,
+  //   }));
+  // };
   const handleScheduleChange = (field, value) => {
-    setScheduleValues((prevState) => ({
+    setEditingScheduleValues((prevState) => ({
       ...prevState,
       [field]: value,
     }));
@@ -76,7 +82,7 @@ function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValu
               id="ingress1"
               timeOnly
               showIcon
-              value={scheduleValues.ingress1}
+              value={editingScheduleValues.ingress1}
               onChange={(e) => handleScheduleChange("ingress1", e.value)}
             />
           </div>
@@ -88,7 +94,7 @@ function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValu
               id="exit1"
               timeOnly
               showIcon
-              value={scheduleValues.exit1}
+              value={editingScheduleValues.exit1}
               onChange={(e) => handleScheduleChange("exit1", e.value)}
             />
           </div>
@@ -102,7 +108,7 @@ function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValu
               id="ingress2"
               timeOnly
               showIcon
-              value={scheduleValues.ingress2}
+              value={editingScheduleValues.ingress2}
               onChange={(e) => handleScheduleChange("ingress2", e.value)}
             />
           </div>
@@ -114,7 +120,7 @@ function DialogSchedule({visible,  setVisible,  setScheduleValues,  scheduleValu
               id="exit2"
               timeOnly
               showIcon
-              value={scheduleValues.exit2}
+              value={editingScheduleValues.exit2}
               onChange={(e) => handleScheduleChange("exit2", e.value)}
             />
           </div>

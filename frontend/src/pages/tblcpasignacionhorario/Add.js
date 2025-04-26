@@ -100,6 +100,12 @@ function TblCpAsigcionHorarioAdd() {
         ingress2: null,
         exit2: null,
     });
+    const [editingScheduleValues, setEditingScheduleValues] = useState({
+      ingress1: null,
+      exit1: null,
+      ingress2: null,
+      exit2: null
+    });
 
     const [ daysWork, setDaysWork ] = useState([]);
 
@@ -107,6 +113,17 @@ function TblCpAsigcionHorarioAdd() {
         fetchPersonaDetails();
         fetchSchedule();
     }, [personaId, app]);
+
+    useEffect(() => {
+      if (dialogSchedule) {
+        setEditingScheduleValues({
+          ingress1: scheduleValues.ingress1 || null,
+          exit1: scheduleValues.exit1 || null,
+          ingress2: scheduleValues.ingress2 || null,
+          exit2: scheduleValues.exit2 || null
+        });
+      }
+    }, [dialogSchedule]);
 
     const fetchPersonaDetails = async () => {
         try {
@@ -337,15 +354,65 @@ function TblCpAsigcionHorarioAdd() {
         );
       };
 
+    // const handleAccept = (selectedDays) => {
+    //   const updatedValues = { ...scheduleValuesByDay };
+      
+    //   if((scheduleValues.ingress1 >= scheduleValues.exit1) || (scheduleValues.ingress2 >= scheduleValues.exit2)){
+    //     app.flashMsg('Error', "El horario de ingreso no puede ser mayor o igual al horario de salida.", 'error');
+    //     return; 
+    //   }
+
+    //   if (Object.keys(checkedDays).length === 0) {
+    //     const allDates = [];
+    //     Object.values(weeks).forEach((daysArray) => {
+    //       daysArray.forEach((day) => {
+    //         if (day) allDates.push(day);
+    //       });
+    //     });
+        
+    //     allDates.forEach((date) => {
+    //       const dayOfWeekSpanish = date
+    //         .toLocaleDateString("es-ES", { weekday: "long" })
+    //         .toLowerCase();
+    //       const dayOfWeek = weekdayMap[dayOfWeekSpanish];
+          
+    //       if (selectedDays[dayOfWeek]) {
+    //         const dateString = date.toDateString();
+
+    //         updatedValues[dateString] = {
+    //           ingress1: scheduleValues.ingress1,
+    //           exit1: scheduleValues.exit1,
+    //           ingress2: scheduleValues.ingress2,
+    //           exit2: scheduleValues.exit2,
+    //         };
+
+    //       }
+    //     });
+    //   } else {
+    //     Object.keys(checkedDays).forEach((dateString) => {
+    //       if (checkedDays[dateString]) {
+    //         updatedValues[dateString] = {
+    //           ingress1: scheduleValues.ingress1,
+    //           exit1: scheduleValues.exit1,
+    //           ingress2: scheduleValues.ingress2,
+    //           exit2: scheduleValues.exit2,
+    //         };
+    //       }
+    //     });
+    //   }
+      
+    //   setScheduleValuesByDay(updatedValues);
+    //   setDialogSchedule(false);
+    //   setDaysWork(selectedDays);
+    // };
+
     const handleAccept = (selectedDays) => {
+      console.log(checkedDays);
       const updatedValues = { ...scheduleValuesByDay };
       
-      if((scheduleValues.ingress1 >= scheduleValues.exit1) || (scheduleValues.ingress2 >= scheduleValues.exit2)){
-        app.flashMsg('Error', "El horario de ingreso no puede ser mayor o igual al horario de salida.", 'error');
-        return; 
-      }
-
+      // Si no hay días específicos seleccionados en checkedDays
       if (Object.keys(checkedDays).length === 0) {
+        // Obtener todas las fechas del objeto weeks
         const allDates = [];
         Object.values(weeks).forEach((daysArray) => {
           daysArray.forEach((day) => {
@@ -353,32 +420,37 @@ function TblCpAsigcionHorarioAdd() {
           });
         });
         
+        // Para cada fecha en el calendario
         allDates.forEach((date) => {
+          // Obtener el día de la semana en español y mapear a inglés
           const dayOfWeekSpanish = date
             .toLocaleDateString("es-ES", { weekday: "long" })
             .toLowerCase();
           const dayOfWeek = weekdayMap[dayOfWeekSpanish];
           
+          // Si este día fue seleccionado en el diálogo
           if (selectedDays[dayOfWeek]) {
             const dateString = date.toDateString();
-
+            // Actualizar valores para esta fecha con los valores de edición
             updatedValues[dateString] = {
-              ingress1: scheduleValues.ingress1,
-              exit1: scheduleValues.exit1,
-              ingress2: scheduleValues.ingress2,
-              exit2: scheduleValues.exit2,
+              ingress1: editingScheduleValues.ingress1,
+              exit1: editingScheduleValues.exit1,
+              ingress2: editingScheduleValues.ingress2,
+              exit2: editingScheduleValues.exit2,
             };
-
           }
         });
-      } else {
+      } 
+      // Si hay días específicos seleccionados en checkedDays
+      else {
+        // Actualiza solo las fechas específicas en checkedDays
         Object.keys(checkedDays).forEach((dateString) => {
           if (checkedDays[dateString]) {
             updatedValues[dateString] = {
-              ingress1: scheduleValues.ingress1,
-              exit1: scheduleValues.exit1,
-              ingress2: scheduleValues.ingress2,
-              exit2: scheduleValues.exit2,
+              ingress1: editingScheduleValues.ingress1,
+              exit1: editingScheduleValues.exit1,
+              ingress2: editingScheduleValues.ingress2,
+              exit2: editingScheduleValues.exit2,
             };
           }
         });
@@ -832,7 +904,9 @@ function TblCpAsigcionHorarioAdd() {
             setScheduleValues={setScheduleValues} 
             scheduleValues={scheduleValues}
             handleAccept={handleAccept}
-            checkedDays={checkedDays}/>
+            checkedDays={checkedDays}
+            editingScheduleValues={editingScheduleValues}
+            setEditingScheduleValues={setEditingScheduleValues}/>
     </>
   )
 }
