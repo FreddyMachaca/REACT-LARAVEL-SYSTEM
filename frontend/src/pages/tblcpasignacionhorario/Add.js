@@ -107,6 +107,8 @@ function TblCpAsigcionHorarioAdd() {
       exit2: null
     });
 
+    const [ dataAssistance, setDataAssistance ] = useState();
+
     const [ daysWork, setDaysWork ] = useState([]);
 
     useEffect(() => {
@@ -164,6 +166,18 @@ function TblCpAsigcionHorarioAdd() {
         });
     };
 
+    useEffect(() => {
+      console.log(dataAssistance)
+    },[dataAssistance])
+
+    function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${day}/${month}/${year}`;
+    }
+
     const handleGenerate = (form) => {
         setDaysWork([]);
         if(form && form.tipoHorario && form.fechaInicio && form.fechaFin){
@@ -174,6 +188,8 @@ function TblCpAsigcionHorarioAdd() {
 
             const days = generateCalendar(form.fechaInicio, form.fechaFin);
             const groupedWeeks = groupDaysByWeek(days);
+            
+            setDataAssistance( generateObjectByWeek(form.fechaInicio, form.fechaFin) );
 
             setWeeks(groupedWeeks);
 
@@ -199,6 +215,82 @@ function TblCpAsigcionHorarioAdd() {
             app.flashMsg('Error', 'Campos vacios.', 'error');
         }
     }
+
+    const generateObjectByWeek = (startDate, endDate) => {
+      const resultado = [];
+
+      const firstMonday = new Date(startDate);
+      const dayOfWeek = firstMonday.getDay(); // 0 es domingo, 1 es lunes, ..., 6 es sábado
+      
+      // Si no es lunes, entonces ajustamos para encontrar cuándo comenzó la semana (lunes)
+      let currentWeekStart = new Date(startDate);
+      if (dayOfWeek !== 1) {
+        // Si es domingo (0), retrocedemos 6 días para llegar al lunes
+        // Si es otro día, retrocedemos (día - 1) días
+        const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        currentWeekStart.setDate(currentWeekStart.getDate() - daysToSubtract);
+      }
+      
+      // Iterar por semanas hasta cubrir todo el rango
+      while (currentWeekStart <= endDate) {
+        // El último día de la semana es domingo (currentWeekStart + 6 días)
+        const currentWeekEnd = new Date(currentWeekStart);
+        currentWeekEnd.setDate(currentWeekEnd.getDate() + 6);
+        
+        // Ajustar fechas al rango solicitado
+        const weekStartDate = currentWeekStart < startDate ? startDate : currentWeekStart;
+        const weekEndDate = currentWeekEnd > endDate ? endDate : currentWeekEnd;
+        
+        // Crear objeto para la semana
+        const semanaObj = {
+          ah_fecha_inicial: formatDate(weekStartDate),
+          ah_fecha_final: formatDate(weekEndDate),
+          // Lunes
+          ah_lun_ing1: null,
+          ah_lun_sal1: null,
+          ah_lun_ing2: null,
+          ah_lun_sal2: null,
+          // Martes
+          ah_mar_ing1: null,
+          ah_mar_sal1: null,
+          ah_mar_ing2: null,
+          ah_mar_sal2: null,
+          // Miércoles
+          ah_mie_ing1: null,
+          ah_mie_sal1: null,
+          ah_mie_ing2: null,
+          ah_mie_sal2: null,
+          // Jueves
+          ah_jue_ing1: null,
+          ah_jue_sal1: null,
+          ah_jue_ing2: null,
+          ah_jue_sal2: null,
+          // Viernes
+          ah_vie_ing1: null,
+          ah_vie_sal1: null,
+          ah_vie_ing2: null,
+          ah_vie_sal2: null,
+          // Sábado
+          ah_sab_ing1: null,
+          ah_sab_sal1: null,
+          ah_sab_ing2: null,
+          ah_sab_sal2: null,
+          // Domingo
+          ah_dom_ing1: null,
+          ah_dom_sal1: null,
+          ah_dom_ing2: null,
+          ah_dom_sal2: null,
+        };
+        
+        resultado.push(semanaObj);
+        
+        // Avanzar al siguiente lunes
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      }
+      
+      return resultado;
+    }
+
     const onCheckboxChange = (day) => {
         const dateString = day.toDateString();
         const newCheckedDays = { ...checkedDays };
@@ -407,8 +499,17 @@ function TblCpAsigcionHorarioAdd() {
     // };
 
     const handleAccept = (selectedDays) => {
-      console.log(checkedDays);
       const updatedValues = { ...scheduleValuesByDay };
+      const updatedDataAssistance = [...dataAssistance];
+      const weekdayMapEs = {
+        "lunes": "lun",
+        "martes": "mar",
+        "miércoles": "mie",
+        "jueves": "jue",
+        "viernes": "vie",
+        "sábado": "sab",
+        "domingo": "dom"
+      };
       
       // Si no hay días específicos seleccionados en checkedDays
       if (Object.keys(checkedDays).length === 0) {
@@ -427,6 +528,7 @@ function TblCpAsigcionHorarioAdd() {
             .toLocaleDateString("es-ES", { weekday: "long" })
             .toLowerCase();
           const dayOfWeek = weekdayMap[dayOfWeekSpanish];
+          const dayCode = weekdayMapEs[dayOfWeekSpanish];
           
           // Si este día fue seleccionado en el diálogo
           if (selectedDays[dayOfWeek]) {
@@ -438,6 +540,21 @@ function TblCpAsigcionHorarioAdd() {
               ingress2: editingScheduleValues.ingress2,
               exit2: editingScheduleValues.exit2,
             };
+            for (let i = 0; i < updatedDataAssistance.length; i++) {
+              const weekData = updatedDataAssistance[i];
+              const weekStart = parseDate(weekData.ah_fecha_inicial);
+              const weekEnd = parseDate(weekData.ah_fecha_final);
+              
+              // Si la fecha está dentro del rango de esta semana
+              if (date >= weekStart && date <= weekEnd) {
+                // Actualizar valores para esta fecha con los valores de edición
+                updatedDataAssistance[i][`ah_${dayCode}_ing1`] = formatearHora(editingScheduleValues.ingress1);
+                updatedDataAssistance[i][`ah_${dayCode}_sal1`] = formatearHora(editingScheduleValues.exit1);
+                updatedDataAssistance[i][`ah_${dayCode}_ing2`] = formatearHora(editingScheduleValues.ingress2);
+                updatedDataAssistance[i][`ah_${dayCode}_sal2`] = formatearHora(editingScheduleValues.exit2);
+                break;
+              }
+            }
           }
         });
       } 
@@ -446,6 +563,28 @@ function TblCpAsigcionHorarioAdd() {
         // Actualiza solo las fechas específicas en checkedDays
         Object.keys(checkedDays).forEach((dateString) => {
           if (checkedDays[dateString]) {
+            const date = new Date(dateString);
+            const dayOfWeekSpanish = date
+              .toLocaleDateString("es-ES", { weekday: "long" })
+              .toLowerCase();
+            const dayCode = weekdayMapEs[dayOfWeekSpanish];
+
+            for (let i = 0; i < updatedDataAssistance.length; i++) {
+              const weekData = updatedDataAssistance[i];
+              const weekStart = parseDate(weekData.ah_fecha_inicial);
+              const weekEnd = parseDate(weekData.ah_fecha_final);
+              
+              // Si la fecha está dentro del rango de esta semana
+              if (date >= weekStart && date <= weekEnd) {
+                // Actualizar valores para esta fecha con los valores de edición
+                updatedDataAssistance[i][`ah_${dayCode}_ing1`] = formatearHora(editingScheduleValues.ingress1);
+                updatedDataAssistance[i][`ah_${dayCode}_sal1`] = formatearHora(editingScheduleValues.exit1);
+                updatedDataAssistance[i][`ah_${dayCode}_ing2`] = formatearHora(editingScheduleValues.ingress2);
+                updatedDataAssistance[i][`ah_${dayCode}_sal2`] = formatearHora(editingScheduleValues.exit2);
+                break;
+              }
+            }
+
             updatedValues[dateString] = {
               ingress1: editingScheduleValues.ingress1,
               exit1: editingScheduleValues.exit1,
@@ -455,11 +594,37 @@ function TblCpAsigcionHorarioAdd() {
           }
         });
       }
+
+      setDataAssistance(updatedDataAssistance);
       
       setScheduleValuesByDay(updatedValues);
       setDialogSchedule(false);
       setDaysWork(selectedDays);
     };
+
+    function formatearHora(fechaISO) {
+      if (!fechaISO) return fechaISO;
+      
+      const fecha = new Date(fechaISO);
+      
+      if (isNaN(fecha.getTime())) {
+        if (typeof fechaISO === 'string' && /^\d{1,2}:\d{2}$/.test(fechaISO)) {
+          return fechaISO;
+        }
+        return null;
+      }
+      
+      // Extraer horas y minutos y formatear como HH:MM
+      const horas = String(fecha.getHours()).padStart(2, '0');
+      const minutos = String(fecha.getMinutes()).padStart(2, '0');
+      
+      return `${horas}:${minutos}`;
+    }
+
+    function parseDate(dateString) {
+      const [day, month, year] = dateString.split('/');
+      return new Date(year, month - 1, day);
+    }
 
     const selectedDaysInSpanish = Object.keys(daysWork)
     .filter((day) => daysWork[day])
