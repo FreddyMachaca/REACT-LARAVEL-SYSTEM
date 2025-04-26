@@ -50,18 +50,27 @@ const weekdayMap = {
   };
 
 const groupDaysByWeek = (days) => {
-const weeks = {};
+  const weeks = {};
 
-days.forEach((day) => {
-    const weekNumber = getWeekNumber(day);
+  days.forEach((day) => {
+      const weekNumber = getWeekNumber(day);
 
-    if (!weeks[weekNumber]) {
-    weeks[weekNumber] = Array(7).fill(null); // Lunes a Domingo
-    }
-    const adjustedDayOfWeek = (day.getDay() + 6) % 7; // Lunes (0) a Domingo (6)
-    weeks[weekNumber][adjustedDayOfWeek] = day;
-});
-return weeks;
+      if (!weeks[weekNumber]) {
+      weeks[weekNumber] = Array(7).fill(null); // Lunes a Domingo
+      }
+      const adjustedDayOfWeek = (day.getDay() + 6) % 7; // Lunes (0) a Domingo (6)
+      weeks[weekNumber][adjustedDayOfWeek] = day;
+  });
+  return weeks;
+};
+const weekdayMapInverted = {
+  monday: "lunes",
+  tuesday: "martes",
+  wednesday: "miércoles",
+  thursday: "jueves",
+  friday: "viernes",
+  saturday: "sábado",
+  sunday: "domingo",
 };
 
 function TblCpAsigcionHorarioAdd() {
@@ -84,13 +93,15 @@ function TblCpAsigcionHorarioAdd() {
 
     const [ data, setData ] = useState();
     const [ checkedDays, setCheckedDays ] = useState({});
-    const [ switchChecked, setSwitchChecked ] = useState(true);    
+    const [ switchChecked, setSwitchChecked ] = useState(false);    
     const [ scheduleValues, setScheduleValues ] = useState({
         ingress1: null,
         exit1: null,
         ingress2: null,
         exit2: null,
     });
+
+    const [ daysWork, setDaysWork ] = useState([]);
 
     useEffect(() => {
         fetchPersonaDetails();
@@ -137,6 +148,7 @@ function TblCpAsigcionHorarioAdd() {
     };
 
     const handleGenerate = (form) => {
+        setDaysWork([]);
         if(form && form.tipoHorario && form.fechaInicio && form.fechaFin){
             if(form.fechaInicio >= form.fechaFin){
                 app.flashMsg('Error', 'La fecha de inicio debe ser menor a la fecha fin.', 'error');
@@ -174,32 +186,15 @@ function TblCpAsigcionHorarioAdd() {
         const dateString = day.toDateString();
         const newCheckedDays = { ...checkedDays };
         newCheckedDays[dateString] = !checkedDays[dateString];
-        setCheckedDays(newCheckedDays);
-    
-        // Si la casilla está marcada, aplica los valores de horario actuales a este día
-        if (!checkedDays[dateString]) {
-          setScheduleValuesByDay((prev) => ({
-            ...prev,
-            [dateString]: { ...scheduleValues },
-          }));
-        } else {
-          // Si está desmarcada, limpia el horario para este día
-          setScheduleValuesByDay((prev) => {
-            const updated = { ...prev };
-            updated[dateString] = {
-              ingress1: null,
-              exit1: null,
-              ingress2: null,
-              exit2: null,
-            };
-            return updated;
-          });
-        }
-    };
 
-    useEffect(() => {
-        console.log(data)
-    }, [data])
+        if (checkedDays[dateString]) {
+          delete newCheckedDays[dateString];
+        } else {
+          newCheckedDays[dateString] = true;
+        }
+
+        setCheckedDays(newCheckedDays);
+    };
 
     const renderDay = (day) => {
         if (!day) return null;
@@ -211,13 +206,15 @@ function TblCpAsigcionHorarioAdd() {
           .toLowerCase();
     
         return (
-          <div key={dateString} style={{ padding: "5px", margin: "5px" }}>
+          <div key={dateString}>
             <div className="fecha-estilizada">{day.getDate()}</div>
-            <Checkbox
-              checked={checkedDays[dateString] || false}
-              onChange={() => onCheckboxChange(day)}
-              disabled={!switchChecked}
-            />
+            { switchChecked && (
+              <Checkbox
+                checked={checkedDays[dateString] || false}
+                onChange={() => onCheckboxChange(day)}
+                disabled={!switchChecked}
+              />
+            ) }
     
             {/* Siempre muestra la grilla de horario si existen valores */}
             {(dayValues.ingress1 ||
@@ -238,18 +235,20 @@ function TblCpAsigcionHorarioAdd() {
                         border: "1px solid #ccc",
                         padding: "5px",
                         textAlign: "center",
+                        fontSize: "8px",
                       }}
                     >
-                      ING
+                      INGRESO
                     </th>
                     <th
                       style={{
                         border: "1px solid #ccc",
                         padding: "5px",
                         textAlign: "center",
+                        fontSize: "8px"
                       }}
                     >
-                      SAL
+                      SALIDA
                     </th>
                   </tr>
                 </thead>
@@ -339,38 +338,104 @@ function TblCpAsigcionHorarioAdd() {
       };
 
     const handleAccept = (selectedDays) => {
-        const updatedValues = { ...scheduleValuesByDay };
-        // Obtener todas las fechas del objeto weeks
+      const updatedValues = { ...scheduleValuesByDay };
+      
+      if((scheduleValues.ingress1 >= scheduleValues.exit1) || (scheduleValues.ingress2 >= scheduleValues.exit2)){
+        app.flashMsg('Error', "El horario de ingreso no puede ser mayor o igual al horario de salida.", 'error');
+        return; 
+      }
+
+      if (Object.keys(checkedDays).length === 0) {
         const allDates = [];
         Object.values(weeks).forEach((daysArray) => {
-        daysArray.forEach((day) => {
+          daysArray.forEach((day) => {
             if (day) allDates.push(day);
+          });
         });
-        });
-        // Para cada fecha en el calendario
+        
         allDates.forEach((date) => {
-        // Obtener el día de la semana en español y mapear a inglés
-        const dayOfWeekSpanish = date
+          const dayOfWeekSpanish = date
             .toLocaleDateString("es-ES", { weekday: "long" })
             .toLowerCase();
-        const dayOfWeek = weekdayMap[dayOfWeekSpanish];
-        // Si este día fue seleccionado en el diálogo
-        if (selectedDays[dayOfWeek]) {
+          const dayOfWeek = weekdayMap[dayOfWeekSpanish];
+          
+          if (selectedDays[dayOfWeek]) {
             const dateString = date.toDateString();
-            // Actualizar valores para esta fecha
+
             updatedValues[dateString] = {
-            ingress1: scheduleValues.ingress1,
-            exit1: scheduleValues.exit1,
-            ingress2: scheduleValues.ingress2,
-            exit2: scheduleValues.exit2,
+              ingress1: scheduleValues.ingress1,
+              exit1: scheduleValues.exit1,
+              ingress2: scheduleValues.ingress2,
+              exit2: scheduleValues.exit2,
             };
-        }
+
+          }
         });
-    
-        setScheduleValuesByDay(updatedValues);
-        setDialogSchedule(false);
+      } else {
+        Object.keys(checkedDays).forEach((dateString) => {
+          if (checkedDays[dateString]) {
+            updatedValues[dateString] = {
+              ingress1: scheduleValues.ingress1,
+              exit1: scheduleValues.exit1,
+              ingress2: scheduleValues.ingress2,
+              exit2: scheduleValues.exit2,
+            };
+          }
+        });
+      }
+      
+      setScheduleValuesByDay(updatedValues);
+      setDialogSchedule(false);
+      setDaysWork(selectedDays);
     };
+
+    const selectedDaysInSpanish = Object.keys(daysWork)
+    .filter((day) => daysWork[day])
+    .map((day) => weekdayMapInverted[day]);
     
+    const handleSave = () => {
+      const payload = {
+        ah_per_id: personaId, 
+        ah_tipo_horario: data ? data.cat_id : null,
+        ah_fecha_inicial: data.fechaInicio
+          ? data.fechaFin.toISOString().split("T")[0]
+          : null,
+        ah_fecha_final: data.fechaFin ? data.fechaFin.toISOString().split("T")[0] : null,
+        selected_days: selectedDaysInSpanish,
+        ah_estado: "V",
+        ingress1: scheduleValues.ingress1
+          ? scheduleValues.ingress1.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+        exit1: scheduleValues.exit1
+          ? scheduleValues.exit1.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+        ingress2: scheduleValues.ingress2
+          ? scheduleValues.ingress2.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+        exit2: scheduleValues.exit2
+          ? scheduleValues.exit2.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+      };
+      
+      if(payload.selected_days.length == 0){
+        app.flashMsg('Error', 'Debe de llenar horario.', 'error');
+        return;
+      }
+      console.log("Datos enviados al backend:", payload);
+    }
+
   return (
     <>
         <div className='card'>
@@ -628,7 +693,10 @@ function TblCpAsigcionHorarioAdd() {
                     </span>
                     <InputSwitch
                       checked={switchChecked}
-                      onChange={(e) => setSwitchChecked(e.value)}
+                      onChange={(e) => {
+                        setCheckedDays([]);
+                        setSwitchChecked(e.value);
+                      }}
                     />
                   </div>
                 </div>
@@ -645,7 +713,7 @@ function TblCpAsigcionHorarioAdd() {
                       icon="pi pi-save"
                       label="GUARDAR"
                       className="bg-green-500 text-white px-4 py-2 rounded"
-                    //   onClick={handleSave}
+                      onClick={ handleSave }
                     />
                   </div>
 
@@ -763,7 +831,8 @@ function TblCpAsigcionHorarioAdd() {
             setVisible={setDialogSchedule} 
             setScheduleValues={setScheduleValues} 
             scheduleValues={scheduleValues}
-            handleAccept={handleAccept}/>
+            handleAccept={handleAccept}
+            checkedDays={checkedDays}/>
     </>
   )
 }

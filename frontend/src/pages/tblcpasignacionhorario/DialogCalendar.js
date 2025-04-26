@@ -15,7 +15,6 @@ function DialogCalendar({ visible, setVisible, handleGenerate }) {
         fechaFin: null,
     });
       
-
     useEffect(() => {
         const fetchData = async () => {
             const { data } = await axios.get('tblcatalogo/get-tipo-horario');
