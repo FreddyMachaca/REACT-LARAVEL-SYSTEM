@@ -14,8 +14,6 @@ import axios from 'axios';
 import DialogCalendar from './DialogCalendar';
 import DialogSchedule from './DialogSchedule';
 
-
-
 const generateCalendar = (start, end) => {
     const days = [];
     let current = new Date(start);
@@ -32,6 +30,7 @@ const getWeekNumber = (date) => {
     const pastDaysOfYear = (date - startOfYear) / 86400000;
     return Math.floor(pastDaysOfYear / 7) + 1;
   };
+
 const getMonthFromWeek = (days) => {
     const firstDay = days.find((day) => day !== null);
     if (firstDay) {
@@ -39,6 +38,16 @@ const getMonthFromWeek = (days) => {
     }
     return "";
 };
+
+const weekdayMap = {
+    lunes: "monday",
+    martes: "tuesday",
+    miércoles: "wednesday",
+    jueves: "thursday",
+    viernes: "friday",
+    sábado: "saturday",
+    domingo: "sunday",
+  };
 
 const groupDaysByWeek = (days) => {
 const weeks = {};
@@ -328,6 +337,39 @@ function TblCpAsigcionHorarioAdd() {
           </div>
         );
       };
+
+    const handleAccept = (selectedDays) => {
+        const updatedValues = { ...scheduleValuesByDay };
+        // Obtener todas las fechas del objeto weeks
+        const allDates = [];
+        Object.values(weeks).forEach((daysArray) => {
+        daysArray.forEach((day) => {
+            if (day) allDates.push(day);
+        });
+        });
+        // Para cada fecha en el calendario
+        allDates.forEach((date) => {
+        // Obtener el día de la semana en español y mapear a inglés
+        const dayOfWeekSpanish = date
+            .toLocaleDateString("es-ES", { weekday: "long" })
+            .toLowerCase();
+        const dayOfWeek = weekdayMap[dayOfWeekSpanish];
+        // Si este día fue seleccionado en el diálogo
+        if (selectedDays[dayOfWeek]) {
+            const dateString = date.toDateString();
+            // Actualizar valores para esta fecha
+            updatedValues[dateString] = {
+            ingress1: scheduleValues.ingress1,
+            exit1: scheduleValues.exit1,
+            ingress2: scheduleValues.ingress2,
+            exit2: scheduleValues.exit2,
+            };
+        }
+        });
+    
+        setScheduleValuesByDay(updatedValues);
+        setDialogSchedule(false);
+    };
     
   return (
     <>
@@ -716,7 +758,12 @@ function TblCpAsigcionHorarioAdd() {
         </div>
 
         <DialogCalendar visible={dialogCalendar} setVisible={setDialogCalendar} handleGenerate={handleGenerate}/>
-        <DialogSchedule visible={dialogSchedule} setVisible={setDialogSchedule} setScheduleValues={setScheduleValues} scheduleValues={scheduleValues}/>
+        <DialogSchedule 
+            visible={dialogSchedule} 
+            setVisible={setDialogSchedule} 
+            setScheduleValues={setScheduleValues} 
+            scheduleValues={scheduleValues}
+            handleAccept={handleAccept}/>
     </>
   )
 }

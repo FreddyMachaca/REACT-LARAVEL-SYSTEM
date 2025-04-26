@@ -14,7 +14,7 @@ const weekDays = [
     { label: "DOMINGO", value: "sunday" },
   ];
 
-function DialogSchedule({ visible, setVisible, setScheduleValues, scheduleValues }) {
+function DialogSchedule({ visible, setVisible, setScheduleValues, scheduleValues, handleAccept }) {
     const [selectedDays, setSelectedDays] = useState({
         monday: false,
         tuesday: false,
@@ -30,39 +30,6 @@ function DialogSchedule({ visible, setVisible, setScheduleValues, scheduleValues
           ...prevState,
           [day]: !prevState[day],
         }));
-      };
-
-    const handleAccept = () => {
-        const updatedValues = { ...scheduleValuesByDay };
-        // Obtener todas las fechas del objeto weeks
-        const allDates = [];
-        Object.values(weeks).forEach((daysArray) => {
-          daysArray.forEach((day) => {
-            if (day) allDates.push(day);
-          });
-        });
-        // Para cada fecha en el calendario
-        allDates.forEach((date) => {
-          // Obtener el día de la semana en español y mapear a inglés
-          const dayOfWeekSpanish = date
-            .toLocaleDateString("es-ES", { weekday: "long" })
-            .toLowerCase();
-          const dayOfWeek = weekdayMap[dayOfWeekSpanish];
-          // Si este día fue seleccionado en el diálogo
-          if (selectedDays[dayOfWeek]) {
-            const dateString = date.toDateString();
-            // Actualizar valores para esta fecha
-            updatedValues[dateString] = {
-              ingress1: scheduleValues.ingress1,
-              exit1: scheduleValues.exit1,
-              ingress2: scheduleValues.ingress2,
-              exit2: scheduleValues.exit2,
-            };
-          }
-        });
-    
-        setScheduleValuesByDay(updatedValues);
-        setDisplayScheduleDialog(false);
       };
 
       const handleScheduleChange = (field, value) => {
@@ -88,7 +55,7 @@ function DialogSchedule({ visible, setVisible, setScheduleValues, scheduleValues
             label="ACEPTAR"
             icon="pi pi-check"
             className="p-button-success"
-            // onClick={handleAccept}
+            onClick={() => handleAccept(selectedDays)}
           />
           <Button
             label="CANCELAR"
