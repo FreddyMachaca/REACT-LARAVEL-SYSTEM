@@ -5,7 +5,6 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Card } from 'primereact/card';
 import { Checkbox } from "primereact/checkbox";
-import { Tag } from 'primereact/tag';
 import { Button } from 'primereact/button';
 import { InputSwitch } from "primereact/inputswitch";
 import { Divider } from 'primereact/divider';
@@ -110,6 +109,8 @@ function TblCpAsigcionHorarioAdd() {
     const [ dataAssistance, setDataAssistance ] = useState();
     const [ daysWork, setDaysWork ] = useState([]);
 
+    const [ isWatching, setIsWatching ] = useState(false);
+
     useEffect(() => {
         fetchPersonaDetails();
         fetchSchedule();
@@ -146,7 +147,6 @@ function TblCpAsigcionHorarioAdd() {
             const { data } = await axios.get(`tblcpasignacionhorario/getschedule/${personaId}`);
 
             setPersonaSchedule( data );
-            console.log(data)
             setTipoHorario(data[0].tipo_horario.cat_descripcion);
         } catch (error){
             console.log('Error', error.message);
@@ -192,6 +192,7 @@ function TblCpAsigcionHorarioAdd() {
 
             // hide table, dialog and show calendar
             setFirstCard(false);
+            setIsWatching(false);
             setSecondCard(true);
             setDialogCalendar(false);
         }else {
@@ -413,73 +414,77 @@ function TblCpAsigcionHorarioAdd() {
     };
 
     const actionTemplate = (rowData) => {
-        return (
-          <div className="flex gap-2">
-            <Button
-              icon="pi pi-eye"
-              className="p-button-rounded p-button-success p-button-text"
-            //   onClick={() => handleView(rowData)}
-            />
-            <Button
-              icon="pi pi-trash"
-              className="p-button-rounded p-button-danger p-button-text"
-            //   onClick={() => handleDelete(rowData.id)}
-            />
-          </div>
-        );
+      return (
+        <div className="flex gap-2">
+          <Button
+            icon="pi pi-calendar-times"
+            className="p-button-rounded p-button-success p-button-text"
+            onClick={() => handleViewSchedule(rowData)}
+          />
+          <Button
+            icon="pi pi-eye"
+            className="p-button-rounded p-button-info p-button-text"
+          //   onClick={() => handleDelete(rowData.id)}
+          />
+        </div>
+      );
+    };
+
+    const handleViewSchedule = (rowData) => {
+      const [yearInicio, monthInicio, dayInicio] = rowData.ah_fecha_inicial.split('-').map(Number);
+      const [yearFin, monthFin, dayFin] = rowData.ah_fecha_final.split('-').map(Number);
+
+      const form = {
+        tipoHorario: rowData.tipo_horario,
+        fechaInicio: new Date(yearInicio, monthInicio - 1, dayInicio),
+        fechaFin: new Date(yearFin, monthFin - 1, dayFin),
       };
 
-    // const handleAccept = (selectedDays) => {
-    //   const updatedValues = { ...scheduleValuesByDay };
+      const parseTime = (timeStr) => {
+        if (!timeStr) return null;
+        const [h, m, s] = timeStr.split(':').map(Number);
+        const date = new Date();
+        date.setHours(h, m, s, 0);
+        return date;
+      };
+
+      const days = generateCalendar(form.fechaInicio, form.fechaFin);
+      const groupedWeeks = groupDaysByWeek(days);
+
+      setWeeks(groupedWeeks);
+
+      const initialValues = {};
       
-    //   if((scheduleValues.ingress1 >= scheduleValues.exit1) || (scheduleValues.ingress2 >= scheduleValues.exit2)){
-    //     app.flashMsg('Error', "El horario de ingreso no puede ser mayor o igual al horario de salida.", 'error');
-    //     return; 
-    //   }
+      days.forEach((day) => {
+        const dateString = day.toDateString();
+        const weekday = day.toLocaleDateString('es-ES', { weekday: 'short' }).toLowerCase();
 
-    //   if (Object.keys(checkedDays).length === 0) {
-    //     const allDates = [];
-    //     Object.values(weeks).forEach((daysArray) => {
-    //       daysArray.forEach((day) => {
-    //         if (day) allDates.push(day);
-    //       });
-    //     });
-        
-    //     allDates.forEach((date) => {
-    //       const dayOfWeekSpanish = date
-    //         .toLocaleDateString("es-ES", { weekday: "long" })
-    //         .toLowerCase();
-    //       const dayOfWeek = weekdayMap[dayOfWeekSpanish];
-          
-    //       if (selectedDays[dayOfWeek]) {
-    //         const dateString = date.toDateString();
+        const ingress1 = parseTime(rowData[`ah_${weekday}_ing1`]);
+        const exit1 = parseTime(rowData[`ah_${weekday}_sal1`]);
+        const ingress2 = parseTime(rowData[`ah_${weekday}_ing2`]);
+        const exit2 = parseTime(rowData[`ah_${weekday}_sal2`]);
 
-    //         updatedValues[dateString] = {
-    //           ingress1: scheduleValues.ingress1,
-    //           exit1: scheduleValues.exit1,
-    //           ingress2: scheduleValues.ingress2,
-    //           exit2: scheduleValues.exit2,
-    //         };
+        initialValues[dateString] = {
+          ingress1,
+          exit1,
+          ingress2,
+          exit2,
+        };
+      });
 
-    //       }
-    //     });
-    //   } else {
-    //     Object.keys(checkedDays).forEach((dateString) => {
-    //       if (checkedDays[dateString]) {
-    //         updatedValues[dateString] = {
-    //           ingress1: scheduleValues.ingress1,
-    //           exit1: scheduleValues.exit1,
-    //           ingress2: scheduleValues.ingress2,
-    //           exit2: scheduleValues.exit2,
-    //         };
-    //       }
-    //     });
-    //   }
-      
-    //   setScheduleValuesByDay(updatedValues);
-    //   setDialogSchedule(false);
-    //   setDaysWork(selectedDays);
-    // };
+      setScheduleValuesByDay(initialValues);
+
+      setData(form);
+
+      setFirstCard(false);
+      setSwitchChecked(false);
+      setIsWatching(true);
+      setSecondCard(true);
+    }
+
+    // useEffect(() => {
+    //   console.log(data)
+    // }, [data]);
 
     const handleAccept = (selectedDays) => {
       const updatedValues = { ...scheduleValuesByDay };
@@ -792,6 +797,9 @@ function TblCpAsigcionHorarioAdd() {
 
         { firstCard && (
             <div className='card mt-3'>
+              <div className="flex justify-content-between align-items-center mb-4">
+                <h5 className="m-0">Historial de registros</h5>
+              </div>
 
                 { personaSchedule && personaSchedule.length > 0 ? (
                   <DataTable
@@ -881,37 +889,40 @@ function TblCpAsigcionHorarioAdd() {
               <Divider/>
 
               <div className="mb-4 pt-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex justify-between gap-4 mb-6">
-                    <div className='w-26rem'>
-                      <Button
-                        icon="pi pi-calendar"
-                        label="LLENAR HORARIO"
-                        className="w-full text-white"
-                        onClick={() => setDialogSchedule(true)}
+                { !isWatching && (
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between gap-4 mb-6">
+                      <div className='w-26rem'>
+                        <Button
+                          icon="pi pi-calendar"
+                          label="LLENAR HORARIO"
+                          className="w-full text-white"
+                          onClick={() => setDialogSchedule(true)}
+                        />
+                      </div>
+                      <div className='w-26rem'>
+                        <Button
+                          icon="pi pi-trash"
+                          label="LIMPIAR HORARIO"
+                          className="w-full bg-white text-gray-700 border border-gray-300"
+                        />
+                        </div>
+                    </div>
+                    <div className="flex flex-column ml-5 items-center justify-between gap-4 w-full max-w-[400px]">
+                      <span className="text-sm font-medium">
+                        ¿APLICAR CASILLAS?
+                      </span>
+                      <InputSwitch
+                        checked={switchChecked}
+                        onChange={(e) => {
+                          setCheckedDays([]);
+                          setSwitchChecked(e.value);
+                        }}
                       />
                     </div>
-                    <div className='w-26rem'>
-                      <Button
-                        icon="pi pi-trash"
-                        label="LIMPIAR HORARIO"
-                        className="w-full bg-white text-gray-700 border border-gray-300"
-                      />
-                      </div>
                   </div>
-                  <div className="flex flex-column ml-5 items-center justify-between gap-4 w-full max-w-[400px]">
-                    <span className="text-sm font-medium">
-                      ¿APLICAR CASILLAS?
-                    </span>
-                    <InputSwitch
-                      checked={switchChecked}
-                      onChange={(e) => {
-                        setCheckedDays([]);
-                        setSwitchChecked(e.value);
-                      }}
-                    />
-                  </div>
-                </div>
+                )}
+
                 {/* Segunda fila */}
                 <div className="flex justify-between items-center mb-6">
                   {/* Contenedor de la izquierda */}
@@ -920,13 +931,19 @@ function TblCpAsigcionHorarioAdd() {
                       icon="pi pi-times"
                       label="CANCELAR"
                       className="bg-gray-200 text-gray-700 px-4 py-2 rounded"
+                      onClick={ () => {
+                        setSecondCard(false);
+                        setFirstCard(true);
+                      }}
                     />
-                    <Button
-                      icon="pi pi-save"
-                      label="GUARDAR"
-                      className="bg-green-500 text-white px-4 py-2 rounded"
-                      onClick={ handleSave }
-                    />
+                    { !isWatching && (
+                      <Button
+                        icon="pi pi-save"
+                        label="GUARDAR"
+                        className="bg-green-500 text-white px-4 py-2 rounded"
+                        onClick={ handleSave }
+                      />
+                    )}
                   </div>
 
                   {/* Espacio adicional entre los grupos */}
@@ -1007,7 +1024,7 @@ function TblCpAsigcionHorarioAdd() {
                               padding: "8px",
                               textAlign: "center",
                               verticalAlign: "middle",
-                              height: "50px", // Altura mínima para mejor visualización
+                              height: "50px", 
                             }}
                           >
                             {day ? renderDay(day) : null}
