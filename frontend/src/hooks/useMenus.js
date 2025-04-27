@@ -20,6 +20,13 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/procesar",
+            "label": "Procesar Datos",
+            "icon": "pi pi-calendar",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblitems",
             "label": "Tbl Items",
             "icon": "pi pi-th-large",

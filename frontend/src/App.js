@@ -122,6 +122,7 @@ import TbltenoresAdd from 'pages/tbltenores/Add';
 import TbltenoresList from 'pages/tbltenores/List';
 import TblFuncionariosList from 'pages/filiacionfuncionario/List'
 import TblFuncionariosView from 'pages/filiacionfuncionario/View'
+import ProcesarDatos from 'pages/administracionDatos/Procesamiento';
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -413,6 +414,9 @@ const App = () => {
                 {/* Gestión de Personal routes */}
                 <Route path="/gestionPersonal" element={<TblPersonalList />} />
                 <Route path="/gestionPersonal/configuracion/:personaId" element={<PersonalConfiguracion />} />
+                
+                {/* Procesos routes */}
+                <Route path="/procesar" element={<ProcesarDatos />} />
                 
             </Route>
 

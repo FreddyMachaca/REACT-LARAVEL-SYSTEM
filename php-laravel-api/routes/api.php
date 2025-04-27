@@ -511,7 +511,8 @@ Route::prefix('ubicaciones')->group(function () {
 	Route::any('tblplafactor/edit/{rec_id}', 'TblPlaFactorController@edit');
 	Route::any('tblplafactor/delete/{rec_id}', 'TblPlaFactorController@delete');
 	Route::get('tblplafactor/getFactoresEspeciales', 'TblPlaFactorController@getFactoresEspeciales');
-	Route::get('tblplafactor/getFactoresSancion', 'TblPlaFactorController@getFactoresSancion'); // <-- Nueva ruta
+	Route::get('tblplafactor/getFactoresSancion', 'TblPlaFactorController@getFactoresSancion');
+	Route::get('tblplafactor/sancionesParaProcesamiento', 'TblPlaFactorController@getFactoresSancionParaProcesamiento');
 
 /*routes Transacciones*/
 	Route::prefix('transacciones')->group(function () {

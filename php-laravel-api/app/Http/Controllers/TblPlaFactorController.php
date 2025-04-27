@@ -125,11 +125,36 @@ class TblPlaFactorController extends Controller
                                     ->orderBy('fa_descripcion')
                                     ->get();
 
-            return Response::json(['records' => $records]); // Alternativa
+            return Response::json(['records' => $records]);
 
         } catch (Exception $e) {
             Log::error("Error fetching sanction factors: " . $e->getMessage());
             return Response::json(['message' => 'Error al obtener factores de sanción: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get specific sanction factors for Procesamiento module (IDs 57, 58, 59, 60)
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getFactoresSancionParaProcesamiento()
+    {
+        try {
+            $specific_ids = [57, 58, 59, 60];
+
+            $records = TblPlaFactor::whereIn('fa_id', $specific_ids)
+                                    ->where('fa_estado', 'V')
+                                    ->select('fa_id', 'fa_descripcion')
+                                    ->orderBy('fa_descripcion')
+                                    ->get();
+
+            Log::info('Factores de sanción específicos para Procesamiento encontrados: ' . $records->count());
+
+            return Response::json(['records' => $records]);
+
+        } catch (Exception $e) {
+            Log::error("Error fetching specific sanction factors for Procesamiento: " . $e->getMessage());
+            return Response::json(['message' => 'Error al obtener factores de sanción específicos para Procesamiento: ' . $e->getMessage()], 500);
         }
     }
 }
