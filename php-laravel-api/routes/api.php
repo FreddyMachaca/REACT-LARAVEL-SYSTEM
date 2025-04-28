@@ -16,6 +16,7 @@ use App\Models\TblPersona;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TblTransaccionController;
 use App\Http\Controllers\TblCpSancionesController;
+use App\Http\Controllers\AsistenciaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -542,6 +543,10 @@ Route::prefix('sanciones')->group(function () {
 	Route::get('tblplacas/index/{filter?}/{filtervalue?}', 'TblPlaCasController@index');
 	Route::post('tblplacas/add', 'TblPlaCasController@add');
 	Route::any('tblplacas/delete/{rec_id}', 'TblPlaCasController@delete');
+
+/* routes for Asistencia Generation */
+    Route::post('asistencia/generar', [AsistenciaController::class, 'generarAsistencia']);
+    Route::get('asistencia/data', [AsistenciaController::class, 'getAsistenciaData']);
 
 /* routes for FileUpload Controller  */	
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

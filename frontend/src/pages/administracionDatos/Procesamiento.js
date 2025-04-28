@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { Calendar } from 'primereact/calendar';
-import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
 import { Title } from 'components/Title';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { Toast } from 'primereact/toast';
 import useApp from 'hooks/useApp';
 import axios from 'axios';
 import { addLocale } from 'primereact/api';
+import { Tag } from 'primereact/tag';
 
 addLocale('es', {
     firstDayOfWeek: 1,
@@ -24,156 +25,154 @@ addLocale('es', {
 
 const ProcesosRH = () => {
     const app = useApp();
+    const toast = useRef(null);
     const [fechaInicio, setFechaInicio] = useState(null);
     const [fechaFin, setFechaFin] = useState(null);
-    const [tiposProceso, setTiposProceso] = useState([]);
-    const [procesoSeleccionado, setProcesoSeleccionado] = useState(null);
-    const [loadingProcesos, setLoadingProcesos] = useState(true);
     
-    // Funcionario
-    const [funcionarios, setFuncionarios] = useState([]);
-    const [funcionarioSeleccionado, setFuncionarioSeleccionado] = useState(null);
-    const [loadingFuncionarios, setLoadingFuncionarios] = useState(false);
-    
-    // Item
-    const [items, setItems] = useState([]);
-    const [itemSeleccionado, setItemSeleccionado] = useState(null);
-    const [loadingItems, setLoadingItems] = useState(false);
+    const [asistenciaData, setAsistenciaData] = useState([]);
+    const [sancionesData, setSancionesData] = useState([]);
+    const [resultsLoading, setResultsLoading] = useState(false);
+    const [showResults, setShowResults] = useState(false);
 
-    // Cargar tipos de proceso (licencias y sanciones)
-    useEffect(() => {
-        const fetchProcesos = async () => {
-            setLoadingProcesos(true);
-            try {
-                const licenciasResponse = await axios.get('/tblcatalogo/byTipo/Tipo_Licencia');
-                const licenciasData = licenciasResponse.data || []; // Asegurar que sea un array
-                const licencias = licenciasData.map(item => ({
-                    id: item.cat_id,
-                    descripcion: item.cat_descripcion,
-                }));
-                
-                // Obtenemos las sanciones ESPECÍFICAS de tbl_pla_factor
-                const sancionesResponse = await axios.get('/tblplafactor/sancionesParaProcesamiento');
-                const sancionesData = sancionesResponse.data?.records || [];
-                const sanciones = sancionesData.map(item => ({
-                    id: item.fa_id,
-                    descripcion: item.fa_descripcion, 
-                }));
-                
-                const groupedOptions = [];
-                if (licencias.length > 0) {
-                    groupedOptions.push({ tipo: 'Licencia', items: licencias });
-                }
-                if (sanciones.length > 0) {
-                    groupedOptions.push({ tipo: 'Sanción', items: sanciones });
-                }
+    const [processing, setProcessing] = useState(false);
 
-                setTiposProceso(groupedOptions);
-            } catch (error) {
-                console.error('Error al cargar tipos de proceso:', error);
-                app.flashMsg('Error', 'No se pudieron cargar los tipos de proceso', 'error');
-                setTiposProceso([]);
-            } finally {
-                setLoadingProcesos(false);
-            }
-        };
-        
-        fetchProcesos();
-    }, [app]);
-
-    useEffect(() => {
-        const fetchFuncionarios = async () => {
-            setLoadingFuncionarios(true);
-            try {
-                const response = await axios.get('/tblpersona', { params: { limit: -1 } });
-                if (response.data && response.data.records) {
-                    const funcionariosMapped = response.data.records.map(person => ({
-                        id: person.per_id,
-                        nombreCompleto: `${person.per_nombres || ''} ${person.per_ap_paterno || ''} ${person.per_ap_materno || ''}`.trim(),
-                        ci: person.per_num_doc
-                    }));
-                    setFuncionarios(funcionariosMapped);
-                } else {
-                    setFuncionarios([]);
-                }
-            } catch (error) {
-                console.error('Error al cargar funcionarios:', error);
-                app.flashMsg('Error', 'No se pudieron cargar los funcionarios', 'error');
-                setFuncionarios([]);
-            } finally {
-                setLoadingFuncionarios(false);
-            }
-        };
-
-        fetchFuncionarios();
-    }, [app]);
-
-    useEffect(() => {
-        const fetchAllItems = async () => {
-            setLoadingItems(true);
-            try {
-                const response = await axios.get('/tblitems', { params: { limit: -1 } });
-                if (response.data && response.data.records) {
-                    setItems(Array.isArray(response.data.records) ? response.data.records : []);
-                } else {
-                    setItems([]);
-                }
-            } catch (error) {
-                console.error('Error al cargar todos los items:', error);
-                app.flashMsg('Error', 'No se pudieron cargar los items', 'error');
-                setItems([]);
-            } finally {
-                setLoadingItems(false);
-            }
-        };
-
-        fetchAllItems();
-    }, [app]);
-
-    const itemTemplate = (option) => {
-        return (
-            <div className="flex flex-column">
-                <span className="font-bold">{`${option.ca_ti_item}-${option.ca_num_item}`}</span>
-                <small className="text-color-secondary">{option.cargo}</small>
-            </div>
-        );
-    };
-
-    const funcionarioOptionTemplate = (option) => {
-        return (
-            <div className="flex flex-column">
-                <span className="font-bold">{option.nombreCompleto}</span>
-                <small className="text-color-secondary">CI: {option.ci}</small>
-            </div>
-        );
+    const formatDate = (date) => {
+        if (!date) return null;
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     const limpiarFormulario = () => {
         setFechaInicio(null);
         setFechaFin(null);
-        setProcesoSeleccionado(null);
-        setFuncionarioSeleccionado(null);
-        setItemSeleccionado(null);
+        setAsistenciaData([]);
+        setSancionesData([]);
+        setShowResults(false);
     };
 
-    const procesarSolicitud = () => {
-        if (!fechaInicio || !fechaFin || !procesoSeleccionado || !funcionarioSeleccionado || !itemSeleccionado) {
-            app.flashMsg('Error', 'Debe completar todos los campos', 'error');
+    const fetchGeneratedData = async (fechaInicioStr, fechaFinStr) => {
+        setResultsLoading(true);
+        setShowResults(true);
+        try {
+            const response = await axios.get('/asistencia/data', {
+                params: {
+                    fecha_inicio: fechaInicioStr,
+                    fecha_fin: fechaFinStr
+                }
+            });
+            setAsistenciaData(response.data.asistencia || []);
+            setSancionesData(response.data.sanciones || []);
+        } catch (error) {
+            console.error('Error al obtener los datos generados:', error);
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los resultados.', life: 5000 });
+            setAsistenciaData([]);
+            setSancionesData([]);
+        } finally {
+            setResultsLoading(false);
+        }
+    };
+
+    const procesarSolicitud = async () => {
+        if (!fechaInicio || !fechaFin) {
+            toast.current.show({ severity: 'error', summary: 'Error', detail: 'Debe seleccionar las fechas de inicio y fin.', life: 3000 });
             return;
         }
 
-        app.flashMsg('Éxito', 'Solicitud procesada correctamente (simulado)', 'success');
-        limpiarFormulario();
+        const fechaInicioFormateada = formatDate(fechaInicio);
+        const fechaFinFormateada = formatDate(fechaFin);
+
+        setProcessing(true); 
+        setResultsLoading(false);
+        setShowResults(false); 
+        setAsistenciaData([]); 
+        setSancionesData([]);
+
+        try {
+            const responseSP = await axios.post('/asistencia/generar', {
+                fecha_inicio: fechaInicioFormateada,
+                fecha_fin: fechaFinFormateada
+            });
+
+            toast.current.show({ severity: 'success', summary: 'Éxito', detail: responseSP.data.message || 'Procedimiento completado.', life: 3000 });
+
+            await fetchGeneratedData(fechaInicioFormateada, fechaFinFormateada);
+
+        } catch (error) {
+            console.error('Error en el proceso:', error);
+            const errorMsg = error.response?.data?.message || 'Ocurrió un error durante el proceso.';
+            toast.current.show({ severity: 'error', summary: 'Error', detail: errorMsg, life: 5000 });
+            setShowResults(false); 
+        } finally {
+            setProcessing(false);
+        }
     };
+
+    // --- Templates para DataTables ---
+    const formatTime = (time) => {
+        if (!time) return '-';
+        return time.substring(0, 5);
+    };
+
+    const statusBodyTemplate = (rowData) => {
+        const status = rowData.att_tipo_observado;
+        let severity = 'info';
+        let value = status;
+
+        switch (status) {
+            case 'OK': severity = 'success'; value = 'Normal'; break;
+            case 'AT': severity = 'warning'; value = 'Atraso'; break;
+            case 'AU': severity = 'danger'; value = 'Ausente'; break;
+            case 'JU': severity = 'info'; value = 'Justificado'; break;
+            case 'VA': severity = 'contrast'; value = 'Vacación'; break;
+            case 'FE': severity = 'secondary'; value = 'Feriado'; break;
+            case 'DL': severity = 'secondary'; value = 'Día Libre'; break;
+            default: value = status || 'N/A'; break;
+        }
+        return <Tag severity={severity} value={value}></Tag>;
+    };
+
+    const atrasoBodyTemplate = (rowData) => {
+        const minutos = rowData.att_min_atraso;
+        if (minutos > 0) {
+            return <span className="text-orange-600 font-bold">{minutos} min</span>;
+        }
+        return '0 min';
+    };
+
+    const formatDateOnly = (dateString) => {
+        if (!dateString) return '-';
+        try {
+            const date = new Date(dateString + 'T00:00:00');
+            return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch (e) {
+            return dateString;
+        }
+    };
+
+    const tipoSancionBodyTemplate = (rowData) => {
+        const tipo = rowData.sa_tipo_sancion;
+        let severity = 'info';
+        let value = tipo;
+
+        switch (tipo) {
+            case 'B': severity = 'danger'; value = 'Descuento Haber'; break;
+            default: value = tipo || 'N/A'; break;
+        }
+        return <Tag severity={severity} value={value}></Tag>;
+    };
+
 
     return (
         <div className="card">
-            <Title title="Procesos de Recursos Humanos" />
+            <Toast ref={toast} />
+            <Title title="Generar y Consultar Reporte de Asistencia" />
             
-            {/* Rango de Fechas */}
-            <Card title="Rango de Fechas" className="mb-4">
+            {/* Selección de Fechas y Botón de Generar */}
+            <Card title="Seleccione el Rango y Genere el Reporte" className="mb-4">
                 <div className="grid">
-                    <div className="col-12 md:col-6 mb-2">
+                    <div className="col-12 md:col-5 mb-2">
                         <span className="p-float-label">
                             <Calendar
                                 id="fechaInicio"
@@ -183,11 +182,12 @@ const ProcesosRH = () => {
                                 showIcon
                                 locale="es"
                                 className="w-full"
+                                placeholder="Fecha Inicio"
                             />
                             <label htmlFor="fechaInicio">Fecha Inicio</label>
                         </span>
                     </div>
-                    <div className="col-12 md:col-6 mb-2">
+                    <div className="col-12 md:col-5 mb-2">
                         <span className="p-float-label">
                             <Calendar
                                 id="fechaFin"
@@ -198,153 +198,96 @@ const ProcesosRH = () => {
                                 locale="es"
                                 className="w-full"
                                 minDate={fechaInicio}
+                                placeholder="Fecha Fin"
                             />
                             <label htmlFor="fechaFin">Fecha Fin</label>
                         </span>
                     </div>
-                </div>
-            </Card>
-
-            {/* Proceso */}
-            <Card title="Proceso" className="mb-4">
-                <div className="grid">
-                    <div className="col-12 mb-2">
-                        <span className="p-float-label">
-                            {loadingProcesos ? (
-                                <div className="flex justify-content-center">
-                                    <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            ) : (
-                                <Dropdown
-                                    id="proceso"
-                                    value={procesoSeleccionado}
-                                    onChange={(e) => setProcesoSeleccionado(e.value)}
-                                    options={tiposProceso}
-                                    optionLabel="descripcion"
-                                    optionValue="id"
-                                    filter
-                                    className="w-full"
-                                    placeholder="Seleccione un proceso"
-                                    optionGroupLabel="tipo"
-                                    optionGroupChildren="items"
-                                />
-                            )}
-                            <label htmlFor="proceso">Seleccione Proceso</label>
-                        </span>
+                    <div className="col-12 md:col-2 mb-2 flex align-items-center justify-content-end">
+                         <Button
+                            label={processing ? 'Procesando...' : 'Generar'}
+                            icon={processing ? 'pi pi-spin pi-spinner' : 'pi pi-check'}
+                            onClick={procesarSolicitud}
+                            disabled={!fechaInicio || !fechaFin || processing || resultsLoading}
+                            className="w-full"
+                            tooltip="Ejecuta el proceso y muestra los resultados"
+                            tooltipOptions={{ position: 'bottom' }}
+                        />
                     </div>
                 </div>
-            </Card>
-
-            {/* Selección de Funcionario */}
-            <Card title="Funcionario" className="mb-4">
-                <div className="grid">
-                    <div className="col-12 mb-2">
-                        <span className="p-float-label">
-                             {loadingFuncionarios ? (
-                                <div className="flex justify-content-center">
-                                    <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-                                </div>
-                            ) : (
-                                <Dropdown
-                                    id="funcionario"
-                                    value={funcionarioSeleccionado}
-                                    options={funcionarios}
-                                    onChange={(e) => setFuncionarioSeleccionado(e.value)}
-                                    optionLabel="nombreCompleto"
-                                    optionValue="id"
-                                    placeholder="Seleccione un funcionario"
-                                    filter 
-                                    showClear
-                                    filterBy="nombreCompleto,ci"
-                                    itemTemplate={funcionarioOptionTemplate}
-                                    className="w-full"
-                                />
-                            )}
-                            <label htmlFor="funcionario">Seleccionar Funcionario</label>
-                        </span>
-                    </div>
-                </div>
-            </Card>
-
-            {/* Selección de Item */}
-            <Card title="Item" className="mb-4">
-                <div className="grid">
-                    <div className="col-12 mb-2">
-                        {loadingItems ? (
-                            <div className="flex justify-content-center">
-                                <ProgressSpinner style={{ width: '50px', height: '50px' }} />
-                            </div>
-                        ) : (
-                            <div>
-                                {items.length > 0 ? (
-                                    <DataTable
-                                        value={items}
-                                        selection={itemSeleccionado}
-                                        onSelectionChange={(e) => setItemSeleccionado(e.value)}
-                                        selectionMode="single"
-                                        dataKey="ca_id"
-                                        paginator
-                                        rows={5}
-                                        emptyMessage="No se encontraron items" 
-                                        className="p-datatable-sm"
-                                        filterDisplay="row"
-                                        globalFilterFields={['ca_num_item', 'cargo_descripcion', 'unidad_organizacional']}
-                                    >
-                                        <Column 
-                                            field="ca_num_item" 
-                                            header="N° Item" 
-                                            body={(rowData) => `${rowData.ca_ti_item || ''}-${rowData.ca_num_item || ''}`} 
-                                            sortable 
-                                            filter
-                                            filterPlaceholder="Buscar N°"
-                                        />
-                                        <Column 
-                                            field="cargo_descripcion"
-                                            header="Cargo" 
-                                            sortable 
-                                            filter
-                                            filterPlaceholder="Buscar Cargo"
-                                        /> 
-                                        <Column 
-                                            field="unidad_organizacional"
-                                            header="Unidad Organizacional" 
-                                            sortable 
-                                            filter
-                                            filterPlaceholder="Buscar Unidad"
-                                        />
-                                        <Column
-                                            field="ns_haber_basico"
-                                            header="Haber Básico"
-                                            body={(rowData) => rowData.ns_haber_basico ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(rowData.ns_haber_basico) : '-'}
-                                            sortable
-                                        />
-                                    </DataTable>
-                                ) : ( 
-                                    <div className="p-3 text-center">
-                                        <p>No se encontraron items disponibles.</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </Card>
-
-            {/* Botones de acción */}
-            <div className="flex justify-content-end mt-4 gap-2">
-                <Button
+                 <Button
                     label="Limpiar"
                     icon="pi pi-eraser"
-                    className="p-button-outlined"
+                    className="p-button-outlined mt-2"
                     onClick={limpiarFormulario}
+                    disabled={processing || resultsLoading}
                 />
-                <Button
-                    label="Procesar"
-                    icon="pi pi-check"
-                    onClick={procesarSolicitud}
-                    disabled={!fechaInicio || !fechaFin || !procesoSeleccionado || !funcionarioSeleccionado || !itemSeleccionado} // Actualizar condición disabled
-                />
-            </div>
+            </Card>
+
+            {/* Sección de Resultados */}
+            {showResults && (
+                <Card title="Resultados del Proceso" className="mt-4">
+                    {resultsLoading ? (
+                        <div className="flex justify-content-center align-items-center" style={{ height: '200px' }}>
+                            <ProgressSpinner />
+                            <span className="ml-2">Cargando resultados...</span>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Tabla de Asistencia */}
+                            <div className="mb-5">
+                                <h3 className="mb-3">Detalle de Asistencia</h3>
+                                <DataTable
+                                    value={asistenciaData}
+                                    paginator rows={10} rowsPerPageOptions={[10, 25, 50]}
+                                    emptyMessage="No se encontraron registros de asistencia para este período."
+                                    className="p-datatable-sm"
+                                    sortMode="multiple"
+                                    removableSort
+                                    filterDisplay="row"
+                                    globalFilterFields={['nombre_completo', 'per_num_doc', 'att_dia', 'att_tipo_observado', 'licencia_descripcion', 'horario_especial_descripcion']}
+                                >
+                                    <Column field="att_fecha" header="Fecha" body={(rowData) => formatDateOnly(rowData.att_fecha)} sortable filter filterPlaceholder="Buscar Fecha"/>
+                                    <Column field="att_dia" header="Día" sortable filter filterPlaceholder="Buscar Día"/>
+                                    <Column field="nombre_completo" header="Funcionario" sortable filter filterPlaceholder="Buscar Nombre"/>
+                                    <Column field="per_num_doc" header="CI" sortable filter filterPlaceholder="Buscar CI"/>
+                                    <Column field="att_ing1" header="Ing. Mañana" body={(rowData) => formatTime(rowData.att_ing1)} style={{ textAlign: 'center' }}/>
+                                    <Column field="att_sal1" header="Sal. Mañana" body={(rowData) => formatTime(rowData.att_sal1)} style={{ textAlign: 'center' }}/>
+                                    <Column field="att_ing2" header="Ing. Tarde" body={(rowData) => formatTime(rowData.att_ing2)} style={{ textAlign: 'center' }}/>
+                                    <Column field="att_sal2" header="Sal. Tarde" body={(rowData) => formatTime(rowData.att_sal2)} style={{ textAlign: 'center' }}/>
+                                    <Column field="att_min_atraso" header="Atraso (min)" body={atrasoBodyTemplate} sortable style={{ textAlign: 'center' }}/>
+                                    <Column field="att_tipo_observado" header="Estado" body={statusBodyTemplate} sortable filter filterPlaceholder="Buscar Estado"/>
+                                    <Column field="licencia_descripcion" header="Justificación" filter filterPlaceholder="Buscar Just."/>
+                                    <Column field="horario_especial_descripcion" header="Horario Especial" filter filterPlaceholder="Buscar Motivo HE"/>
+                                </DataTable>
+                            </div>
+
+                            {/* Tabla de Sanciones */}
+                            <div>
+                                <h3 className="mb-3">Sanciones Generadas</h3>
+                                <DataTable
+                                    value={sancionesData}
+                                    paginator rows={5} rowsPerPageOptions={[5, 10, 25]}
+                                    emptyMessage="No se encontraron sanciones generadas para este período."
+                                    className="p-datatable-sm"
+                                    sortMode="multiple"
+                                    removableSort
+                                    filterDisplay="row"
+                                    globalFilterFields={['nombre_completo', 'per_num_doc', 'factor_descripcion', 'sa_tipo_sancion']}
+                                >
+                                    <Column field="fecha_sancion" header="Fecha Sanción" body={(rowData) => formatDateOnly(rowData.fecha_sancion)} sortable filter filterPlaceholder="Buscar Fecha"/>
+                                    <Column field="nombre_completo" header="Funcionario" sortable filter filterPlaceholder="Buscar Nombre"/>
+                                    <Column field="per_num_doc" header="CI" sortable filter filterPlaceholder="Buscar CI"/>
+                                    <Column field="factor_descripcion" header="Motivo (Factor)" sortable filter filterPlaceholder="Buscar Motivo"/>
+                                    <Column field="sa_minutos" header="Minutos Atraso" sortable style={{ textAlign: 'center' }}/>
+                                    <Column field="sa_tipo_sancion" header="Tipo Sanción" body={tipoSancionBodyTemplate} sortable filter filterPlaceholder="Buscar Tipo"/>
+                                    <Column field="sa_dias_sancion" header="Días Sanción" sortable style={{ textAlign: 'center' }}/>
+                                </DataTable>
+                            </div>
+                        </>
+                    )}
+                </Card>
+            )}
         </div>
     );
 };
