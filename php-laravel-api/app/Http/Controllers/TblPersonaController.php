@@ -277,4 +277,11 @@ class TblPersonaController extends Controller
             return $this->respondWithError($e);
         }
     }
+
+    function getDataForSelect () {
+        $records = TblPersona::select('per_id', 'per_ap_materno', 'per_ap_paterno', 'per_nombres')
+        ->get();
+
+        return response()->json($records);
+    }
 }

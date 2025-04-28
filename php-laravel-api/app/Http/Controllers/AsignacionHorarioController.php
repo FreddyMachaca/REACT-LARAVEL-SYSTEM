@@ -118,4 +118,66 @@ class AsignacionHorarioController extends Controller
 
         return response()->json(['message' => 'Horario eliminado correctamente'], 200);
     }
+
+    public function getSchedule(Request $request, $persona_id = null){
+        try{
+            $records = AsignacionHorario::where('ah_per_id', $persona_id)
+                ->with(['tipoHorario:cat_id,cat_descripcion'])
+                ->get();
+
+            return response()->json($records);
+        }
+		catch (Exception $e) {
+			return response()->json(['error' => $e->getMessage()], 500);
+		}
+
+    }
+
+    public function addPerWeek (Request $request) {
+        $request->validate([
+            'tipoHorarioId' => 'required|integer',
+            'personaId' => 'required|integer',
+            'asistencias' => 'required|array',
+        ]);
+    
+        foreach ($request->asistencias as $asistencia) {
+            AsignacionHorario::create([
+                'ah_per_id' => $request->personaId,
+                'ah_tipo_horario' => $request->tipoHorarioId,                
+                'ah_fecha_inicial' => $asistencia['ah_fecha_inicial'] ,
+                'ah_fecha_final' => $asistencia['ah_fecha_final'],
+                'ah_lun_ing1' => $asistencia['ah_lun_ing1'],
+                'ah_lun_sal1' => $asistencia['ah_lun_sal1'],
+                'ah_lun_ing2' => $asistencia['ah_lun_ing2'],
+                'ah_lun_sal2' => $asistencia['ah_lun_sal2'],
+                'ah_mar_ing1' => $asistencia['ah_mar_ing1'],
+                'ah_mar_sal1' => $asistencia['ah_mar_sal1'],
+                'ah_mar_ing2' => $asistencia['ah_mar_ing2'],
+                'ah_mar_sal2' => $asistencia['ah_mar_sal2'],
+                'ah_mie_ing1' => $asistencia['ah_mie_ing1'],
+                'ah_mie_sal1' => $asistencia['ah_mie_sal1'],
+                'ah_mie_ing2' => $asistencia['ah_mie_ing2'],
+                'ah_mie_sal2' => $asistencia['ah_mie_sal2'],
+                'ah_jue_ing1' => $asistencia['ah_jue_ing1'],
+                'ah_jue_sal1' => $asistencia['ah_jue_sal1'],
+                'ah_jue_ing2' => $asistencia['ah_jue_ing2'],
+                'ah_jue_sal2' => $asistencia['ah_jue_sal2'],
+                'ah_vie_ing1' => $asistencia['ah_vie_ing1'],
+                'ah_vie_sal1' => $asistencia['ah_vie_sal1'],
+                'ah_vie_ing2' => $asistencia['ah_vie_ing2'],
+                'ah_vie_sal2' => $asistencia['ah_vie_sal2'],
+                'ah_sab_ing1' => $asistencia['ah_sab_ing1'],
+                'ah_sab_sal1' => $asistencia['ah_sab_sal1'],
+                'ah_sab_ing2' => $asistencia['ah_sab_ing2'],
+                'ah_sab_sal2' => $asistencia['ah_sab_sal2'],
+                'ah_dom_ing1' => $asistencia['ah_dom_ing1'],
+                'ah_dom_sal1' => $asistencia['ah_dom_sal1'],
+                'ah_dom_ing2' => $asistencia['ah_dom_ing2'],
+                'ah_dom_sal2' => $asistencia['ah_dom_sal2'],
+                'ah_estado' => 'V',
+            ]);
+        }
+    
+        return response()->json(['message' => 'Asistencias registradas correctamente.']);
+    }
 }

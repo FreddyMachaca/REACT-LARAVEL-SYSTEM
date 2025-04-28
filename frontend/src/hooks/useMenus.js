@@ -27,6 +27,13 @@ export default function useMenus() {
             "target": "",
         },
         {
+            "to": "/tblcpasignacionhorario",
+            "label": "Asignación de Horario",
+            "icon": "pi pi-clock",
+            "iconcolor": "",
+            "target": "",
+        },
+        {
             "to": "/tblitems",
             "label": "Tbl Items",
             "icon": "pi pi-th-large",
