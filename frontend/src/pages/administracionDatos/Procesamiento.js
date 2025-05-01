@@ -80,6 +80,11 @@ const ProcesosRH = () => {
             return;
         }
 
+        if (fechaFin < fechaInicio) {
+            toast.current.show({ severity: 'warn', summary: 'Advertencia', detail: 'La fecha de fin no puede ser anterior a la fecha de inicio.', life: 3000 });
+            return;
+        }
+
         const fechaInicioFormateada = formatDate(fechaInicio);
         const fechaFinFormateada = formatDate(fechaFin);
 
@@ -197,7 +202,6 @@ const ProcesosRH = () => {
                                 showIcon
                                 locale="es"
                                 className="w-full"
-                                minDate={fechaInicio}
                                 placeholder="Fecha Fin"
                             />
                             <label htmlFor="fechaFin">Fecha Fin</label>
