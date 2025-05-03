@@ -420,6 +420,7 @@ function TblCpAsigcionHorarioAdd() {
             icon="pi pi-calendar-times"
             className="p-button-rounded p-button-success p-button-text"
             onClick={() => handleViewSchedule(rowData)}
+            tooltip="Ver horario"
           />
           <Button
             icon="pi pi-eye"
@@ -457,7 +458,11 @@ function TblCpAsigcionHorarioAdd() {
       
       days.forEach((day) => {
         const dateString = day.toDateString();
-        const weekday = day.toLocaleDateString('es-ES', { weekday: 'short' }).toLowerCase();
+        const weekday = day
+          .toLocaleDateString('es-ES', { weekday: 'short' })
+          .normalize('NFD') 
+          .replace(/[\u0300-\u036f]/g, '') 
+          .toLowerCase();
 
         const ingress1 = parseTime(rowData[`ah_${weekday}_ing1`]);
         const exit1 = parseTime(rowData[`ah_${weekday}_sal1`]);
@@ -481,10 +486,6 @@ function TblCpAsigcionHorarioAdd() {
       setIsWatching(true);
       setSecondCard(true);
     }
-
-    // useEffect(() => {
-    //   console.log(data)
-    // }, [data]);
 
     const handleAccept = (selectedDays) => {
       const updatedValues = { ...scheduleValuesByDay };

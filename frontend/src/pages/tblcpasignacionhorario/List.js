@@ -33,13 +33,13 @@ function tblCpAsignacionHorarioList() {
                   icon="pi pi-id-card" 
                   className="p-button-rounded p-button-success p-button-text"
                   onClick={() => app.navigate(`/tblcplicenciajustificada/add/${rowData.per_id}`)}
-                  tooltip="Gestionar"
+                  tooltip="Registrar licencia"
               />
               <Button 
                   icon="pi pi-clock" 
                   className="p-button-rounded p-button-primary p-button-text"
                   onClick={() => app.navigate(`/tblcpasignacionhorario/add/${rowData.per_id}`)}
-                  tooltip="Gestionar"
+                  tooltip="Registro de horarios"
               />
           </div>
       );
