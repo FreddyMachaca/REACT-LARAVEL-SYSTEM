@@ -190,7 +190,6 @@ const ProcesosRH = () => {
                     fecha_fin: fechaFin.toISOString().split('T')[0]
                 }
             });
-            console.log(data.reporte)
 
             setReportData(data.reporte);        
             setPersonaInfo(data.persona.records[0]);
@@ -362,8 +361,6 @@ const ProcesosRH = () => {
                             personaInf={personaInfo}
                         />
                     </PDFViewer>
-
-                    <button>s</button>
                     </>
                 )}
                 

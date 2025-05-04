@@ -163,6 +163,15 @@ const ReporteAsistenciaTemplate = ({ data, personaInf }) => {
 
   const totales = calcularTotales();
   const nombre_completo = formatName();
+
+  const isWithinLicense = (hora, licencia) => {
+    if (!licencia || !hora) return false;
+  
+    const [licenciaInicio, licenciaFin] = licencia.split(' - ');
+  
+    const horaMinutos = hora.slice(0, 5); // "08:23:00" → "08:23"
+    return horaMinutos >= licenciaInicio && horaMinutos <= licenciaFin;
+  };  
   
   // const formatMinutesToTime = (minutes) => {
   //   const dias = Math.floor(minutes / (24 * 60));
@@ -245,16 +254,24 @@ const ReporteAsistenciaTemplate = ({ data, personaInf }) => {
           <View key={rowIndex} style={styles.tableRow}>
             <Text style={[styles.tableCol, styles.firstCol, styles.colFecha]}>{item.att_fecha}</Text>
             <Text style={[styles.tableCol, styles.colDia]}>{item.att_dia}</Text>
-            <Text style={[styles.tableCol, styles.colHora]}>{item.marca_entrada_manana || ''}</Text>
-            <Text style={[styles.tableCol, styles.colHora]}>{item.marca_salida_manana || ''}</Text>
-            <Text style={[styles.tableCol, styles.colHora]}>{item.marca_entrada_tarde || ''}</Text>
-            <Text style={[styles.tableCol, styles.colHora]}>{item.marca_salida_tarde || ''}</Text>
+            <Text style={[styles.tableCol, styles.colHora]}>{item.licencia ? 'LICENCIA' : (item.marca_entrada_manana ?? 'NO MARCO')}</Text>
+            <Text style={[styles.tableCol, styles.colHora]}>{item.licencia ? 'LICENCIA' : (item.marca_salida_manana ?? 'NO MARCO')}</Text>
+            <Text style={[styles.tableCol, styles.colHora]}>{item.licencia ? 'LICENCIA' : (item.marca_entrada_tarde ?? 'NO MARCO')}</Text>
+            <Text style={[styles.tableCol, styles.colHora]}>{item.licencia ? 'LICENCIA' : (item.marca_salida_tarde ?? 'NO MARCO')}</Text>
             <Text style={[styles.tableCol, styles.colMin]}>{item.min_atraso}</Text>
             <Text style={[styles.tableCol, styles.colMin]}>{item.min_trabajo}</Text>
-            <Text style={[styles.tableCol, styles.colMin]}>{item.no_marcado_entrada}</Text>
-            <Text style={[styles.tableCol, styles.colMin]}>{item.no_marcado_salida}</Text>
+            <Text style={[styles.tableCol, styles.colMin]}>{item.no_marcado_entrada == 2 ? (item.licencia? 0 : 2) :  item.no_marcado_entrada}</Text>
+            <Text style={[styles.tableCol, styles.colMin]}>{item.no_marcado_salida == 2 ? (item.licencia? 0 : 2) :  item.no_marcado_salida}</Text>
             <Text style={[styles.tableCol, styles.colMin]}>0</Text>
-            <Text style={[styles.tableCol, styles.colObs]}>{item.he_descripcion} </Text>
+            <Text style={[styles.tableCol, styles.colObs]}>
+            {
+              item.he_descripcion
+                ? item.he_descripcion
+                : (item.no_marcado_entrada === 2 && item.no_marcado_salida === 2
+                    ? (item.licencia ? '':'FALTA')
+                    : '')
+            }
+              </Text>
           </View>
         ))}
 
