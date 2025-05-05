@@ -1,0 +1,99 @@
+/* AuthorizationPopup.css */
+.authorization-popup .p-dialog-content {
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.authorization-popup-header {
+    height: 30px;
+    padding: 0 !important;
+    border-radius: 4px 4px 0 0;
+}
+
+.authorization-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    width: 100%;
+}
+
+.authorization-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.close-button {
+    color: white !important;
+   /* background: rgba(255, 255, 255, 0.2) !important;*/
+    width: 3rem;
+    height: 3rem;
+    transition: background-color 0.2s;
+}
+
+.close-button:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+.transaction-title {
+    background-color: #f8f8f8;
+    color: #ff8c00;
+    font-size: 1.2rem;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.authorization-table {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.authorization-table .p-datatable-thead > tr > th {
+    background-color: #2868a8;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+}
+
+.file-count {
+    padding: 10px;
+    color: #666;
+    font-style: italic;
+    text-align: right;
+    background-color: #f8f8f8;
+    border-top: 1px solid #e0e0e0;
+}
+
+.authorization-footer {
+    text-align: center;
+    padding: 10px;
+    background: transparent !important;
+    border-top: none !important;
+}
+
+.accept-button {
+    background-color: #0078d7;
+    border-color: #0078d7;
+    color: white;
+}
+
+/* Aplica fondo gradiente completo */
+.authorization-header.blue-gradient-bar {
+    background: linear-gradient(to right, #0047ab, #2a9df4);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    margin: 0;
+    border-bottom: none;
+}

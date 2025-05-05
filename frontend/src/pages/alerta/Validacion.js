@@ -91,8 +91,8 @@ const LicenseValidation = () => {
   // Botón de la tabla para abrir el popup
   const openPopup = async (license) => {
     try {
-      const urlBoleta = `http://localhost:8000/api/licencias/boleta/${license.papeleta}`;
-      const urlPersona = `http://localhost:8000/api/licencias/persona/${license.codigo}`;
+      const urlBoleta = `http://localhost:8000/api/TblLicenciaJustificada/boleta/${license.papeleta}`;
+      const urlPersona = `http://localhost:8000/api/TblLicenciaJustificada/persona/${license.codigo}`;
 
       console.log("Consultando API:", urlBoleta, urlPersona);
 

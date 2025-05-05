@@ -29,7 +29,7 @@ const EmpleadoFileCard = ({ empleadoData }) => {
         <Card className="w-full">
           <h5 className="ml-3">Administración de horarios</h5>
           <div className="grid">
-            <div className="col-12 md:col-3 flex flex-column align-items-center justify-content-center">
+            <div className="col-4 md:col-3 flex flex-column align-items-center justify-content-center">
               <Avatar
                 image={empleadoData.foto}
                 style={{ width: "120px", height: "120px" }}
@@ -46,7 +46,7 @@ const EmpleadoFileCard = ({ empleadoData }) => {
               
             </div>
 
-            <div className="col-12 md:col-9">
+            <div className="col-8 md:col-9">
               <div className="grid">
                 {/* First row: Escalafón and Fecha Asignación */}
                 <div className="col-12">

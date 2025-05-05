@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Exception;
 use DB;
 use Carbon\Carbon;
-
+use Illuminate\Http\JsonResponse;
 class TblPersonaController extends Controller
 {
     /**
@@ -22,20 +22,20 @@ class TblPersonaController extends Controller
     function index(Request $request, $fieldname = null, $fieldvalue = null){
         try{
             $query = TblPersona::query();
-            
+
             // Aplicar filtros solo si tienen valor
             if ($request->nombres && trim($request->nombres) !== '') {
                 $query->where('per_nombres', 'ILIKE', '%'.trim($request->nombres).'%');
             }
-            
+
             if ($request->apellido_paterno && trim($request->apellido_paterno) !== '') {
                 $query->where('per_ap_paterno', 'ILIKE', '%'.trim($request->apellido_paterno).'%');
             }
-            
+
             if ($request->apellido_materno && trim($request->apellido_materno) !== '') {
                 $query->where('per_ap_materno', 'ILIKE', '%'.trim($request->apellido_materno).'%');
             }
-            
+
             if ($request->num_doc && trim($request->num_doc) !== '') {
                 $query->where('per_num_doc', 'ILIKE', '%'.trim($request->num_doc).'%');
             }
@@ -50,7 +50,7 @@ class TblPersonaController extends Controller
             if ($request->with_assignments) {
                 $query->has('asignacionesTipoAportante');
             }
-            
+
             $query->leftJoin('tbl_mp_asignacion', function($join) {
                 $join->on('tbl_persona.per_id', '=', 'tbl_mp_asignacion.as_per_id')
                      ->where('tbl_mp_asignacion.as_estado', '=', 'V');
@@ -72,23 +72,23 @@ class TblPersonaController extends Controller
                 'tbl_mp_nivel_salarial.ns_haber_basico',
                 DB::raw('CASE WHEN tbl_mp_asignacion.as_id IS NOT NULL THEN true ELSE false END as tiene_item')
             );
-            
+
             if ($request->nombres) {
                 $query->where('per_nombres', 'ILIKE', "%{$request->nombres}%");
             }
-            
+
             if ($request->apellido_paterno) {
                 $query->where('per_ap_paterno', 'ILIKE', "%{$request->apellido_paterno}%");
             }
-            
+
             if ($request->apellido_materno) {
                 $query->where('per_ap_materno', 'ILIKE', "%{$request->apellido_materno}%");
             }
-            
+
             if ($request->num_doc) {
                 $query->where('per_num_doc', 'ILIKE', "%{$request->num_doc}%");
             }
-            
+
             if($request->search){
                 $search = trim($request->search);
                 TblPersona::search($query, $search);
@@ -97,26 +97,26 @@ class TblPersonaController extends Controller
             $orderby = $request->orderby ?? "tbl_persona.per_id";
             $ordertype = $request->ordertype ?? "desc";
             $query->orderBy($orderby, $ordertype);
-            
+
             if ($fieldname) {
                 $query->where($fieldname, $fieldvalue);
             }
-            
+
             // Paginación
             $page = $request->input('page', 1);
             $limit = $request->input('limit', 10);
-            
+
             // Obtener el total antes de la paginación
             $total = $query->count();
-            
+
             // Aplicar paginación
             $records = $query->skip(($page - 1) * $limit)
                             ->take($limit)
                             ->get();
-            
+
             $records = $records->filter(function($record) {
-                return !empty(trim($record->per_nombres)) && 
-                       !empty(trim($record->per_ap_paterno)) && 
+                return !empty(trim($record->per_nombres)) &&
+                       !empty(trim($record->per_ap_paterno)) &&
                        !empty(trim($record->per_num_doc));
             })->values();
 
@@ -157,18 +157,18 @@ class TblPersonaController extends Controller
     function addPersonAndHome(TblPersonaAddRequest $request){
         try {
             DB::beginTransaction();
-            
+
             $modeldata = $request->validated();
             $modeldata['per_fecha_registro'] = Carbon::now();
             $persona = TblPersona::create($modeldata);
 
             $domicilioData = $request->only([
-                'perd_ciudad_residencia', 
-                'perd_descripcion_via', 
-                'perd_numero', 
-                'perd_tipo_via', 
+                'perd_ciudad_residencia',
+                'perd_descripcion_via',
+                'perd_numero',
+                'perd_tipo_via',
                 'perd_zona'
-            ]); 
+            ]);
             $domicilioData['perd_per_id'] = $persona->per_id;
             $domicilioData['perd_fecha_creacion'] = Carbon::now();
             $domicilio = TblPersonaDomicilio::create($domicilioData);
@@ -180,7 +180,7 @@ class TblPersonaController extends Controller
             return $this->respondWithError($e);
         }
     }
-    
+
     /**
      * Select table record by ID
      * @param string $rec_id
@@ -189,7 +189,7 @@ class TblPersonaController extends Controller
     function view($rec_id = null){
         try{
             $query = TblPersona::query();
-            
+
             $query->leftJoin('tbl_mp_asignacion', function($join) {
                 $join->on('tbl_persona.per_id', '=', 'tbl_mp_asignacion.as_per_id')
                      ->where('tbl_mp_asignacion.as_estado', '=', 'V'); // Solo asignaciones vigentes
@@ -204,16 +204,16 @@ class TblPersonaController extends Controller
             );
 
             $record = $query->findOrFail($rec_id);
-            
+
             $record->tiene_item = !is_null($record->as_id);
-            
+
             return $this->respond($record);
         }
         catch(Exception $e){
             return $this->respondWithError($e);
         }
     }
-    
+
     /**
      * Save form record to the table
      * @param Request $request
@@ -223,11 +223,11 @@ class TblPersonaController extends Controller
         try{
             $modeldata = $this->normalizeFormData($request->all());
             $modeldata['per_fecha_registro'] = $modeldata['per_fecha_registro'] ?? now();
-            
+
             DB::beginTransaction();
             $record = TblPersona::create($modeldata);
             DB::commit();
-            
+
             return $this->respond($record);
         }
         catch(Exception $e){
@@ -235,7 +235,7 @@ class TblPersonaController extends Controller
             return $this->respondWithError($e);
         }
     }
-    
+
     /**
      * Update table record with form data
      * @param Request $request
@@ -253,7 +253,7 @@ class TblPersonaController extends Controller
             return $this->respondWithError($e);
         }
     }
-    
+
     /**
      * Delete record from the database
      * @param Request $request
@@ -266,7 +266,7 @@ class TblPersonaController extends Controller
             $query = TblPersona::query();
             $query->whereIn("per_id", $arr_id);
             $query->delete();
-            
+
             return $this->respond([
                 "status" => "success",
                 "message" => "Registros eliminados exitosamente",
@@ -283,5 +283,62 @@ class TblPersonaController extends Controller
         ->get();
 
         return response()->json($records);
+    }
+    
+    public function obtenerEmpleado(): JsonResponse
+    {
+        return response()->json([
+            'foto' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRezYSyEzcasjaNDM7MW1642vvo8e8TSEdoKA&s',
+            'estado' => 'Pasivo',
+            'nombre' => 'CARLOS EDUARDO ASIN HAYDAR',
+            'ci' => '471563 LP',
+            'codigo' => '5572',
+            'item' => 'P-911',
+            'cargo' => 'PROFESIONAL III',
+            'puesto' => 'SANEADOR TÉCNICO UACT DATC',
+            'haber_basico' => 6564.00,
+            'codigo_escalafon' => '303',
+            'nivel_salarial' => '04',
+            'clase' => '0',
+            'fecha_alta' => '11/06/2015',
+            'fecha_baja' => '29/06/2015',
+            'ubicacion_admin' => 'UNIDAD DE ADMINISTRACIÓN Y CONTROL TERRITORIAL',
+            'categoria_admin' => '3 - 10 - 4 - 1 - 0',
+            'ubicacion_prog' => 'SERVICIOS DE ADMINISTRACIÓN DIRECCIÓN DE ADMINISTRACIÓN TERRITORIAL Y CATASTRAL',
+            'categoria_prog' => '8 - 137 - 3 - 0 - 5'
+        ]);
+    }
+    public function obtenerOpciones($personaId): JsonResponse
+    {
+        $results = DB::select("
+        SELECT
+            pe.per_id AS value,
+            CONCAT(pe.per_nombres, ' ', pe.per_ap_paterno, ' ', pe.per_ap_materno) AS label,
+            eo.eo_id,
+            eo.eo_cod_superior,
+            ca.ca_ti_item,
+            ca.ca_num_item
+        FROM
+            tbl_mp_cargo AS ca
+            INNER JOIN tbl_mp_escala_salarial AS es ON ca.ca_es_id = es.es_id
+            INNER JOIN tbl_mp_asignacion AS asignacion ON ca.ca_id = asignacion.as_ca_id
+            INNER JOIN tbl_persona AS pe ON asignacion.as_per_id = pe.per_id
+            INNER JOIN tbl_mp_estructura_organizacional AS eo ON ca.ca_eo_id = eo.eo_id
+        WHERE
+            eo.eo_id = (
+                SELECT eo2.eo_id
+                FROM tbl_mp_cargo AS ca2
+                INNER JOIN tbl_mp_asignacion AS asignacion2 ON ca2.ca_id = asignacion2.as_ca_id
+                INNER JOIN tbl_mp_estructura_organizacional AS eo2 ON ca2.ca_eo_id = eo2.eo_id
+                WHERE asignacion2.as_per_id = ?
+                LIMIT 1
+            )
+            AND TRIM(ca.ca_ti_item) = 'E'
+    ", [$personaId]);
+
+    return response()->json([
+        'success' => true,
+        'data' => $results
+    ]);
     }
 }

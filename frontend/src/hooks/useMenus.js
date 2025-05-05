@@ -76,6 +76,13 @@ export default function useMenus() {
             "target": "",
           },
           {
+            "to": "/tbllicencia/solicitudlicencia",
+            "label": "Solicitud de licencia",
+            "icon": "pi pi-th-large",
+            "iconcolor": "",
+            "target": "",
+          },
+          {
             "to": "/tbllicencia/validacion",
             "label": "Validar licencia justificada",
             "icon": "pi pi-th-large",

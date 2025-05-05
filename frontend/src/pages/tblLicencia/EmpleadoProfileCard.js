@@ -24,13 +24,13 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
 
             {/* Información del usuario */}
             <div className="user-profile-info">
-              <h3>{empleadoData.nombre}</h3>
+              <h3>{empleadoData.per_nombres} {empleadoData.per_ap_paterno} {empleadoData.per_ap_materno} {empleadoData.per_ap_casada}                </h3>
               <p>
-                C.I: {empleadoData.ci} CODIGO: {empleadoData.codigo} ITEM:{" "}
-                {empleadoData.item}
+                C.I: {empleadoData.per_num_doc} CODIGO: {empleadoData.per_id} ITEM: {empleadoData.ca_ti_item}-{empleadoData.ca_num_item}
+               
               </p>
             </div>
-
+ 
             {/* Resto de la información */}
             <div className="info-section">
               <div className="info-header">ESCALAFÓN</div>
@@ -42,10 +42,10 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
                   <div className="info-label">HABER BÁSICO (BS)</div>
                 </div>
                 <div className="info-row">
-                  <div className="info-value">{empleadoData.cargo}</div>
-                  <div className="info-value">{empleadoData.puesto}</div>
+                  <div className="info-value">{empleadoData.cargo_descripcion}</div>
+                  <div className="info-value">{empleadoData.cargo_Descripcion}</div>
                   <div className="info-value">
-                    {empleadoData.haber_basico}
+                    {empleadoData.ns_haber_basico}
                   </div>
                 </div>
 
@@ -57,9 +57,9 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
                 </div>
                 <div className="info-row">
                   <div className="info-value">
-                    {empleadoData.codigo_escalafon}
+                    {empleadoData.es_escalafon}
                   </div>
-                  <div className="info-value">{empleadoData.clase}</div>
+                  <div className="info-value">{empleadoData.ca_tipo_jornada}</div>
                   <div className="info-value">
                     {empleadoData.nivel_salarial}
                   </div>
@@ -78,10 +78,10 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
               </div>
               <div className="info-row">
                 <div className="info-value">
-                  {empleadoData.fecha_alta}
+                  {empleadoData.as_fecha_inicio}
                 </div>
                 <div className="info-value">
-                  {empleadoData.fecha_baja}
+                  {empleadoData.as_fecha_fin}
                 </div>
               </div>
             </div>
@@ -94,10 +94,10 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
               </div>
               <div className="info-row">
                 <div className="info-value">
-                  {empleadoData.ubicacion_admin}
+                  {empleadoData.categoria_administrativa}
                 </div>
                 <div className="info-value">
-                  {empleadoData.categoria_admin}
+                  {empleadoData.codigo_administrativo}
                 </div>
               </div>
             </div>
@@ -110,10 +110,10 @@ const EmpleadoProfileCard = ({ empleadoData }) => {
               </div>
               <div className="info-row">
                 <div className="info-value">
-                  {empleadoData.ubicacion_prog}
+                  {empleadoData.categoria_programatica}
                 </div>
                 <div className="info-value">
-                  {empleadoData.categoria_prog}
+                  {empleadoData.codigo_programatico}
                 </div>
               </div>
             </div>

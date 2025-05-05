@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TblLicenciaJustificada;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Exception;
+//use DB;
 
 class TblLicenciaJustificadaController extends Controller
 {
@@ -120,19 +124,48 @@ class TblLicenciaJustificadaController extends Controller
             'lj_id' => $boleta->lj_id
         ]);
     }
-    public function obtenerPersona($tipo){
-        return response()->json([
-            'avatar'=>'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRezYSyEzcasjaNDM7MW1642vvo8e8TSEdoKA&s',
-            'alta' => '01/01/2021',
-            'baja' => '31/12/2021',
-            'ubi_admin' => 'PROGRAMA BARRIOS Y COMUNIDADES DE VERDAD (Eventual I)',
-            'ubi_prog' => 'GESTION ADMINISTRATIVA PROGRAMA BARRIOS Y COMUNIDADES DE VERDAD',
-            'item' => 'BV-10',
+    public function obtenerPersona($personaId)
+    {
+        try {
+            $query = DB::table('tbl_persona AS p')
+                ->select(
+                    'p.*',
+                    'a.as_fecha_inicio',
+                    'a.as_fecha_fin',
+                    'c.ca_ti_item',
+                    'c.ca_num_item',
+                    'c.ca_tipo_jornada',
+                    'es.es_descripcion AS cargo_descripcion',
+                    'es.es_escalafon',
+                    'ns.ns_haber_basico',
+                    'eo.eo_descripcion AS categoria_administrativa',
+                    'cp.cp_descripcion AS categoria_programatica',
+                    DB::raw("CONCAT(eo.eo_prog, ' - ', eo.eo_sprog, ' - ', eo.eo_proy, ' - ', eo.eo_obract, ' - ', eo.eo_unidad) as codigo_administrativo"),
+                    DB::raw("CONCAT(cp.cp_da, ' - ', cp.cp_ue, ' - ', cp.cp_programa, ' - ', cp.cp_proyecto, ' - ', cp.cp_actividad) as codigo_programatico")
+                )
+                ->leftJoin('tbl_mp_asignacion AS a', function($join) {
+                    $join->on('p.per_id', '=', 'a.as_per_id')
+                        ->where('a.as_estado', '=', 'V');
+                })
+                ->leftJoin('tbl_mp_cargo AS c', 'a.as_ca_id', '=', 'c.ca_id')
+                ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
+                ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
+                ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
+                ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')
+                ->where('p.per_id', $personaId)
+                ->first();
 
-            'message' => 'Boleta no encontrada' // Mensaje de aviso
-        ], 200);
+                return response()->json($query);
+
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener datos de la persona',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-
     public function search(Request $request)
     {
         $query = TblLicenciaJustificada::with(['persona', 'tipoLicencia']);
@@ -217,13 +250,13 @@ class TblLicenciaJustificadaController extends Controller
             'lj_hora_retorno' => 'nullable|date_format:H:i',
             'lj_motivo' => 'nullable|string|max:200',
             'lj_lugar' => 'nullable|string|max:200',
-            'lj_per_id_autoriza' => 'nullable|integer|max:200',
+            'lj_per_id_autoriza' => 'nullable|integer',
         ]);
 
         $licenciaData = $request->all();
 
         $licenciaData['lj_fecha_emision'] = now();
-        $licenciaData['lj_estado'] = 'V';
+        $licenciaData['lj_estado'] = 'P';
 
         $licencia = TblLicenciaJustificada::create($licenciaData);
 
@@ -288,5 +321,115 @@ class TblLicenciaJustificadaController extends Controller
 
         return response()->json(['message' => 'Licencia actualizada con éxito', 'data' => $licencia]);
     }
+ /**
+     * metodos de autorizacion de licencias
+     * @return JsonResponse|mixed
+     */
+    public function getPendingAuthorizations($autorizaId)
+    {
+        $query = DB::query()
+            ->select([
+                'tbl_persona.per_id',
+                'tbl_persona.per_nombres',
+                'tbl_persona.per_ap_paterno',
+                'tbl_persona.per_ap_materno',
+                'tbl_cp_licencia_justificada.lj_id',
+                'tbl_cp_licencia_justificada.lj_tipo_licencia',
+                'tbl_catalogo.cat_descripcion',
+                'tbl_cp_licencia_justificada.lj_fecha_inicial',
+                'tbl_cp_licencia_justificada.lj_fecha_final',
+                'tbl_cp_licencia_justificada.lj_hora_salida',
+                'tbl_cp_licencia_justificada.lj_hora_retorno',
+                'tbl_cp_licencia_justificada.lj_motivo',
+                'tbl_cp_licencia_justificada.lj_per_id_autoriza'
+            ])
+            ->from('tbl_cp_licencia_justificada')
+            ->join('tbl_persona', 'tbl_cp_licencia_justificada.lj_per_id', '=', 'tbl_persona.per_id')
+            ->join('tbl_catalogo', 'tbl_cp_licencia_justificada.lj_tipo_licencia', '=', 'tbl_catalogo.cat_id')
+            ->where('tbl_cp_licencia_justificada.lj_per_id_autoriza', $autorizaId)
+            ->where('tbl_cp_licencia_justificada.lj_estado', 'P');
 
+        $results = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $results,
+            'count' => $results->count()
+        ]);
+    }
+    public function approveAuthorization(Request $request, $id)
+    {
+        try {
+
+            Log::info("Authorization {$id} approved by user {$request->user()->id}");
+
+            return response()->json(['success' => true, 'message' => 'Authorization approved successfully']);
+        } catch (\Exception $e) {
+            Log::error('Error approving authorization: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to approve authorization'], 500);
+        }
+    }
+
+    public function getPersonaInfo($personaId)
+    {
+        try {
+            $query = DB::table('tbl_persona AS p')
+                ->select(
+                    'p.*',
+                    'a.as_fecha_inicio',
+                    'a.as_fecha_fin',
+                    'c.ca_ti_item',
+                    'c.ca_num_item',
+                    'c.ca_tipo_jornada',
+                    'es.es_descripcion AS cargo_descripcion',
+                    'es.es_escalafon',
+                    'ns.ns_haber_basico',
+                    'eo.eo_descripcion AS categoria_administrativa',
+                    'cp.cp_descripcion AS categoria_programatica',
+                    DB::raw("CONCAT(eo.eo_prog, ' - ', eo.eo_sprog, ' - ', eo.eo_proy, ' - ', eo.eo_obract, ' - ', eo.eo_unidad) as codigo_administrativo"),
+                    DB::raw("CONCAT(cp.cp_da, ' - ', cp.cp_ue, ' - ', cp.cp_programa, ' - ', cp.cp_proyecto, ' - ', cp.cp_actividad) as codigo_programatico")
+                )
+                ->leftJoin('tbl_mp_asignacion AS a', function($join) {
+                    $join->on('p.per_id', '=', 'a.as_per_id')
+                        ->where('a.as_estado', '=', 'V');
+                })
+                ->leftJoin('tbl_mp_cargo AS c', 'a.as_ca_id', '=', 'c.ca_id')
+                ->leftJoin('tbl_mp_escala_salarial AS es', 'c.ca_es_id', '=', 'es.es_id')
+                ->leftJoin('tbl_mp_nivel_salarial AS ns', 'es.es_ns_id', '=', 'ns.ns_id')
+                ->leftJoin('tbl_mp_estructura_organizacional AS eo', 'c.ca_eo_id', '=', 'eo.eo_id')
+                ->leftJoin('tbl_mp_categoria_programatica AS cp', 'eo.eo_cp_id', '=', 'cp.cp_id')
+                ->where('p.per_id', $personaId)
+                ->first();
+
+            return $this->respond($query);
+        } catch (Exception $e) {
+            return $this->respondWithError($e);
+        }
+    }
+
+    public function obtenerLicenciasPorAutorizador(int $autorizaId): JsonResponse
+{
+    $licencias = DB::table('tbl_cp_licencia_justificada')
+        ->join('tbl_persona', 'tbl_cp_licencia_justificada.lj_per_id', '=', 'tbl_persona.per_id')
+        ->join('tbl_catalogo', 'tbl_cp_licencia_justificada.lj_tipo_licencia', '=', 'tbl_catalogo.cat_id')
+        ->select(
+            'tbl_persona.per_id',
+            'tbl_persona.per_nombres',
+            'tbl_persona.per_ap_paterno',
+            'tbl_persona.per_ap_materno',
+            'tbl_cp_licencia_justificada.lj_tipo_licencia',
+            'tbl_catalogo.cat_descripcion',
+            'tbl_cp_licencia_justificada.lj_id',
+            'tbl_cp_licencia_justificada.lj_fecha_inicial',
+            'tbl_cp_licencia_justificada.lj_fecha_final',
+            'tbl_cp_licencia_justificada.lj_hora_salida',
+            'tbl_cp_licencia_justificada.lj_hora_retorno',
+            'tbl_cp_licencia_justificada.lj_motivo',
+            'tbl_cp_licencia_justificada.lj_per_id_autoriza'
+        )
+        ->where('tbl_cp_licencia_justificada.lj_per_id_autoriza', $autorizaId)
+        ->get();
+
+    return response()->json($licencias);
+}
 }
