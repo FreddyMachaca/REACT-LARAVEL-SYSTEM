@@ -330,7 +330,7 @@ const PersonalSearchSystem = () => {
 
       {/* Footer */}
       <div className="bg-gray-200 p-2 text-center text-gray-600 text-sm">
-        <div>© 2020, Q-Magic Systems</div>
+      <div>© {new Date().getFullYear()}, Maestro System</div>
         <div>Transformando el futuro</div>
       </div>
     </div>
