@@ -132,7 +132,7 @@ import TbllicenciaUbicacion from 'pages/tblLicencia/Ubicacion';
 import TbllicenciaValidacion from 'pages/tblLicencia/Validacion';
 import BusquedaActa  from 'pages/serviciosprevalorados/busquedaacta';
 import TbllicenciaSolicitudLicencia from 'pages/tblLicencia/SolicitudLicencia';
-import Alert from 'pages/alerta/Alert'; ///alerta pendientes
+import Alert from 'pages/alerta/Alert';
 
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
@@ -436,12 +436,10 @@ const App = () => {
                 {/* Gestión de Personal routes */}
                 <Route path="/gestionPersonal" element={<TblPersonalList />} />
                 <Route path="/gestionPersonal/configuracion/:personaId" element={<PersonalConfiguracion />} />
-<<<<<<< HEAD
                 
                 {/* Procesos routes */}
                 <Route path="/procesar" element={<ProcesarDatos />} />
                 
-=======
                 {/* Alertas de solicitud de licencias justificadas */}
                 <Route path="/alerta/Alert" element={<Alert />} />
                 <Route path="/tbllicencia" element={<TbllicenciaList />} />
@@ -459,7 +457,7 @@ const App = () => {
                 <Route path="/tbllicencia/solicitudlicencia/" element={<TbllicenciaSolicitudLicencia />} />
 				{/**abre popup alerta */}
 				<Route path="/alerta/Alert" element={<Alert />} />
->>>>>>> modulo-alerta-licencias
+                
             </Route>
 
             <Route exact element={<IndexLayout />}></Route>
