@@ -561,6 +561,7 @@ Route::prefix('sanciones')->group(function () {
 /* routes for Asistencia Generation */
     Route::post('asistencia/generar', [AsistenciaController::class, 'generarAsistencia']);
     Route::get('asistencia/data', [AsistenciaController::class, 'getAsistenciaData']);
+    Route::get('asistencia/generar-pdf-reporte', [AsistenciaController::class, 'getReporteAsistecia']);
 
 /* routes for FileUpload Controller  */
 	Route::post('fileuploader/upload/{fieldname}', 'FileUploaderController@upload');

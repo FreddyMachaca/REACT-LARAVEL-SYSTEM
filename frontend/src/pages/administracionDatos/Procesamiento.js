@@ -11,6 +11,10 @@ import useApp from 'hooks/useApp';
 import axios from 'axios';
 import { addLocale } from 'primereact/api';
 import { Tag } from 'primereact/tag';
+import { Dialog } from 'primereact/dialog';
+import { PDFViewer } from '@react-pdf/renderer';
+import ReporteAsistenciaTemplate from 'pdf/ReporteAsistenciaTemplate';
+import { Dropdown } from 'primereact/dropdown';
 
 addLocale('es', {
     firstDayOfWeek: 1,
@@ -34,7 +38,14 @@ const ProcesosRH = () => {
     const [resultsLoading, setResultsLoading] = useState(false);
     const [showResults, setShowResults] = useState(false);
 
+    const [showPrintDialog, setShowPrintDialog] = useState(false);
+    const [reportData, setReportData] = useState(null);
+
     const [processing, setProcessing] = useState(false);
+    const [personas, setPersonas] = useState();
+    const [personaInfo, setPersonaInfo] = useState();
+    const [personaSeleccionada, setPersonaSeleccionada] = useState(null);
+
 
     const formatDate = (date) => {
         if (!date) return null;
@@ -64,6 +75,7 @@ const ProcesosRH = () => {
             });
             setAsistenciaData(response.data.asistencia || []);
             setSancionesData(response.data.sanciones || []);
+            setPersonas(response.data.personas || []);
         } catch (error) {
             console.error('Error al obtener los datos generados:', error);
             toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los resultados.', life: 5000 });
@@ -169,6 +181,35 @@ const ProcesosRH = () => {
     };
 
 
+    const handlePrint = async () => {
+        if(!personaSeleccionada){
+            toast.current.show({ severity: 'success', summary: 'Éxito', detail: "Por favor, seleccione una persona antes de generar el reporte.", life: 5000 });
+        }
+
+        try {
+            setResultsLoading(true);
+            const { data } = await axios.get('asistencia/generar-pdf-reporte', {
+                params: {
+                    persona_id: personaSeleccionada.per_id,
+                    fecha_inicio: fechaInicio.toISOString().split('T')[0], 
+                    fecha_fin: fechaFin.toISOString().split('T')[0]
+                }
+            });
+
+            setReportData(data.reporte);        
+            setPersonaInfo(data.persona.records[0]);
+            setShowPrintDialog(true);
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo generar el reporte'
+            });
+        } finally {
+            setResultsLoading(false);
+        }
+    }
+
     return (
         <div className="card">
             <Toast ref={toast} />
@@ -238,6 +279,22 @@ const ProcesosRH = () => {
                         </div>
                     ) : (
                         <>
+                            <div className='flex justify-content-end'>
+                                <Dropdown
+                                value={personaSeleccionada}
+                                options={personas}
+                                optionLabel='nombre_completo'
+                                filterBy='nombre_completo'
+                                onChange={(e) => setPersonaSeleccionada(e.value)}
+                                placeholder="Seleccione una persona"
+                                filter 
+                                />
+                                <Button 
+                                className='ml-3'
+                                icon="pi pi-print"
+                                label='Generar reporte PDF' 
+                                onClick={handlePrint}/>
+                            </div>
                             {/* Tabla de Asistencia */}
                             <div className="mb-5">
                                 <h3 className="mb-3">Detalle de Asistencia</h3>
@@ -292,6 +349,26 @@ const ProcesosRH = () => {
                     )}
                 </Card>
             )}
+
+            <Dialog
+                visible={showPrintDialog}
+                onHide={() => setShowPrintDialog(false)}
+                style={{ width: '90vw' }}
+                maximizable
+                header="Vista Previa del Reporte"
+            >
+                {reportData && (
+                    <>
+                    <PDFViewer style={{ width: '100%', height: '80vh' }}>
+                        <ReporteAsistenciaTemplate
+                            data={reportData}
+                            personaInf={personaInfo}
+                        />
+                    </PDFViewer>
+                    </>
+                )}
+                
+            </Dialog>
         </div>
     );
 };

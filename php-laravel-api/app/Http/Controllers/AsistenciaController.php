@@ -156,16 +156,87 @@ class AsistenciaController extends Controller
 
             $sancionesData = $sancionesQuery->get();
 
+            $personasConAsistencia = DB::table('tbl_cp_asistencia as a')
+                ->join('tbl_persona as p', 'a.att_per_id', '=', 'p.per_id')
+                ->select('p.per_id', DB::raw("CONCAT(p.per_nombres, ' ', p.per_ap_paterno, ' ', p.per_ap_materno) as nombre_completo"))
+                ->whereBetween('a.att_fecha', [$fechaInicio, $fechaFin])
+                ->distinct()
+                ->orderBy('nombre_completo')
+                ->get();
+
             Log::info("Datos encontrados - Asistencia: " . $asistenciaData->count() . ", Sanciones: " . $sancionesData->count());
 
             return response()->json([
                 'asistencia' => $asistenciaData,
-                'sanciones' => $sancionesData
+                'sanciones' => $sancionesData, 
+                'personas' => $personasConAsistencia,
             ], 200);
 
         } catch (Exception $e) {
             Log::error("Error al obtener datos de asistencia/sanciones: " . $e->getMessage());
             return response()->json(['message' => 'Error al obtener los datos generados: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getReporteAsistecia(Request $request){
+        $personaId = $request->query('persona_id'); 
+        $fechaInicio = $request->query('fecha_inicio');
+        $fechaFin = $request->query('fecha_fin');
+
+        try {
+
+            $requestFake = new Request();
+            $tblPersona = new TblPersonaController();
+            $personaData = $tblPersona->index($requestFake, 'per_id', $personaId);
+
+            $reporte = DB::select(
+                "SELECT * FROM fn_l_reporte_asistencia(?, ?, ?);",
+                [$personaId, $fechaInicio, $fechaFin]
+            );
+
+            $reporte = collect($reporte)->map(function ($item) {
+                $manana = 0;
+                $tarde = 0;
+
+                $manana_esp = 0;
+                $tarde_esp = 0;
+
+                if ($item->marca_entrada_manana && $item->marca_salida_manana) {
+                    $manana = Carbon::parse($item->marca_salida_manana)->diffInMinutes(Carbon::parse($item->marca_entrada_manana));
+                }
+
+                if ($item->marca_entrada_tarde && $item->marca_salida_tarde) {
+                    $tarde = Carbon::parse($item->marca_salida_tarde)->diffInMinutes(Carbon::parse($item->marca_entrada_tarde));
+                }
+
+                if(!$item->horario_ing_tarde){
+                    $item->marca_entrada_tarde = 'NO LABORABLE';
+                    $item->marca_salida_tarde = 'NO LABORABLE';
+                } else {
+                    $manana_esp = Carbon::parse($item->horario_sal_manana)->diffInMinutes(Carbon::parse($item->horario_ing_manana));
+                }
+
+                if(!$item->horario_ing_manana){
+                    $item->marca_entrada_manana = 'NO LABORABLE';
+                    $item->marca_salida_manana = 'NO LABORABLE';
+                } else {
+                    $tarde_esp = Carbon::parse($item->horario_sal_tarde)->diffInMinutes(Carbon::parse($item->horario_ing_tarde));
+                }
+
+                $item->min_trabajo_esp = $manana_esp + $tarde_esp;
+                $item->min_trabajo = $manana + $tarde;
+
+                return $item;
+            });
+
+            return response()->json([
+                'reporte' => $reporte,
+                'persona' => $personaData
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("Error al ejecutar fn_l_reporte_asistencia: " . $e->getMessage());
+            return response()->json(['message' => 'Error al generar reporte de asistencia: ' . $e->getMessage()], 500);
         }
     }
 }
