@@ -51,14 +51,29 @@ const weekdayMap = {
 const groupDaysByWeek = (days) => {
   const weeks = {};
 
-  days.forEach((day) => {
-      const weekNumber = getWeekNumber(day);
+  // days.forEach((day) => {
+  //     const weekNumber = getWeekNumber(day);
 
-      if (!weeks[weekNumber]) {
-      weeks[weekNumber] = Array(7).fill(null); // Lunes a Domingo
-      }
-      const adjustedDayOfWeek = (day.getDay() + 6) % 7; // Lunes (0) a Domingo (6)
-      weeks[weekNumber][adjustedDayOfWeek] = day;
+  //     if (!weeks[weekNumber]) {
+  //     weeks[weekNumber] = Array(7).fill(null); // Lunes a Domingo
+  //     }
+  //     const adjustedDayOfWeek = (day.getDay() + 6) % 7; // Lunes (0) a Domingo (6)
+  //     weeks[weekNumber][adjustedDayOfWeek] = day;
+  // });
+  days.forEach((day) => {
+    const dayDate = new Date(day);
+    const adjustedDayOfWeek = (dayDate.getDay() + 6) % 7; 
+
+    const monday = new Date(dayDate);
+    monday.setDate(dayDate.getDate() - adjustedDayOfWeek);
+
+    const weekKey = monday.toISOString().split('T')[0]; 
+
+    if (!weeks[weekKey]) {
+      weeks[weekKey] = Array(7).fill(null);
+    }
+
+    weeks[weekKey][adjustedDayOfWeek] = dayDate;
   });
   return weeks;
 };
@@ -297,7 +312,7 @@ function TblCpAsigcionHorarioAdd() {
         const dayOfWeek = day
           .toLocaleDateString("es-ES", { weekday: "long" })
           .toLowerCase();
-    
+            
         return (
           <div key={dateString}>
             <div className="fecha-estilizada">{day.getDate()}</div>
@@ -430,6 +445,10 @@ function TblCpAsigcionHorarioAdd() {
         </div>
       );
     };
+
+    useEffect(() => {
+      console.log(weeks)
+    }, [weeks])
 
     const handleViewSchedule = (rowData) => {
       const [yearInicio, monthInicio, dayInicio] = rowData.ah_fecha_inicial.split('-').map(Number);
