@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TblCatalogoAddRequest;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Response; // Asegúrate de importar Response
 
 class TblCatalogoController extends Controller
 {
-	
+
 
 	/**
      * List table records
@@ -36,7 +36,7 @@ class TblCatalogoController extends Controller
 		$records = $this->paginate($query, TblCatalogo::listFields());
 		return $this->respond($records);
 	}
-	
+
 
 	/**
      * Select table record by ID
@@ -48,7 +48,7 @@ class TblCatalogoController extends Controller
 		$record = $query->findOrFail($rec_id, TblCatalogo::viewFields());
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Save form record to the table
@@ -56,13 +56,13 @@ class TblCatalogoController extends Controller
      */
 	function add(TblCatalogoAddRequest $request){
 		$modeldata = $request->validated();
-		
+
 		//save TblCatalogo record
 		$record = TblCatalogo::create($modeldata);
 		$rec_id = $record->cat_id;
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Update table record with form data
@@ -78,13 +78,13 @@ class TblCatalogoController extends Controller
 		}
 		return $this->respond($record);
 	}
-	
+
 
 	/**
      * Delete record from the database
 	 * Support multi delete by separating record id by comma.
 	 * @param  \Illuminate\Http\Request
-	 * @param string $rec_id //can be separated by comma 
+	 * @param string $rec_id //can be separated by comma
      * @return \Illuminate\Http\Response
      */
 	function delete(Request $request, $rec_id = null){
@@ -107,7 +107,7 @@ class TblCatalogoController extends Controller
                 ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion'])
                 ->orderBy('cat_secuencial')
                 ->get();
-                
+
             return $this->respond($records);
         } catch (Exception $e) {
             return $this->respondWithError($e);
@@ -122,7 +122,7 @@ class TblCatalogoController extends Controller
             $records = TblCatalogo::where('cat_tabla', 'tipo_mov_general')
                 ->where('cat_estado', 'V')
                 ->get();
-            
+
             return $this->respond($records);
         } catch (Exception $e) {
             return $this->respondWithError($e);
@@ -150,7 +150,7 @@ class TblCatalogoController extends Controller
     function getDataEducation(){
         try {
             $records = TblCatalogo::whereIn('cat_tabla', [
-                'nivel_instruccion', 'centro_formacion_kd', 
+                'nivel_instruccion', 'centro_formacion_kd',
                 'carrera', 'titulos'
             ])
                 ->where('cat_estado', 'V')
@@ -209,7 +209,7 @@ class TblCatalogoController extends Controller
                 "cat_estado" => "required|string",
                 "cat_tabla" => "required|string",
             ]);
-            
+
             $maxSecuencial = TblCatalogo::where('cat_tabla', 'zona')->max('cat_secuencial');
 
             $catalogo = new TblCatalogo();
@@ -235,15 +235,52 @@ class TblCatalogoController extends Controller
         try {
             $records = TblCatalogo::where('cat_tabla', 'Tipo_Sancion')
                                     ->where('cat_estado', 'V')
-                                    ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion']) 
-                                    ->orderBy('cat_secuencial') 
+                                    ->select(['cat_id', 'cat_descripcion', 'cat_abreviacion'])
+                                    ->orderBy('cat_secuencial')
                                     ->get();
-                
-            return Response::json($records); 
+
+            return Response::json($records);
 
         } catch (Exception $e) {
             Log::error("Error fetching Tipos Sancion: " . $e->getMessage());
             return Response::json(['message' => 'Error al obtener tipos de sanción: ' . $e->getMessage()], 500);
         }
+    }
+    /*****para licencia justificada** */
+    public function tipoHorario()
+    {
+        // Realizar la consulta
+        $horarios = TblCatalogo::where('cat_tabla', 'Tipo_Horario')
+            ->where('cat_estado', 'V')
+            ->orderBy('cat_secuencial', 'asc')
+            ->get();
+
+        // Devolver la respuesta en formato JSON
+        return response()->json([
+            'success' => true,
+            'data' => $horarios,
+        ]);
+    }
+    public function obtenerTiposLicencia()
+    {
+        $datos = TblCatalogo::where('cat_tabla', 'Tipo_Licencia')
+            ->orderBy('cat_secuencial', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $datos
+        ]);
+    }
+    public function obtenerTipoUbicacion()
+    {
+        $datos = TblCatalogo::where('cat_tabla', 'Edificio_Institucional')
+            ->orderBy('cat_secuencial', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $datos
+        ]);
     }
 }

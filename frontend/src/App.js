@@ -122,6 +122,17 @@ import TbltenoresAdd from 'pages/tbltenores/Add';
 import TbltenoresList from 'pages/tbltenores/List';
 import TblFuncionariosList from 'pages/filiacionfuncionario/List'
 import TblFuncionariosView from 'pages/filiacionfuncionario/View'
+
+import TbllicenciaList from 'pages/tblLicencia/List';
+import TbllicenciaView from 'pages/tblLicencia/View';
+import TbllicenciaAdd from 'pages/tblLicencia/Add';
+import TbllicenciaEdit from 'pages/tblLicencia/Edit';
+import TbllicenciaUbicacion from 'pages/tblLicencia/Ubicacion';
+import TbllicenciaValidacion from 'pages/tblLicencia/Validacion';
+import BusquedaActa  from 'pages/serviciosprevalorados/busquedaacta';
+import TbllicenciaSolicitudLicencia from 'pages/tblLicencia/SolicitudLicencia';
+import Alert from 'pages/alerta/Alert'; ///alerta pendientes
+
 import HomePage from './pages/home/HomePage';
 import IndexPages from './pages/index';
 import ErrorPages from './pages/errors';
@@ -413,7 +424,23 @@ const App = () => {
                 {/* Gestión de Personal routes */}
                 <Route path="/gestionPersonal" element={<TblPersonalList />} />
                 <Route path="/gestionPersonal/configuracion/:personaId" element={<PersonalConfiguracion />} />
-                
+                {/* Alertas de solicitud de licencias justificadas */}
+                <Route path="/alerta/Alert" element={<Alert />} />
+                <Route path="/tbllicencia" element={<TbllicenciaList />} />
+				<Route path="/tbllicencia/:fieldName/:fieldValue" element={<TbllicenciaList />} />
+				<Route path="/tbllicencia/index/:fieldName/:fieldValue" element={<TbllicenciaList />} />			
+				<Route path="/tbllicencia/add/:idPer" element={<TbllicenciaAdd />} />			
+				<Route path="/tbllicencia/edit/:idPer" element={<TbllicenciaEdit />} />
+				<Route path="/tbllicencia/ubicacion/:idPer" element={<TbllicenciaUbicacion />} />
+				<Route path="/tbllicencia/validacion" element={<TbllicenciaValidacion />} />
+				<Route path="/tbllicencia/view" element={<TbllicenciaView />} />				
+				<Route path="/tbllicencia/LicensePopup" element={<licensepopup />} />
+				<Route path="/asignacionhorario/store" element={<TbllicenciaAdd />} />
+				<Route path="/serviciosprevalorados/busquedaacta/" element={<BusquedaActa />} /> 				
+				<Route path="/serviciosprevalorados/actaentregapopup/" element={<actaentregapopup />} /> 
+                <Route path="/tbllicencia/solicitudlicencia/" element={<TbllicenciaSolicitudLicencia />} />
+				{/**abre popup alerta */}
+				<Route path="/alerta/Alert" element={<Alert />} />
             </Route>
 
             <Route exact element={<IndexLayout />}></Route>

@@ -1,46 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { Card } from "primereact/card";
 import { Dropdown } from "primereact/dropdown";
-import { Toolbar } from "primereact/toolbar";
-import { Tooltip } from "primereact/tooltip";
+import { ProgressSpinner } from "primereact/progressspinner";
+import axios from "axios";
 import { Panel } from "primereact/panel";
 import { Link } from "react-router-dom";
-
+import useApp from "hooks/useApp";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 const PersonalSearchSystem = () => {
+  const app = useApp();
   // State for search form
   const [searchForm, setSearchForm] = useState({
-    apellidoPaterno: "",
-    apellidoMaterno: "",
-    nombre: "",
-    carnetIdentidad: "",
-    codigoFuncionario: "",
+    nombres: "",
+    apellido_paterno: "",
+    apellido_materno: "",
+    num_doc: "",
+    codigo_funcionario: "",
   });
 
-  // State for search results
+  const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [globalFilter, setGlobalFilter] = useState("");
-  // Sample data that will be shown when search is performed
-  const mockData = [
-    {
-      codigo: 34,
-      apellidoPaterno: "ASIN",
-      apellidoMaterno: "SANDOVAL",
-      nombre: "OSCAR GODOY",
-      apellidoCasada: "",
-      ci: "1754232",
-      controles: "",
-    },
-  ];
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -52,11 +44,45 @@ const PersonalSearchSystem = () => {
   };
 
   // Handle search button click
-  const handleSearch = () => {
+  /*   const handleSearch = () => {
     setSearchResults(mockData);
     setShowResults(true);
-  };
+  }; */
+  const handleSearch = async (page = 0) => {
+    try {
+      setLoading(true);
+      setCurrentPage(page);
 
+      const response = await axios.get("/tblpersona", {
+        params: {
+          ...searchForm,
+          page: page + 1,
+          limit: pageSize,
+        },
+      });
+
+      if (response.data) {
+        setSearchResults(response.data.records || []);
+        setTotalRecords(response.data.total_records || 0);
+        setShowResults(true);
+      } else {
+        setSearchResults([]);
+        setTotalRecords(0);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error searching personas:", error);
+      app.flashMsg(
+        "Error",
+        "Error al buscar personas: " + error.message,
+        "error"
+      );
+      setLoading(false);
+      setSearchResults([]);
+      setTotalRecords(0);
+    }
+  };
   // Action buttons template for the DataTable
   const actionBodyTemplate = (rowData) => {
     const idPer = rowData.codigo; // Usamos el campo "codigo" como ID_PER
@@ -97,7 +123,13 @@ const PersonalSearchSystem = () => {
     { label: "25", value: 25 },
     { label: "50", value: 50 },
   ];
+  const onPageChange = (event) => {
+    handleSearch(event.page);
+  };
 
+  useEffect(() => {
+    handleSearch(0);
+  }, []);
   return (
     <div className="bg-gray-100 min-h-screen">
       {/* Content */}
@@ -206,39 +238,83 @@ const PersonalSearchSystem = () => {
                 <span>registros</span>
               </div>
               <div className="flex align-items-center">
-              <span className="block mt-2 md:mt-0 p-input-icon-left">
-                <InputText
-                  type="search"
-                  placeholder="Buscar..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                />
-                <i className="pi pi-search" /> </span>
+                <span className="block mt-2 md:mt-0 p-input-icon-left">
+                  <InputText
+                    type="search"
+                    placeholder="Buscar..."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                  />
+                  <i className="pi pi-search" />{" "}
+                </span>
               </div>
             </div>
             <DataTable
               value={searchResults}
+              loading={loading}
+              emptyMessage={
+                <div className="p-4 text-center">
+                  {loading ? (
+                    <ProgressSpinner
+                      style={{ width: "50px", height: "50px" }}
+                    />
+                  ) : (
+                    "No se encontraron registros válidos"
+                  )}
+                </div>
+              }
+              responsiveLayout="scroll"
+              lazy
               paginator
               rows={rowsPerPage}
+              totalRecords={totalRecords}
+              first={currentPage * pageSize}
+              onPage={onPageChange}
               globalFilter={globalFilter || ""}
-              emptyMessage={
-                searchResults.length === 0
-                  ? "No hay registros (ver consola)"
-                  : "No hay registros disponibles"
-              }
               className="p-datatable-sm"
               stripedRows
             >
               <Column
-                field="codigo"
-                header="CÓDIGO"
-                style={{ width: "70px" }}
+                field="per_nombres"
+                header="Nombres"
+                sortable
+                body={(rowData) => (
+                  <span className={!rowData.per_nombres ? "text-500" : ""}>
+                    {rowData.per_nombres || "Sin nombre"}
+                  </span>
+                )}
               />
-              <Column field="apellidoPaterno" header="APELLIDO PATERNO" />
-              <Column field="apellidoMaterno" header="APELLIDO MATERNO" />
-              <Column field="nombre" header="NOMBRE(S)" />
-              <Column field="apellidoCasada" header="APELLIDO CASADA" />
-              <Column field="ci" header="C.I." style={{ width: "100px" }} />
+              <Column
+                field="per_ap_paterno"
+                header="Apellido Paterno"
+                sortable
+                body={(rowData) => (
+                  <span className={!rowData.per_ap_paterno ? "text-500" : ""}>
+                    {rowData.per_ap_paterno || "Sin apellido"}
+                  </span>
+                )}
+              />
+              <Column
+                field="per_ap_materno"
+                header="Apellido Materno"
+                sortable
+                body={(rowData) => (
+                  <span className={!rowData.per_ap_materno ? "text-500" : ""}>
+                    {rowData.per_ap_materno || "Sin apellido"}
+                  </span>
+                )}
+              />
+              <Column
+                field="per_num_doc"
+                header="CI"
+                sortable
+                body={(rowData) => (
+                  <span className={!rowData.per_num_doc ? "text-500" : ""}>
+                    {rowData.per_num_doc || "Sin CI"}
+                  </span>
+                )}
+              />
+
               <Column
                 body={actionBodyTemplate}
                 header="CONTROLES"

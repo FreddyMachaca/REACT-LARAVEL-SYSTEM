@@ -166,11 +166,12 @@ const EmployeeManagementForm = () => {
       })
       .catch((error) => {
         console.error("Error al cargar datos del empleado:", error);
+        if (toast.current) {
         toast.current.show({
           severity: "error",
           summary: "Error",
           detail: "No se pudieron cargar los datos del formulario",
-        });
+        });}
       });
   }, [formData.sujeto]);
 
@@ -525,7 +526,8 @@ const EmployeeManagementForm = () => {
     try {
       const response = await api.post("asignacionhorario/store", payload);
       console.log("Horario guardado:", response.data);
-      toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Se guardo correctamente' });
+      if (toast.current) {
+      toast.current.show({ severity: 'success', summary: 'Éxito', detail: 'Se guardo correctamente' });}
       // Actualizar la tabla con el nuevo registro
       setRecords((prevRecords) => [
         ...prevRecords,
@@ -545,7 +547,8 @@ const EmployeeManagementForm = () => {
       setShowSecondCard(false);
     } catch (error) {
       console.error("Error al guardar el horario:", error);
-      toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });
+      if (toast.current) {
+      toast.current.show({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar' });}
     }
   };
 
