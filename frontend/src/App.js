@@ -124,14 +124,14 @@ import TblFuncionariosList from 'pages/filiacionfuncionario/List'
 import TblFuncionariosView from 'pages/filiacionfuncionario/View'
 import ProcesarDatos from 'pages/administracionDatos/Procesamiento';
 
-import TbllicenciaList from 'pages/tblLicencia/List';
-import TbllicenciaView from 'pages/tblLicencia/View';
-import TbllicenciaAdd from 'pages/tblLicencia/Add';
-import TbllicenciaEdit from 'pages/tblLicencia/Edit';
-import TbllicenciaUbicacion from 'pages/tblLicencia/Ubicacion';
-import TbllicenciaValidacion from 'pages/tblLicencia/Validacion';
+import TbllicenciaList from 'pages/tbllicencia/List';
+import TbllicenciaView from 'pages/tbllicencia/View';
+import TbllicenciaAdd from 'pages/tbllicencia/Add';
+import TbllicenciaEdit from 'pages/tbllicencia/Edit';
+import TbllicenciaUbicacion from 'pages/tbllicencia/Ubicacion';
+import TbllicenciaValidacion from 'pages/tbllicencia/Validacion';
 import BusquedaActa  from 'pages/serviciosprevalorados/busquedaacta';
-import TbllicenciaSolicitudLicencia from 'pages/tblLicencia/SolicitudLicencia';
+import TbllicenciaSolicitudLicencia from 'pages/tbllicencia/SolicitudLicencia';
 import Alert from 'pages/alerta/Alert';
 
 import HomePage from './pages/home/HomePage';
