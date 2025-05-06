@@ -135,7 +135,27 @@ class TblPersonaController extends Controller
     }
 
     function getPersonWithHome(Request $request, $fieldname = null, $fieldvalue = null){
-        $query = TblPersona::with('domicilio');
+        //$query = TblPersona::with('domicilio');
+        $query = TblPersona::with([
+            'domicilio' => function ($q) {
+                $q->select('*');
+            },
+            'procedencia' => function ($q) {
+                $q->select('cat_id', 'cat_descripcion');
+            },
+            'lugarNacimiento' => function ($q) {
+                $q->select('cat_id', 'cat_descripcion');
+            },
+            'estadoCivil' => function ($q) {
+                $q->select('cat_id', 'cat_descripcion');
+            },
+            'lugarExportado' => function ($q) {
+                $q->select('cat_id', 'cat_descripcion');
+            }
+        ])->select('per_id', 'per_nombres', 'per_ap_paterno', 'per_procedencia', 'per_lugar_nac', 'per_estado_civil',
+            'per_tipo_doc', 'per_num_doc', 'per_lugar_exp', 'per_ap_materno', 'per_ap_casada', 'per_sexo',
+            'per_fecha_nac', 'per_serie_libreta_militar', 'per_fecha_registro'
+        );
 
         if ($request->search) {
             $search = trim($request->search);

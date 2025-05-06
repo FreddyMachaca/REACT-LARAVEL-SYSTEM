@@ -5,10 +5,12 @@ import { DataTable } from "primereact/datatable";
 import { Dropdown } from "primereact/dropdown";
 import { InputText } from "primereact/inputtext";
 import { useNavigate } from 'react-router-dom';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import axios from 'axios';
 
 function TblFuncionariosList() {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const [first, setFirst] = useState(0);
     const [dataPeople, setDataPeople] = useState();
     const [formData, setFormData] = useState(
@@ -20,11 +22,6 @@ function TblFuncionariosList() {
           per_id: ""
         }
       );
-
-    const onCustomPage = (event) => {
-        setFirst(event.first);
-        setRows(event.rows);
-    }
 
     const template = {
         layout: 'RowsPerPageDropdown CurrentPageReport PrevPageLink NextPageLink',
@@ -78,6 +75,7 @@ function TblFuncionariosList() {
               };
   
               const { data } = await axios.get('/tblpersona/index', { params });
+              console.log(data)
               setDataPeople(data.records || []);
             } catch (err) {
               console.error('Error:', err);
@@ -100,7 +98,7 @@ function TblFuncionariosList() {
     <>
     <div className="card">
         <h5>Búsqueda de Personal</h5>
-        <div className="grid p-fluid mb-2">
+        <div className="grid p-fluid mb-2 flex justify-content-start">
             <div className="col-12 md:col-4 mt-5">
                 <div className="p-inputgroup">
                     <span className="p-inputgroup-addon">
@@ -154,16 +152,25 @@ function TblFuncionariosList() {
       {dataPeople && (
         <DataTable
           value={dataPeople}
+          lazy
           paginator
           rows={10}
           first={first}
           totalRecords={dataPeople.length}
-          onPage={onCustomPage}
+          rowsPerPageOptions={[10, 20, 30, 50, 100]}
           paginatorTemplate={template}
-          paginatorClassName="justify-content-end"
+          paginatorClassName="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           className="mt-6"
           responsiveLayout="scroll"
-          emptyMessage="No se han encontrado resultados"
+          emptyMessage={
+            <div className="p-4 text-center">
+                {loading ? (
+                    <ProgressSpinner style={{width:'50px', height:'50px'}} />
+                ) : (
+                    "No se encontraron registros válidos"
+                )}
+            </div>
+        }
         >
           <Column field="per_id" header="CÓDIGO"></Column>
           <Column field="per_ap_paterno" header="APELLIDO PATERNO"></Column>
@@ -172,7 +179,7 @@ function TblFuncionariosList() {
           <Column field="per_ap_casada" header="APELLIDO CASADA"></Column>
           <Column field="per_num_doc" header="C.I." ></Column>
           <Column field="per_estado" header="ESTADO" ></Column>
-          <Column body={ActionButtons} header="OPCIONES"></Column>
+          <Column body={ActionButtons} header="ACCIONES"></Column>
         </DataTable>
       )}
     </>

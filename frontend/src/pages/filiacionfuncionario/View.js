@@ -71,97 +71,116 @@ function TblFuncionariosView() {
     <>
       { personaData && (<><h2>Filiación Funcionario</h2>
       <Card title={<><i className="pi pi-briefcase" style={{ fontSize: '1.5rem' }} /> Datos Funcionario</>}>
-        
-        <div className='flex overflow-hidden'>
-          <Image src="/images/avatar-3.jpg" className="custom-image" width='200' shape="square" />
-          <div className='flex-grow-1 mx-5 my-2'>
-            <section>
-              <h6 className='text-color-secondary'> DATOS PERSONALES </h6>
-              <div className='flex justify-content-between flex-wrap px-5'>
-                <div>
-                  <label>CÓD. FUNCIONARIO</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_id ?? ''}</span>
-                  </div>
-                </div>
-                <div>
-                  <label>CI</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>{personaData.per_num_doc ?? ''}</span>
-                  </div>
-                </div>
-                <div>
-                  <label>NOMBRE FUNCIONARIO</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>
-                      {`${personaData.per_nombres} ${personaData.per_ap_paterno ?? ''} ${personaData.per_ap_materno ?? ''}`.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                
-                <div>
-                  <label>ESTADO CIVIL</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>
-                      {personaData.per_estado_civil ?? 'No registrado'}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label>SEXO</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>
-                      {personaData.per_sexo ?? 'No registrado'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
 
-            <Divider />
+        <div className="flex flex-column md:flex-row">
+            {/* Avatar Section */}
+            <div className="flex align-items-center justify-content-center mr-4 mb-3 md:mb-0" style={{minWidth: '200px'}}>
+                <div className="bg-primary w-8rem h-8rem border-circle flex align-items-center justify-content-center">
+                    <i className="pi pi-user text-white" style={{ fontSize: '4rem' }}></i>
+                </div>
+            </div>
 
-            <section>
-            <h6 className='text-color-secondary'> FECHA Y LUGAR DE NACIMIENTO </h6>
-              <div className='flex justify-content-between flex-wrap px-5'>
-                <div>
-                  <label>FECHA DE NACIMIENTO</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>
-                      {personaData.per_fecha_nac ? personaData.per_fecha_nac.split(' ')[0] : 'Sin fecha'}
-                    </span>
-                  </div>
+            {/* Info Section */}
+            <div className="flex-1">
+                <h2 className="text-xl font-bold m-0 mb-3">
+                    {`${personaData?.per_nombres || ''} ${personaData?.per_ap_paterno || ''} ${personaData?.per_ap_materno || ''}`}
+                </h2>
+
+                <div className="surface-100 border-round-xl p-4 w-full">
+                    <div className="grid">
+                        <div className="col-12 md:col-4">
+                            <h3 className="text-lg font-semibold mb-3">Datos Personales</h3>
+                            <div className="flex flex-column gap-3">
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-briefcase text-primary mr-2"></i>
+                                        <span className="text-600">Cód. Funcionario </span>
+                                    </div>
+                                    <span className="font-medium">{personaData.per_id || 'No asignado'}</span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-money-bill text-primary mr-2"></i>
+                                        <span className="text-600">Carnet de Identidad </span>
+                                    </div>
+                                    <span className="text-primary font-bold">
+                                        {personaData.per_num_doc ?? 'No asignado'}
+                                    </span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-chart-line text-primary mr-2"></i>
+                                        <span className="text-600">Estado Civil </span>
+                                    </div>
+                                    <span className="font-medium">
+                                      { 
+                                        personaData.estado_civil.cat_descripcion || 'No registrado' 
+                                      }
+                                    </span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-chart-line text-primary mr-2"></i>
+                                        <span className="text-600">Sexo </span>
+                                    </div>
+                                    <span className="font-medium">{personaData.per_sexo || 'No registrado'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-12 md:col-4">
+                            <h3 className="text-lg font-semibold mb-3">Lugar de Nacimiento</h3>
+                            <div className="flex flex-column gap-3">
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-briefcase text-primary mr-2"></i>
+                                        <span className="text-600">País </span>
+                                    </div>
+                                    <span className="font-medium">{personaData.procedencia.cat_descripcion || 'No registrado'}</span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-money-bill text-primary mr-2"></i>
+                                        <span className="text-600">Departamento </span>
+                                    </div>
+                                    <span className="font-medium">
+                                      {personaData.lugar_exportado.cat_descripcion || 'No registrado'}
+                                    </span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-chart-line text-primary mr-2"></i>
+                                        <span className="text-600">Provincia </span>
+                                    </div>
+                                    <span className="font-medium">{personaData.lugar_nacimiento.cat_descripcion || 'No registrado'}</span>
+                                </div>
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-chart-line text-primary mr-2"></i>
+                                        <span className="text-600">Localidad </span>
+                                    </div>
+                                    <span className="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-12 md:col-4">
+                            <h3 className="text-lg font-semibold mb-3">Información Personal</h3>
+                            <div className="flex flex-column gap-3">
+                                <div className="flex align-items-center justify-content-between">
+                                    <div className="flex align-items-center">
+                                        <i className="pi pi-calendar text-primary mr-2"></i>
+                                        <span className="text-600">Fecha Nacimiento </span>
+                                    </div>
+                                    <span className="font-medium">
+                                      {personaData.per_fecha_nac.split(" ")[0] || 'No registrado'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <label>PAÍS</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'>
-                      {personaData.per_procedencia ? personaData.per_procedencia : 'No registrado'}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label>DEPARTAMENTO</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'></span>
-                  </div>
-                </div>
-                
-                <div>
-                  <label>PROVINCIA</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'></span>
-                  </div>
-                </div>
-                <div>
-                  <label>LOCALIDAD</label>
-                  <div>
-                    <span className='text-color-secondary text-lg'></span>
-                  </div>
-                </div>
-              </div>
-              
-            </section>
-          </div>
+            </div>
         </div>
 
         <Divider/>

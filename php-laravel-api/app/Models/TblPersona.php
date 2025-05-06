@@ -84,4 +84,24 @@ class TblPersona extends Model
     {
         return $this->hasOne(TblPersonaDomicilio::class, 'perd_per_id', 'per_id');
     }
+
+    public function procedencia()
+    {
+        return $this->belongsTo(TblCatalogo::class, 'per_procedencia', 'cat_id');
+    }
+
+    public function lugarNacimiento()
+    {
+        return $this->belongsTo(TblCatalogo::class, 'per_lugar_nac', 'cat_id');
+    }
+
+    public function estadoCivil()
+    {
+        return $this->belongsTo(TblCatalogo::class, 'per_estado_civil', 'cat_id');
+    }
+
+    public function lugarExportado()
+    {
+        return $this->belongsTo(TblCatalogo::class, 'per_lugar_exp', 'cat_id');
+    }
 }

@@ -5,9 +5,11 @@ import { Dropdown } from 'primereact/dropdown';
 import { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import { classNames } from 'primereact/utils';
+import useApp from 'hooks/useApp';
 import axios from 'axios';
 
 function PersonalDataForm({data, perd_per_id}) {
+    const app = useApp();
     const [dataCity, setDataCity] = useState([]);
     const [dataZone, setDataZone] = useState([]);
     const [dataVia, setDataVia] = useState([]);
@@ -54,9 +56,11 @@ function PersonalDataForm({data, perd_per_id}) {
     
             const response = await axios.post(`tblpersonadomicilio/edit/${values.perd_per_id}`, cleanedData);
     
+            app.flashMsg('Éxito', 'Datos personales actualizados exitosamente.', 'success');
             console.log("Datos actualizados con éxito:", response.data);
         } catch (error) {
             console.error("Error al actualizar los datos:", error.response?.data || error.message);
+            app.flashMsg('Error', `Error al actulizar datos: ${error.message}`, 'error');
         }
     };
 
